@@ -7,21 +7,25 @@ services:
     ports:
       - 80:80
       - 443:443
+    network_mode: bridge
 
 
   nodejs:
     container_name: nodejs
-    build: ./DockerConfigs/Nodejs
+    build: .\DockerConfigs\Nodejs
     volumes:
       - ./Nodejs:/var/www/node
+      #- ./Nodejs:/var/www/node
     command: bash      #npm run nf
     tty: true # Only for Dev
     environment:
       PORT: 3000 # process.env.PORT
+    network_mode: bridge
 
   redis:
     container_name: redis
     build: ./DockerConfigs/Redis
+    network_mode: bridge
 
   mongo:
     container_name: mongo
@@ -32,6 +36,7 @@ services:
       - 27017:27017
     command: bash
     tty: true
+    network_mode: bridge
 
 
 volumes:

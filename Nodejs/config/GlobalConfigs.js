@@ -17,3 +17,8 @@ module.exports.mpath1= {
                 toolsController : MPath1_controller_toolscontroller,
                 redis: MPath1_config_redis
 }
+
+module.exports.connections = {
+    redisconnection: false,
+    mongoconnection: false
+}
