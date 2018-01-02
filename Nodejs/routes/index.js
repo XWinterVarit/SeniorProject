@@ -71,7 +71,7 @@ router.post('/adduser', (req, res, next) => {
     }
 })
 router.get('/r', (req, res, next)=>{
-    redistools.redis.set('foo','bar')
+    redistools.redis.sadd('foo',['a','b','c'])
     redistools.redis.get('foo', (err, results)=>{
         console.log("my result : " + results)
     })
@@ -93,4 +93,116 @@ router.get('/test', (req, res, next) => {
     }
     toolController.RequestFilter(request, options)
 })
+
+
+
+const ndarray = require('ndarray')
+/*
+let mat = ndarray(new Int32Array(10))
+let arraysize = mat.shape[0]
+for (i = 0; i < arraysize; i++) {
+    mat.set(i, i);
+}
+for (i = 0; i < arraysize; i++) {
+    console.log(mat.get(i));
+}
+*/
+const HashArray = require('hasharray')
+let Users_InMemoryDatabase = new HashArray('name')
+
+class UserData {
+    constructor (name, persisted_id) {
+        this.name = name
+        this.persisted_id = persisted_id
+        this.memberToWorlds = []
+        this.groupofFriends = []
+
+    }
+}
+class World {
+    constructor (name, persisted_id) {
+        this.name = name
+        this.persisted_id = persisted_id
+        this.activeMembers = []
+        this.groupofMembers = []
+        this.objects = []
+        this.invitations = []
+    }
+    force_refresh_from_Persisted () {
+
+    }
+    force_refresh_to_Persisted () {
+
+    }
+}
+
+let usertestdata = {
+    name: 'cheevarit',
+    mobile: '0876730025'
+}
+let worldtampletedata = {
+    name: 'world',
+    Members: null,
+
+}
+router.get('/createNewWorld', async (req, res, next) => {
+    const collection = mongotools.db.collection('worlds')
+    let founded_persistent = false
+    await new Promise (resolve => {
+        collection.findOne(
+
+            {'name':'cheevarit'}
+
+            ,(err, docs) => {
+                if (err) {
+                    console.log('database error')
+                } else if (docs) {
+                    founded_persistentuser = true
+                    console.log(docs)
+                } else {
+                    console.log('data not found in record')
+                }
+                return resolve()
+            }
+        )
+    })
+
+    if (!founded_persistent) {
+        await new Promise(resolve => {
+            collection.insertOne(
+                usertestdata,
+                (err)=> {
+                    if (err){
+                        console.log(err)
+                    }
+                    return resolve()
+                }
+            )
+        })
+        console.log("write completed")
+    }
+
+    console.log("completed")
+    res.end()
+})
+router.post('editWorld', async(req, res, next) => {
+
+    res.end()
+})
+router.get('/add', (req ,res, next) => {
+    console.log("Welcome")
+    if (Users_InMemoryDatabase.has('cheevarit')) {
+        console.log("this name already had");
+    } else {
+        Users_InMemoryDatabase.add({name: 'cheevarit', data: new UserData('cheevarit', '41gr6eg6')})
+    }
+    res.end()
+})
+router.get('/get', (req, res, next) => {
+    let UserData = Users_InMemoryDatabase.get('cheevarit')
+    console.log(JSON.stringify(UserData, null, 4))
+    res.end()
+})
+
+
 module.exports = router;
