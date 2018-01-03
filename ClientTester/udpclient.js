@@ -6,7 +6,7 @@ var HOST = '127.0.0.1';
 
 var dgram = require('dgram');
 var message = new Buffer('My KungFu is Good!');
-let frame_message = fs.readFileSync('./cat.jpg')
+let frame_message = /*fs.readFileSync('./cat.jpg')*/ new Buffer('My KungFu is Good!');
 console.log("show length "+frame_message.length)
 let async_setTimeout = (syncfunc,waittime) => {
     return new Promise(resolve => {
