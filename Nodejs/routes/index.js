@@ -185,6 +185,61 @@ router.get('/createNewWorld', async (req, res, next) => {
     console.log("completed")
     res.end()
 })
+router.post('/createNewUsers', async (req, res, next) => {
+    console.log(JSON.stringify(req.body))
+    let validation = true
+    let filteroptions = {
+        bool_permitprob: true,
+        setarr_permitprob: new Set(['name', 'emailaddr','password'])
+    }
+    let filter = toolController.RequestFilter(req.body, filteroptions)
+    if (filter.validation_numprob === false) {
+        console.log(filter.validation_message)
+        validation = false
+        return res.end()
+    }
+    if (Users_InMemoryDatabase.has(req.body.name)) {
+        console.log("This name already taken!")
+        validation = false
+    }
+    if (validation) {
+        const collection = mongotools.db.collection('users')
+        await new Promise (resolve => {
+            collection.findOne(
+
+                {'name':req.body.name}
+
+                ,(err, docs) => {
+                    if (err) {
+                        console.log('database error')
+                    } else if (docs) {
+                        validation = false
+                        console.log("user already found in the database")
+                        //console.log(docs)
+                    } else {
+                        console.log('data not found in record')
+                    }
+                    return resolve()
+                }
+            )
+        })
+    }
+    if (validation) {
+            await new Promise(resolve => {
+                collection.insertOne(
+                    req.body,
+                    (err)=> {
+                        if (err){
+                            console.log(err)
+                        }
+                        return resolve()
+                    }
+                )
+            })
+            console.log("write completed")
+    }
+    res.end()
+})
 router.post('editWorld', async(req, res, next) => {
 
     res.end()

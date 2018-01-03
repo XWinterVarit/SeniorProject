@@ -1,6 +1,10 @@
 const fs = require('fs')
 const screenshot = require('desktop-screenshot')
 const screenshot2 = require('screenshot-desktop')
+const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
+let converter
+let input
+
 var PORT = 44444;
 var HOST = '127.0.0.1';
 
@@ -29,7 +33,7 @@ let async_setInterval = (syncfunc,intervaltime) => {
     })
 }
 
-
+let frames = []
 
 let test = async () => {
 
@@ -91,8 +95,45 @@ let screen2 = () => {
 }
 //screen()
 //screen2()
+let toMp4 = () => {
+    console.log("pass1")
+    const conv = ffmpeg_stream() // create converter
+    console.log("pass2")
+    const input = conv.input({f: 'image2pipe', r: 30}) // create input writable stream
+    console.log("pass3")
+    conv.output('out.mp4', {vcodec: 'libx264', pix_fmt: 'yuv420p'}) // output to file
 
+// for every frame create a function that returns a promise
+    console.log("pass4")
 
+    frames.map(filename => () =>
+        new Promise((fulfill, reject) =>
+            s3
+                .getObject({Bucket: '...', Key: filename})
+                .createReadStream()
+                .on('end', fulfill) // fulfill promise on frame end
+                .on('error', reject) // reject promise on error
+                .pipe(input, {end: false}) // pipe to converter, but don't end the input yet
+        )
+    )
+    // reduce into a single promise, run sequentially
+        .reduce((prev, next) => prev.then(next), Promise.resolve())
+        // end converter input
+        .then(() => input.end())
+
+    conv.run()
+}
+let toMp4V2 = () => {
+    converter = ffmpeg_stream()
+    input = converter.input({f: 'image2pipe', vcodec: 'mjpeg'});
+    fs.createReadStream('./well55.jpg').pipe(input)
+    converter.output({
+        f: 'image2', vcodec: 'mjpeg',
+        vf: 'scale=1280:720'
+    }).pipe(fs.createWriteStream('./cat_thumb.jpg'))
+    converter.run()
+}
+toMp4V2()
 let fpscap = async (fpscap) => {
     /*
     let times = 1000/fpscap
@@ -107,49 +148,53 @@ let fpscap = async (fpscap) => {
     let framedrop = 0;
     let framepass = 0;
     let working = false
-    setInterval(
+    let screenrecords = setInterval(
         () => {
             framepass++;
             if (working === true) {
                 framedrop++;
             } else {
-                working = true
-                console.log("start take screenshot")
+                if (framepass > 300) {
+                    console.log("stop screenshot")
+                    clearInterval(screenrecords)
+                    toMp4()
+                } else {
+                    working = true
+                    console.log("start take screenshot")
+                    screenshot2().then((img)=>{
+                        let framefilename = 'well' + framepass + '.jpg'
+                        frames.push(framefilename)
 
+                        fs.writeFileSync(framefilename, img, (err) => {
+                            console.log("write file error" + err)
+                        })
 
-                screenshot2().then((img)=>{
-                    fs.writeFileSync('well' + framepass + '.bmp', img, (err) => {
-                        console.log("write file error" + err)
+                        //framebuffer.push(img)
+                        console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
+                        realtimestamp = Date.now()
+                        working = false
+                    }).catch((err) => {
+                        console.log("error " + err);
+
                     })
 
-                    //framebuffer.push(img)
-                    console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
-                    realtimestamp = Date.now()
-                    working = false
-                }).catch((err) => {
-                    console.log("error " + err);
+                    /*
+                    setTimeout(
+                        () => {
+                            console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}`)
+                            working = false
+                            realtimestamp = Date.now()
+                        }
+                        ,80
+                    )
+                    */
 
-                })
-
-                /*
-                setTimeout(
-                    () => {
-                        console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}`)
-                        working = false
-                        realtimestamp = Date.now()
-                    }
-                    ,80
-                )
-                */
+                }
             }
         }, times
     )
-
-
 }
-fpscap(25)
-
-
+//fpscap(25)
 
 
 /*

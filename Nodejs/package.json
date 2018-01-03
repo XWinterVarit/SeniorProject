@@ -19,7 +19,9 @@
     "ndarray": "^1.0.18",
     "pug": "~2.0.0-beta11",
     "redis": "^2.8.0",
+    "screenshot-desktop": "^1.2.0",
     "serve-favicon": "~2.4.2",
+    "stun": "^1.1.0",
     "supervisor": "^0.12.0"
   }
 }

@@ -20,7 +20,7 @@ module.exports.RequestFilter = (request, options) => {
         let permitSet = options.setarr_permitprob;
         let probcount = 0
         for (let properties in request) {
-            if (request.hasOwnProperty(properties)) {
+            if (Object.hasOwnProperty.call(request,properties)) {
                 if (!permitSet.has(properties)) {
                     delete request[properties]
                 } else {
@@ -30,11 +30,16 @@ module.exports.RequestFilter = (request, options) => {
         }
         console.log("probcount is : " + probcount)
         console.log("permitSet is : " + permitSet.size)
+        console.log("show after remove")
+        console.log(request)
 
         if (probcount < permitSet.size) {
-            console.log("element not enough")
+            return {validation_numprob: false, validation_message: 'element not enough'}
+        } else {
+            return {validation_numprob: true}
         }
+
+
     }
-    console.log("show after remove")
-    console.log(request)
+
 }
