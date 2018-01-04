@@ -109,6 +109,7 @@ for (i = 0; i < arraysize; i++) {
 */
 const HashArray = require('hasharray')
 let Users_InMemoryDatabase = new HashArray('name')
+let Worlds_InMemoryDatabase = new HashArray('name')
 
 class UserData {
     constructor (name, persisted_id) {
@@ -145,32 +146,50 @@ let worldtampletedata = {
     Members: null,
 
 }
-router.get('/createNewWorld', async (req, res, next) => {
+router.post('/createNewWorld', async (req, res, next) => {
+    console.log(JSON.stringify(req.body))
+    let validation = true
+    let filteroptions = {
+        bool_permitprob: true,
+        setarr_permitprob: new Set(['name','adminpassword'])
+    }
+    let filter = toolController.RequestFilter(req.body, filteroptions)
+    if (filter.validation_numprob === false) {
+        console.log(filter.validation_message)
+        validation = false
+        return res.end()
+    }
+    if (Worlds_InMemoryDatabase.has(req.body.name)) {
+        console.log("This name already taken!")
+        validation = false
+    }
     const collection = mongotools.db.collection('worlds')
-    let founded_persistent = false
-    await new Promise (resolve => {
-        collection.findOne(
 
-            {'name':'cheevarit'}
+    if (validation) {
+        await new Promise (resolve => {
+            collection.findOne(
 
-            ,(err, docs) => {
-                if (err) {
-                    console.log('database error')
-                } else if (docs) {
-                    founded_persistentuser = true
-                    console.log(docs)
-                } else {
-                    console.log('data not found in record')
+                {'name':req.body.name}
+
+                ,(err, docs) => {
+                    if (err) {
+                        console.log('database error')
+                    } else if (docs) {
+                        validation = false
+                        console.log("world's name already found in the database")
+                        //console.log(docs)
+                    } else {
+                        console.log('data not found in record')
+                    }
+                    return resolve()
                 }
-                return resolve()
-            }
-        )
-    })
-
-    if (!founded_persistent) {
+            )
+        })
+    }
+    if (validation) {
         await new Promise(resolve => {
             collection.insertOne(
-                usertestdata,
+                req.body,
                 (err)=> {
                     if (err){
                         console.log(err)
@@ -181,9 +200,8 @@ router.get('/createNewWorld', async (req, res, next) => {
         })
         console.log("write completed")
     }
-
-    console.log("completed")
     res.end()
+
 })
 router.post('/createNewUsers', async (req, res, next) => {
     console.log(JSON.stringify(req.body))
@@ -202,8 +220,9 @@ router.post('/createNewUsers', async (req, res, next) => {
         console.log("This name already taken!")
         validation = false
     }
+    const collection = mongotools.db.collection('users')
+
     if (validation) {
-        const collection = mongotools.db.collection('users')
         await new Promise (resolve => {
             collection.findOne(
 
