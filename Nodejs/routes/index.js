@@ -124,18 +124,116 @@ class World {
     constructor (name, persisted_id) {
         this.name = name
         this.persisted_id = persisted_id
-        this.activeMembers = []
-        this.groupofMembers = []
-        this.objects = []
+        this.activeMembers = new Map()
+        this.groupofMembers = new Map()
+        this.renderObjects = new Map()
         this.invitations = []
     }
-    force_refresh_from_Persisted () {
+        force_refresh_from_Persisted ()  {
 
-    }
-    force_refresh_to_Persisted () {
+        }
+        force_refresh_to_Persisted () {
 
-    }
+        }
+
+        get_active_member () {
+            console.log("size: " + this.groupofMembers.size)
+            for (let [key, value] of this.activeMembers) {
+                console.log(key + " = " + JSON.stringify(value,null, 4))
+            }
+        }
+
+        set_member_active (membername) {
+            let currentmember = this.activeMembers.get(membername)
+            if (currentmember) {
+                if (currentmember.isActive) {
+                    console.log("member already active")
+                } else {
+                    currentmember.isActive = true
+                }
+            } else {
+                this.activeMembers.set(
+
+                    membername,
+
+                    {
+                        isActive: true,
+                        isStandby: false,
+                        mongoid: null,
+                        ipaddress: "192.168.1.1",
+                        port: null,
+                        positionx: 0,
+                        positiony: 0,
+                        peerworkload: [],
+                        peerworkloadweight: 0
+                    }
+
+                )
+
+            }
+        }
+
+        set_member_nonactive (membername) {
+            let currentmember = this.activeMembers.get(membername)
+            if (currentmember) {
+                if (!currentmember.isActive) {
+                    console.log("member already not active")
+                } else {
+                    currentmember.isActive = false
+                }
+            } else {
+                console.log("member not active and not in the cache")
+            }
+        }
+
+        addUser(Username,GroupofMemberName) {
+            let currentgroup = this.groupofMembers.get(GroupofMemberName).members
+            currentgroup.push("cheevarit")
+            currentgroup.push("david")
+            currentgroup.push("sarah")
+            console.log(this.groupofMembers.get(GroupofMemberName))
+
+        }
+        addGroupofMember () {
+            //console.log("hello world")
+
+            this.groupofMembers.set('admin' ,{members: new Set()})
+            this.groupofMembers.set('standard', {members: new Set()})
+            this.getGroupofMemberInfo()
+
+            this.addUser("cheevarit","admin")
+
+        }
+        getGroupofMemberInfo () {
+            console.log("size: " + this.groupofMembers.size)
+            for (let [key, value] of this.groupofMembers) {
+                console.log(key + " = " + JSON.stringify(value,null, 4))
+            }
+        }
+
+
+
+
 }
+Worlds_InMemoryDatabase.add({name: "xtameer", world: new World("xtameer", "4r6g4re")})
+router.post('/tt', (req, res, next) => {
+    let world = Worlds_InMemoryDatabase.get("xtameer").world
+    //console.log(world)
+    world.set_member_active(req.body.name)
+    res.end()
+})
+router.post('/tq', (req, res, next) => {
+    let world = Worlds_InMemoryDatabase.get("xtameer").world
+    //console.log(world)
+    world.get_active_member()
+    res.end()
+})
+router.post('/tf', (req, res, next) => {
+    let world = Worlds_InMemoryDatabase.get("xtameer").world
+    //console.log(world)
+    world.set_member_nonactive(req.body.name)
+    res.end()
+})
 
 let usertestdata = {
     name: 'cheevarit',
@@ -145,42 +243,10 @@ let worldtampletedata = {
     name: 'world',
     Members: null,
 
+
 }
 let cacheWorlds = async (tags, options) => {
-    let validation = true
 
-    if (tags.name) {
-
-        let name = tags.name
-        let alreadycache = false
-        if (Worlds_InMemoryDatabase.has(name)) {
-            console.log("this world already cache")
-        } else {
-            const collection = mongotools.db.collection('worlds')
-            await new Promise (resolve => {
-                collection.findOne(
-
-                    {'name':name}
-
-                    ,(err, docs) => {
-                        if (err) {
-                            console.log('database error')
-                        } else if (docs) {
-                            validation = false
-                            console.log("world's name already found in the database")
-                            Worlds_InMemoryDatabase.add({name: docs.name, data: docs})
-                            //console.log(docs)
-                        } else {
-                            console.log('your request world has not existed in cache or database')
-                        }
-                        return resolve()
-                    }
-                )
-            })
-        }
-        console.log("show cache : " + JSON.stringify(Worlds_InMemoryDatabase.get(tags.name)), null, 4)
-
-    }
 }
 let cacheUsers = () => {
 
