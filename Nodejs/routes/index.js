@@ -146,6 +146,50 @@ let worldtampletedata = {
     Members: null,
 
 }
+let cacheWorlds = async (tags, options) => {
+    let validation = true
+
+    if (tags.name) {
+
+        let name = tags.name
+        let alreadycache = false
+        if (Worlds_InMemoryDatabase.has(name)) {
+            console.log("this world already cache")
+        } else {
+            const collection = mongotools.db.collection('worlds')
+            await new Promise (resolve => {
+                collection.findOne(
+
+                    {'name':name}
+
+                    ,(err, docs) => {
+                        if (err) {
+                            console.log('database error')
+                        } else if (docs) {
+                            validation = false
+                            console.log("world's name already found in the database")
+                            Worlds_InMemoryDatabase.add({name: docs.name, data: docs})
+                            //console.log(docs)
+                        } else {
+                            console.log('your request world has not existed in cache or database')
+                        }
+                        return resolve()
+                    }
+                )
+            })
+        }
+        console.log("show cache : " + JSON.stringify(Worlds_InMemoryDatabase.get(tags.name)), null, 4)
+
+    }
+}
+let cacheUsers = () => {
+
+}
+
+router.post('/cacheWorlds', async (req, res, next) => {
+    await cacheWorlds({name : 'xtameer'})
+    res.end()
+})
 router.post('/createNewWorld', async (req, res, next) => {
     console.log(JSON.stringify(req.body))
     let validation = true
