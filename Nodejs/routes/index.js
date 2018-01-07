@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const globalConfigs = require('../config/GlobalConfigs')
 const mongotools = require(globalConfigs.mpath1.mongodb).tools
+let ObjectID = require('mongodb').ObjectID
 const toolController = require(globalConfigs.mpath1.toolsController)
 const redistools = require(globalConfigs.mpath1.redis).tools
 const chalk = require('chalk')
@@ -632,6 +633,94 @@ router.post('/createNewUsers', async (req, res, next) => {
     }
     res.end()
 })
+
+
+
+router.post('/createObjectLinks', async (req, res, next) => {
+    let worldname = req.body.worldname
+    let positionx = req.body.positionx
+    let positiony = req.body.positiony
+    let owner_name = req.body.owner_name
+    let owner_persisted_id = req.body.owner_persisted_id
+    let object_persisted_id = req.body.object_persisted_id
+
+    const collection = mongotools.db.collection('worlds')
+    let validation = true
+    await new Promise(resolve => {
+
+        collection.updateOne(
+
+            {name: req.body.name},
+
+            {$push :
+                    {
+                        "objectlinks": {
+                            _id: new ObjectID(),
+                            positionx: positionx,
+                            positiony: positiony,
+                            owner_name: owner_name,
+                            owner_persisted_id: owner_persisted_id,
+                            object_persisted_id: object_persisted_id
+                        }
+                    }
+            },
+
+            (err, response) => {
+                if (err) {
+                    console.log("Error " + err)
+                } else {
+                    console.log(response.result)
+                }
+                return resolve()
+            }
+        )
+    })
+
+
+
+
+})
+
+
+
+router.post('/addToCloudDrive', async (req, res, next) => {
+    const collection = mongotools.db.collection('users')
+    let validation = true
+    let remotedobj_template = {
+        persisted_id: "0",
+        virtualpath: "\\good\\well",
+    }
+    await new Promise(resolve => {
+
+        collection.updateOne(
+
+            {name: req.body.name},
+
+            {$push :
+                    {
+                        "clouddrive.remotedobj": {
+                            _id: new ObjectID(),
+                            name: req.body.objectname,
+                            virtualpath: req.body.vpath
+                        }
+                    }
+            },
+
+            (err, response) => {
+                if (err) {
+                    console.log("Error " + err)
+                } else {
+                    console.log(response.result)
+                }
+                return resolve()
+            }
+        )
+    })
+    res.end()
+})
+
+
+
 
 router.post('editWorld', async(req, res, next) => {
 
