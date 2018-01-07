@@ -131,17 +131,43 @@ class RemoteDesktopObject {
 class RemoteDesktopP2PScheduler {
     constructor () {
         this.setofDeliver = []
+        this.setofFulledDeliver = []
         this.setofReceiver = []
+        this.tmpDeliver = []
 
-        this.maximumDelivingPerNode = 5
+        this.clientchanged = false
+
+        this.maximumDelivingPerNode = 1
         this.activeMembers = new Map()
     }
-    Initiate_Deliver (membername) {
+    Push_Deliver (membername) {
         this.setofDeliver.push({name: membername, weight: 0, ipaddr: "", port: "", sentto: []})
+        this.print_Deliver()
+    }
+    Push_Receiver (membername) {
+        this.setofReceiver.push({name: membername, weight: 0, ipaddr: "", port: "", sentto: []})
+        this.print_Receiver()
     }
     Distribute_to_Receiver () {
+        let iterations = 0
+        let currentallweight = this.maximumDelivingPerNode
         while (this.setofReceiver.length !== 0) {
-            for (let currentdeliver in this.setofDeliver) {
+            iterations++
+            console.log("iteration : " + iterations)
+            if (currentallweight <= 0) {
+                currentallweight = 0
+                while (this.setofDeliver.length > 0) {
+                    this.setofFulledDeliver.push(this.setofDeliver.pop())
+                }
+                while (this.tmpDeliver.length > 0) {
+                    this.setofDeliver.push(this.tmpDeliver.pop())
+                    currentallweight += this.maximumDelivingPerNode
+                }
+            }
+
+            for (let currentdeliver of this.setofDeliver) {
+                //console.log("currentdeliver " + JSON.stringify(currentdeliver, null, 4))
+
                 if (this.setofReceiver.length === 0) {
                     break
                 }
@@ -149,21 +175,48 @@ class RemoteDesktopP2PScheduler {
                     continue
                 }
                 currentdeliver.weight++
+                currentallweight--
                 let popReceiver = this.setofReceiver.pop()
                 currentdeliver.sentto.push(popReceiver)
-                this.setofDeliver.push(popReceiver)
+                this.tmpDeliver.push(popReceiver)
             }
         }
+        console.log("end")
     }
-
-
+    print_Deliver () {
+        //console.log(this.setofDeliver)
+        console.log("printing set of Deliver")
+        for (let i of this.setofDeliver) {
+            console.log(i)
+        }
+        for (let i of this.setofFulledDeliver) {
+            console.log(i)
+        }
+        for (let i of this.tmpDeliver) {
+            console.log(i)
+        }
+    }
+    print_Receiver () {
+        let all = ""
+        for (let i of this.setofReceiver) {
+            all += i.name + " "
+        }
+        console.log("printing set of Receiver")
+        console.log(all)
+    }
     SendToClient () {
 
     }
     HeartBeatCheck () {
 
     }
+
+
 }
+let remoteP2P1 = new RemoteDesktopP2PScheduler()
+
+
+
 class CamP2PScheduler {
 
 }
@@ -295,7 +348,51 @@ router.post('/tf', (req, res, next) => {
     world.set_member_nonactive(req.body.name)
     res.end()
 })
+router.post('/pushdeli', async (req, res, next) => {
+    remoteP2P1.Push_Deliver("A")
+    res.end()
 
+})
+router.post('/pushRecei', async (req, res, next) => {
+    remoteP2P1.Push_Receiver("B")
+    remoteP2P1.Push_Receiver("C")
+    remoteP2P1.Push_Receiver("D")
+    remoteP2P1.Push_Receiver("E")
+    remoteP2P1.Push_Receiver("F")
+    remoteP2P1.Push_Receiver("G")
+    remoteP2P1.Push_Receiver("H")
+    remoteP2P1.Push_Receiver("I")
+    res.end()
+
+})
+router.post('/printDeli', (req, res, next) => {
+    remoteP2P1.print_Deliver()
+    res.end()
+})
+router.post('/tmp', (req, res, next) => {
+    remoteP2P1.Push_Deliver("A")
+
+    remoteP2P1.Push_Receiver("B")
+    remoteP2P1.Push_Receiver("C")
+    remoteP2P1.Push_Receiver("D")
+    remoteP2P1.Push_Receiver("E")
+    remoteP2P1.Push_Receiver("F")
+    remoteP2P1.Push_Receiver("G")
+    remoteP2P1.Push_Receiver("H")
+    remoteP2P1.Push_Receiver("I")
+
+    remoteP2P1.Distribute_to_Receiver()
+
+    remoteP2P1.print_Deliver()
+    res.end()
+
+})
+router.post('/printRec', (req, res, next) => {
+    remoteP2P1.print_Receiver()
+})
+
+
+router.post('/')
 let usertestdata = {
     name: 'cheevarit',
     mobile: '0876730025'
@@ -317,6 +414,12 @@ router.post('/cacheWorlds', async (req, res, next) => {
     await cacheWorlds({name : 'xtameer'})
     res.end()
 })
+
+
+router.post('/login', async (req, res, next) => {
+
+})
+
 
 router.post('/addMemberInvitation', async (req, res, next) => {
     const collection = mongotools.db.collection('worlds')
