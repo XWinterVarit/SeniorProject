@@ -120,13 +120,69 @@ class UserData {
 
     }
 }
+class RemoteDesktopObject {
+    constructor (persisted_id) {
+        this.persisted_id = persisted_id
+        this.name = ""
+        this.ownertype = ""
+        this.ownername = ""
+    }
+}
+class RemoteDesktopP2PScheduler {
+    constructor () {
+        this.setofDeliver = []
+        this.setofReceiver = []
+
+        this.maximumDelivingPerNode = 5
+        this.activeMembers = new Map()
+    }
+    Initiate_Deliver (membername) {
+        this.setofDeliver.push({name: membername, weight: 0, ipaddr: "", port: "", sentto: []})
+    }
+    Distribute_to_Receiver () {
+        while (this.setofReceiver.length !== 0) {
+            for (let currentdeliver in this.setofDeliver) {
+                if (this.setofReceiver.length === 0) {
+                    break
+                }
+                if (currentdeliver.weight >= this.maximumDelivingPerNode) {
+                    continue
+                }
+                currentdeliver.weight++
+                let popReceiver = this.setofReceiver.pop()
+                currentdeliver.sentto.push(popReceiver)
+                this.setofDeliver.push(popReceiver)
+            }
+        }
+    }
+
+
+    SendToClient () {
+
+    }
+    HeartBeatCheck () {
+
+    }
+}
+class CamP2PScheduler {
+
+}
+class LinksObject {
+    constructor (realobject_persisted_id, persisted_id ,name) {
+        this.positionx = 0
+        this.positiony = 0
+        this.realobject_persisted_id = realobject_persisted_id
+        this.persisted_id = persisted_id
+
+    }
+}
 class World {
     constructor (name, persisted_id) {
         this.name = name
         this.persisted_id = persisted_id
         this.activeMembers = new Map()
         this.groupofMembers = new Map()
-        this.renderObjects = new Map()
+        this.Objectlinks = new Map()
         this.invitations = []
     }
         force_refresh_from_Persisted ()  {
@@ -185,6 +241,11 @@ class World {
                 console.log("member not active and not in the cache")
             }
         }
+
+
+
+
+
 
         addUser(Username,GroupofMemberName) {
             let currentgroup = this.groupofMembers.get(GroupofMemberName).members
@@ -256,7 +317,109 @@ router.post('/cacheWorlds', async (req, res, next) => {
     await cacheWorlds({name : 'xtameer'})
     res.end()
 })
+
+router.post('/addMemberInvitation', async (req, res, next) => {
+    const collection = mongotools.db.collection('worlds')
+    await new Promise(resolve => {
+        /*
+        collection.updateOne(
+            {name: req.body.name},
+            {$set :
+                    {
+                        Invitations :
+                            [
+                                {  member: [] }
+                            ]
+                    }
+            },
+            (err, response) => {
+                if (err) {
+                    console.log("Error " + err)
+                } else {
+                    console.log(response.result)
+                }
+                return resolve()
+            }
+        )
+        */
+        //console.log(req.body.name)
+        collection.updateOne(
+            {name: req.body.worldname},
+            {$addToSet :
+                    {"Invitations.member": req.body.name}
+            },
+            (err, response) => {
+                if (err) {
+                    console.log("Error " + err)
+                } else {
+                    console.log(response.result)
+                }
+                return resolve()
+            }
+        )
+
+    })
+    res.end()
+})
+router.post('/acceptMemberInvitation', async (req, res, next) => {
+
+    const collection = mongotools.db.collection('worlds')
+    let validation = true
+    if (validation) {
+        await new Promise(resolve => {
+            collection.updateOne(
+                {name: req.body.worldname},
+
+                {
+                    $pull:
+                        {
+                            "Invitations.member": req.body.name
+                        }
+                },
+
+                (err, response) => {
+                    if (err) {
+                        console.log("Error " + err)
+                    } else {
+                        console.log(response.result)
+                        if (response.result.nModified === 0) {
+                            console.log("validation go false")
+                            validation = false
+                        }
+                    }
+                    return resolve()
+                }
+            )
+        })
+    }
+    if (validation) {
+        await new Promise(resolve => {
+            let groupobject = {}
+            collection.updateOne(
+                {name: req.body.worldname},
+                {
+                    $addToSet:
+                        {"member.standard": req.body.name}
+                    //groupobject["member."+req.body.group] = req.body.name
+                },
+                (err, response) => {
+                    if (err) {
+                        console.log("Error " + err)
+                    } else {
+                        console.log(response.result)
+                    }
+                    return resolve()
+                }
+            )
+
+        })
+    }
+    res.end()
+
+})
 router.post('/createNewWorld', async (req, res, next) => {
+
+
     console.log(JSON.stringify(req.body))
     let validation = true
     let filteroptions = {
@@ -269,10 +432,8 @@ router.post('/createNewWorld', async (req, res, next) => {
         validation = false
         return res.end()
     }
-    if (Worlds_InMemoryDatabase.has(req.body.name)) {
-        console.log("This name already taken!")
-        validation = false
-    }
+
+
     const collection = mongotools.db.collection('worlds')
 
     if (validation) {
@@ -313,6 +474,7 @@ router.post('/createNewWorld', async (req, res, next) => {
     res.end()
 
 })
+
 router.post('/createNewUsers', async (req, res, next) => {
     console.log(JSON.stringify(req.body))
     let validation = true
@@ -326,10 +488,8 @@ router.post('/createNewUsers', async (req, res, next) => {
         validation = false
         return res.end()
     }
-    if (Users_InMemoryDatabase.has(req.body.name)) {
-        console.log("This name already taken!")
-        validation = false
-    }
+
+
     const collection = mongotools.db.collection('users')
 
     if (validation) {
@@ -369,6 +529,7 @@ router.post('/createNewUsers', async (req, res, next) => {
     }
     res.end()
 })
+
 router.post('editWorld', async(req, res, next) => {
 
     res.end()
