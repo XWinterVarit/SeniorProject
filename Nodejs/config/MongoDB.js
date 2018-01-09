@@ -4,7 +4,7 @@
 
 const MongoClient = require('mongodb').MongoClient
 const assert = require('assert')
-const url = 'mongodb://localhost:27017/myproject'
+const url = 'mongodb://mongo:27017/myproject'
 let tools = {db:null, count:2}
 console.log("check count : " + tools.count)
 

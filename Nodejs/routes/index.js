@@ -121,6 +121,211 @@ class UserData {
 
     }
 }
+class OneActiveUserClass {
+    constructor (persisted_id, name) {
+        this.persisted_id = ""
+        this.name = ""
+        this.ipaddr = ""
+        this.port = ""
+        this.standby = false
+        this.active = false
+        this.active_at_world = ""
+        this.active_at_objectID = ""
+
+        this.heartbeatIntervalTime = 5 //sec
+        this.heartbeatTimer = null
+        this.heartbeatScore = 0
+    }
+
+    set_active_world (worldname) {
+        if (this.active_at_world === worldname){
+            console.log("not change active world")
+        } else {
+            console.log("change activeworld")
+        }
+    }
+
+    set_active_objectID (objectID) {
+        if (this.active_at_objectID === objectID){
+            console.log("not change active object")
+        } else {
+            console.log("change activeobject")
+        }
+    }
+
+    set_IP (ip) {
+        if (this.ipaddr === ip){
+            console.log("ip not change")
+        } else {
+            console.log("ip changed")
+        }
+    }
+
+    set_port (port) {
+        if (this.port === port){
+            console.log("port not change")
+        } else {
+            console.log("port change")
+        }
+    }
+
+    start_heartbeat () {
+        this.active = true
+  /*
+        if (this.heartbeatTimer === null) {
+
+        } else {
+            clearTimeout(this.heartbeatTimer)
+        }
+
+        this.heartbeatTimer = setTimeout(
+            () => {
+                this.active = false
+            }, this.heartbeatIntervalTime
+        )
+*/
+        this.heartbeatTimer = setInterval(
+            () => {
+                this.heartbeatScore--
+                if (this.heartbeatScore <= 0) {
+                    clearInterval(this.heartbeatTimer)
+                    this.active = false
+                }
+            }, this.heartbeatIntervalTime
+        )
+
+    }
+
+    signal_heartbeat () {
+        this.heartbeatScore = 2
+        if (this.active === false) {
+            this.start_heartbeat()
+        }
+    }
+
+    get_messages (req) {
+        //console.log("hello from : " + this.name + "  " + this.persisted_id)
+        this.signal_heartbeat()
+        if (req.body.standby !== undefined) {
+            this.standby = req.body.standby
+        }
+        if (req.body.ipaddr) {
+            this.set_IP(req.body.ipaddr)
+        }
+        if (req.body.port) {
+            this.set_port(req.body.port)
+        }
+        if (req.body.activeworld) {
+            this.set_active_world(req.body.activeworld)
+        }
+        if (req.body.activeobject) {
+            this.set_active_objectID(req.body.activeobject)
+
+        }
+    }
+
+    sent_messages () {
+
+    }
+
+
+}
+
+class GlobalActiveUserClass {
+    constructor () {
+        this.ActiveUsers = new HashArray('name')
+    }
+    async callUsers (name) {
+        let validation = true
+        let currentUser = this.ActiveUsers.get(name)
+        let outputdocs
+        if (currentUser) {
+            console.log("User already in GlobalActiveUser")
+        } else {
+            const collection = mongotools.db.collection('users')
+            await new Promise (resolve => {
+                collection.findOne(
+
+                    {'name': name},
+
+                    {_id:1},
+
+                    (err, docs) => {
+                        if (err) {
+                            console.log('database error')
+                            validation = false
+                        } else if (docs) {
+                            console.log("found user in database")
+                            outputdocs = docs
+                            console.log(docs)
+                        } else {
+                            console.log('data not found in record')
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+            })
+
+            if (validation && outputdocs) {
+                this.ActiveUsers.add({name: name, data: new OneActiveUserClass(name, outputdocs._id)})
+            }
+        }
+        return validation
+    }
+
+    printall_activeuser () {
+        console.log(JSON.stringify(this.ActiveUsers,null, 4))
+    }
+
+    async get_messages (req) {
+        //console.log(JSON.stringify(req.body,null, 4))
+        await this.callUsers(req.body.name)
+
+        if (!(await this.callUsers(req.body.name))) {
+            console.log("user not found in database")
+            return false
+        }
+        let currentUser = this.ActiveUsers.get(req.body.name).data
+        //console.log(currentUser)
+
+        switch (req.body.type) {
+            case "toone":
+                currentUser.getmessages(req)
+                break
+            case "others":
+                break
+        }
+
+    }
+    set_messages (res) {
+
+    }
+
+}
+
+let GlobalActiveUser = new GlobalActiveUserClass()
+router.post('/heart', async (req, res, next) => {
+    await GlobalActiveUser.get_messages(req)
+
+
+    res.end()
+})
+router.post('/calluser', async (req, res, next)=>{
+    await GlobalActiveUser.callUsers("cheevarit")
+    await GlobalActiveUser.callUsers("well")
+    await GlobalActiveUser.callUsers("David")
+    await GlobalActiveUser.callUsers("Sarah")
+
+    GlobalActiveUser.printall_activeuser()
+    res.end()
+})
+
+
+
+class GlobalRemoteObjectScheduler {
+
+}
 class RemoteDesktopObject {
     constructor (persisted_id) {
         this.persisted_id = persisted_id
@@ -205,7 +410,7 @@ class RemoteDesktopP2PScheduler {
         console.log("printing set of Receiver")
         console.log(all)
     }
-    SendToClient () {
+    SendMessagesToClient () {
 
     }
     HeartBeatCheck () {
@@ -295,11 +500,6 @@ class World {
                 console.log("member not active and not in the cache")
             }
         }
-
-
-
-
-
 
         addUser(Username,GroupofMemberName) {
             let currentgroup = this.groupofMembers.get(GroupofMemberName).members
@@ -637,6 +837,9 @@ router.post('/createNewUsers', async (req, res, next) => {
 
 
 router.post('/createObjectLinks', async (req, res, next) => {
+
+
+
     let worldname = req.body.worldname
     let positionx = req.body.positionx
     let positiony = req.body.positiony
@@ -644,13 +847,40 @@ router.post('/createObjectLinks', async (req, res, next) => {
     let owner_persisted_id = req.body.owner_persisted_id
     let object_persisted_id = req.body.object_persisted_id
 
-    const collection = mongotools.db.collection('worlds')
+    const world_collection = mongotools.db.collection('worlds')
+    const user_collection = mongotools.db.collection('users')
     let validation = true
+
+    //get owner_persisted_id
+
     await new Promise(resolve => {
 
-        collection.updateOne(
+        user_collection.findOne(
 
-            {name: req.body.name},
+            {name: req.body.owner_name},
+
+            {_id: 1},
+
+            (err, response) => {
+                if (err) {
+                    console.log("Error " + err)
+                } else {
+                    console.log(response)
+                    owner_persisted_id = response._id
+                }
+                return resolve()
+            }
+        )
+    })
+
+    console.log("world name : " + JSON.stringify(req.body, null, 4))
+
+
+    await new Promise(resolve => {
+
+        world_collection.updateOne(
+
+            {name: req.body.worldname},
 
             {$push :
                     {
@@ -676,7 +906,7 @@ router.post('/createObjectLinks', async (req, res, next) => {
         )
     })
 
-
+    res.end()
 
 
 })
