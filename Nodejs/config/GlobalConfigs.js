@@ -9,6 +9,11 @@ let MPath1_config_redis = MPath1_config + "Redis"
 
 let MPath1_controller = nodepath + 'controller/'
 let MPath1_controller_toolscontroller = MPath1_controller + 'toolsController'
+let MPath1_controller_UsersController = MPath1_controller + 'UsersController'
+let MPath1_controller_WorldController = MPath1_controller + 'UsersController'
+let MPath1_controller_CameraController = MPath1_controller + 'UsersController'
+let MPath1_controller_GlobalMemory = MPath1_controller + 'UsersController'
+let MPath1_controller_RemoteDesktopOBJController = MPath1_controller + 'UsersController'
 
 let MPath1_clouddrive = nodepath + 'clouddrive/'
 module.exports.mpath1= {
