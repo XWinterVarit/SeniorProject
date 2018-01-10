@@ -123,8 +123,8 @@ class UserData {
 }
 class OneActiveUserClass {
     constructor (persisted_id, name) {
-        this.persisted_id = ""
-        this.name = ""
+        this.persisted_id = persisted_id
+        this.name = name
         this.ipaddr = ""
         this.port = ""
         this.standby = false
@@ -132,7 +132,7 @@ class OneActiveUserClass {
         this.active_at_world = ""
         this.active_at_objectID = ""
 
-        this.heartbeatIntervalTime = 5 //sec
+        this.heartbeatIntervalTime = 1000 //millisec
         this.heartbeatTimer = null
         this.heartbeatScore = 0
     }
@@ -197,7 +197,7 @@ class OneActiveUserClass {
     }
 
     signal_heartbeat () {
-        this.heartbeatScore = 2
+        this.heartbeatScore = 20
         if (this.active === false) {
             this.start_heartbeat()
         }
@@ -220,8 +220,8 @@ class OneActiveUserClass {
         }
         if (req.body.activeobject) {
             this.set_active_objectID(req.body.activeobject)
-
         }
+
     }
 
     sent_messages () {
@@ -234,6 +234,7 @@ class OneActiveUserClass {
 class GlobalActiveUserClass {
     constructor () {
         this.ActiveUsers = new HashArray('name')
+        this.Debug_ActiveUsers = []
     }
     async callUsers (name) {
         let validation = true
@@ -268,19 +269,36 @@ class GlobalActiveUserClass {
             })
 
             if (validation && outputdocs) {
-                this.ActiveUsers.add({name: name, data: new OneActiveUserClass(name, outputdocs._id)})
+
+                let OneUser = new OneActiveUserClass(outputdocs._id, name)
+                this.ActiveUsers.add({name: name, data: OneUser})
+                this.Debug_ActiveUsers.push(OneUser)
             }
         }
         return validation
     }
 
     printall_activeuser () {
-        console.log(JSON.stringify(this.ActiveUsers,null, 4))
+
+        for (let currentuser of this.Debug_ActiveUsers) {
+            console.log(currentuser.name)
+        }
+
+        //console.log(JSON.stringify(this.ActiveUsers,null, 4))
+
+    }
+
+    monitor_activeuser (res) {
+        let messages = "users\n"
+        for (let currentuser of this.Debug_ActiveUsers) {
+            messages += "name: " + currentuser.name + " id : " + currentuser.persisted_id + " isActive : " + currentuser.active + " heartbeatscore : " + currentuser.heartbeatScore + "\n"
+        }
+        res.send(messages)
     }
 
     async get_messages (req) {
         //console.log(JSON.stringify(req.body,null, 4))
-        await this.callUsers(req.body.name)
+        //await this.callUsers(req.body.name)
 
         if (!(await this.callUsers(req.body.name))) {
             console.log("user not found in database")
@@ -288,10 +306,11 @@ class GlobalActiveUserClass {
         }
         let currentUser = this.ActiveUsers.get(req.body.name).data
         //console.log(currentUser)
-
+        //console.log(req.body.type)
         switch (req.body.type) {
             case "toone":
-                currentUser.getmessages(req)
+                //console.log("pass")
+                currentUser.get_messages(req)
                 break
             case "others":
                 break
@@ -320,7 +339,9 @@ router.post('/calluser', async (req, res, next)=>{
     GlobalActiveUser.printall_activeuser()
     res.end()
 })
-
+router.get('/monitor', (req, res, next) => {
+  GlobalActiveUser.monitor_activeuser(res)
+})
 
 
 class GlobalRemoteObjectScheduler {
@@ -952,7 +973,7 @@ router.post('/addToCloudDrive', async (req, res, next) => {
 
 
 
-router.post('editWorld', async(req, res, next) => {
+router.post('/editWorld', async(req, res, next) => {
 
     res.end()
 })
