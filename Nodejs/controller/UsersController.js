@@ -30,7 +30,7 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 //==================================================================================================
 //==================================================================================================
 
-module.exports = class OneActiveUserClass {
+class OneActiveUserClass {
     constructor (persisted_id, name) {
         this.persisted_id = persisted_id
         this.name = name
@@ -140,11 +140,12 @@ module.exports = class OneActiveUserClass {
 
 }
 
-module.exports = class GlobalActiveUserClass {
+class GlobalActiveUserClass {
     constructor () {
         this.ActiveUsers = new HashArray('name')
         this.Debug_ActiveUsers = []
     }
+
     async callUsers (name) {
         let validation = true
         let currentUser = this.ActiveUsers.get(name)
@@ -198,11 +199,13 @@ module.exports = class GlobalActiveUserClass {
     }
 
     monitor_activeuser (res) {
+
         let messages = "users\n"
         for (let currentuser of this.Debug_ActiveUsers) {
             messages += "name: " + currentuser.name + " id : " + currentuser.persisted_id + " isActive : " + currentuser.active + " heartbeatscore : " + currentuser.heartbeatScore + "\n"
         }
         res.send(messages)
+
     }
 
     async get_messages (req) {
@@ -214,7 +217,7 @@ module.exports = class GlobalActiveUserClass {
             return false
         }
         let currentUser = this.ActiveUsers.get(req.body.name).data
-        //console.log(currentUser)
+        console.log(currentUser)
         //console.log(req.body.type)
         switch (req.body.type) {
             case "toone":
@@ -232,7 +235,7 @@ module.exports = class GlobalActiveUserClass {
 
 }
 
-module.exports = class UserMethods {
+class UserMethods {
 
     static async createUser (req, res) {
         console.log(JSON.stringify(req.body))
@@ -287,6 +290,8 @@ module.exports = class UserMethods {
         }
         res.end()
     }
-
-
 }
+
+module.exports.OneActiveUserClass = OneActiveUserClass
+module.exports.GlobalActiveUserClass = GlobalActiveUserClass
+module.exports.UserMethods = UserMethods

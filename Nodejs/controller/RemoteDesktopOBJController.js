@@ -29,7 +29,7 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 //==================================================================================================
 //==================================================================================================
 //==================================================================================================
-export default class One_Scheduler_RemoteDesktopP2P {
+module.exports = class One_Scheduler_RemoteDesktopP2P {
     constructor () {
         this.setofDeliver = []
         this.setofFulledDeliver = []
@@ -113,7 +113,7 @@ export default class One_Scheduler_RemoteDesktopP2P {
     }
 
 }
-export default class Group_RemoteDesktop  {
+module.exports = class Group_RemoteDesktop  {
     constructor () {
         this.RemoteDesktopP2PScheduler = new HashArray('id')
         this.Debug_RemoteDesktopP2PScheduler = []

@@ -129,9 +129,17 @@ class World {
 
 
 
-class WorldMethods {
+module.exports.WorldMethods = class WorldMethods {
 
-    static async addMember (req, res) {
+    /**
+     * add user acceptance invation to the world
+     * @param req
+     * @param req.body.worldname - name of destination world
+     * @param req.body.name - name of user to send member accept invitation
+     * @param res
+     * @returns {Promise<void>}
+     */
+    static async addMemberToInvitation (req, res) {
         const collection = mongotools.db.collection('worlds')
         await new Promise(resolve => {
             /*
@@ -170,10 +178,17 @@ class WorldMethods {
                     return resolve()
                 }
             )
-
         })
     }
 
+    /** @param
+     *
+     * @param req
+     * @param req.body.worldname - name of destination world
+     * @param req.body.name - name of user to add
+     * @param res
+     * @returns {Promise<void>}
+     */
     static async acceptMember (req, res) {
         const collection = mongotools.db.collection('worlds')
         let validation = true
@@ -230,7 +245,15 @@ class WorldMethods {
 
     }
 
-    static async createWorld (req, res) {
+    /**
+     * Create new world
+     * @param req
+     * @param req.body.name
+     * @param req.body.adminpassword
+     * @param res
+     * @returns {Promise<void>}
+     */
+    static async createNew (req, res) {
         console.log(JSON.stringify(req.body))
         let validation = true
         let filteroptions = {

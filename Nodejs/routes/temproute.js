@@ -105,7 +105,6 @@ router.post('/pushRecei', async (req, res, next) => {
     remoteP2P1.Push_Receiver("H")
     remoteP2P1.Push_Receiver("I")
     res.end()
-
 })
 router.post('/printDeli', (req, res, next) => {
     remoteP2P1.print_Deliver()
