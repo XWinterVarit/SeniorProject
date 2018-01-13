@@ -50,23 +50,46 @@ class OneActiveUserClass {
         if (this.active_at_world === worldname){
             console.log("not change active world")
         } else {
+            this.active_at_world = worldname
             console.log("change activeworld")
         }
     }
 
-    set_active_objectID (objectID) {
+    async set_active_objectID (objectID, objecttype, username) {
+        const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
+
         if (this.active_at_objectID === objectID){
             console.log("not change active object")
         } else {
             console.log("change activeobject")
+            this.active_at_objectID = objectID
+            switch (objecttype) {
+                case "remote":
+                    let previousObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: this.active_at_objectID, username: username})
+                    //console.log("show previous object")
+                    //console.log(previousObject)
+                    if (previousObject) {
+                        previousObject.removeActiveMember(username)
+                    }
+                    let nextObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: objectID})
+                    if (nextObject) {
+                        //console.log(nextObject)
+                        nextObject.CallActiveMember(username)
+                    }
+                    console.log("completed")
+                    break
+            }
         }
     }
 
     set_IP (ip) {
+        const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
         if (this.ipaddr === ip){
             console.log("ip not change")
         } else {
             console.log("ip changed")
+            this.ipaddr = ip
+            let currentObject = await globalmemoryController.GlobalRemoteDesktopOBJ.get_messages()
         }
     }
 
@@ -75,6 +98,7 @@ class OneActiveUserClass {
             console.log("port not change")
         } else {
             console.log("port change")
+            this.port = port
         }
     }
 
@@ -112,23 +136,23 @@ class OneActiveUserClass {
         }
     }
 
-    get_messages (req) {
+    async get_messages (req) {
         //console.log("hello from : " + this.name + "  " + this.persisted_id)
         this.signal_heartbeat()
         if (req.body.standby !== undefined) {
             this.standby = req.body.standby
         }
         if (req.body.ipaddr) {
-            this.set_IP(req.body.ipaddr)
+            this.set_IP(req.body.ipaddr, req.body.name)
         }
         if (req.body.port) {
-            this.set_port(req.body.port)
+            this.set_port(req.body.port, req.body.name)
         }
         if (req.body.activeworld) {
-            this.set_active_world(req.body.activeworld)
+            this.set_active_world(req.body.activeworld, req.body.name)
         }
         if (req.body.activeobject) {
-            this.set_active_objectID(req.body.activeobject)
+            await this.set_active_objectID(req.body.activeobject, req.body.objecttype, req.body.name)
         }
 
     }
@@ -187,7 +211,47 @@ class GlobalActiveUserClass {
         }
         return validation
     }
+    async callUsersV2 (name) {
+        let validation = true
+        let currentUser = this.ActiveUsers.get(name)
+        let outputdocs
+        if (currentUser) {
+            console.log("User already in GlobalActiveUser")
+        } else {
+            const collection = mongotools.db.collection('users')
+            await new Promise (resolve => {
+                collection.findOne(
 
+                    {'name': name},
+
+                    {_id:1},
+
+                    (err, docs) => {
+                        if (err) {
+                            console.log('database error')
+                            validation = false
+                        } else if (docs) {
+                            console.log("found user in database")
+                            outputdocs = docs
+                            console.log(docs)
+                        } else {
+                            console.log('data not found in record')
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+            })
+
+            if (validation && outputdocs) {
+
+                let OneUser = new OneActiveUserClass(outputdocs._id, name)
+                this.ActiveUsers.add({name: name, data: OneUser})
+                this.Debug_ActiveUsers.push(OneUser)
+            }
+        }
+        return currentUser
+    }
     printall_activeuser () {
 
         for (let currentuser of this.Debug_ActiveUsers) {
@@ -211,17 +275,18 @@ class GlobalActiveUserClass {
     async get_messages (req) {
         //console.log(JSON.stringify(req.body,null, 4))
         //await this.callUsers(req.body.name)
-
+        console.log('-----------Global User Get Message ')
         if (!(await this.callUsers(req.body.name))) {
             console.log("user not found in database")
             return false
         }
         let currentUser = this.ActiveUsers.get(req.body.name).data
-        console.log(currentUser)
+        //console.log(currentUser)
         //console.log(req.body.type)
+        console.log("passssssss")
         switch (req.body.type) {
             case "toone":
-                //console.log("pass")
+                console.log('-----------One User Get Message ')
                 currentUser.get_messages(req)
                 break
             case "others":

@@ -17,6 +17,7 @@ const globalConfigs = require('../config/GlobalConfigs')
 const toolController = require(globalConfigs.mpath1.toolsController)
 const userController = require(globalConfigs.mpath1.userscontroller)
 const worldController = require(globalConfigs.mpath1.worldController)
+const remoteDesktopOBJController = require(globalConfigs.mpath1.remotedesktopobjController)
 const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
 /////////////////////////////From Mongo//////////////////////////////
 
@@ -57,7 +58,34 @@ router.get('/monitor', (req, res, next) => {
     //res.end()
 })
 
+router.post('/seeRemote', async (req, res, next) => {
+    await globalmemoryController.GlobalActiveUser.get_messages(req)
+    res.end()
+})
+
+
 router.post('/pushRecei', async (req, res, next) => {
+    remoteDesktopOBJController. remoteP2P1.Push_Receiver("B")
+    /*
+    remoteP2P1.Push_Receiver("C")
+    remoteP2P1.Push_Receiver("D")
+    remoteP2P1.Push_Receiver("E")
+    remoteP2P1.Push_Receiver("F")
+    remoteP2P1.Push_Receiver("G")
+    remoteP2P1.Push_Receiver("H")
+    remoteP2P1.Push_Receiver("I")
+    */
+    res.end()
+})
+router.post('/printDeli', (req, res, next) => {
+    //remoteP2P1.print_Deliver()
+    res.end()
+})
+router.post('/tmp', (req, res, next) => {
+    let remoteobj = globalmemoryController.GlobalRemoteDesktopOBJ
+    /*
+    remoteP2P1.Push_Deliver("A")
+
     remoteP2P1.Push_Receiver("B")
     remoteP2P1.Push_Receiver("C")
     remoteP2P1.Push_Receiver("D")
@@ -66,13 +94,14 @@ router.post('/pushRecei', async (req, res, next) => {
     remoteP2P1.Push_Receiver("G")
     remoteP2P1.Push_Receiver("H")
     remoteP2P1.Push_Receiver("I")
-    res.end()
-})
-router.post('/printDeli', (req, res, next) => {
-    remoteP2P1.print_Deliver()
-    res.end()
-})
 
+    remoteP2P1.Distribute_to_Receiver()
+
+    remoteP2P1.print_Deliver()
+    */
+    res.end()
+
+})
 
 router.post('/')
 
