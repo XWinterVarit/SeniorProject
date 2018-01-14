@@ -68,6 +68,44 @@ router.post('/monremoteUser', async(req, res, next) => {
     await globalmemoryController.GlobalRemoteDesktopOBJ.Monitor(req, res)
 })
 
+router.post('/addRemoteObject', async (req, res, next) => {
+    const collection = mongotools.db.collection('users')
+    let validation = true
+    let remotedobj_template = {
+        persisted_id: "0",
+        virtualpath: "\\good\\well",
+    }
+    await new Promise(resolve => {
+
+        collection.updateOne(
+
+            {name: req.body.name},
+
+            {$push :
+                    {
+                        "clouddrive.remotedobj": {
+                            _id: new ObjectID(),
+                            name: req.body.objectname,
+                            virtualpath: req.body.vpath
+                        }
+                    }
+            },
+
+            (err, response) => {
+                if (err) {
+                    console.log("Error " + err)
+                } else {
+                    console.log(response.result)
+                }
+                return resolve()
+            }
+        )
+    })
+    res.end()
+})
+
+
+
 router.post('/pushRecei', async (req, res, next) => {
     remoteDesktopOBJController. remoteP2P1.Push_Receiver("B")
     /*
