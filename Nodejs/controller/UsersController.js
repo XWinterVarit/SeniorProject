@@ -72,14 +72,14 @@ class OneActiveUserClass {
                     //console.log("show previous object")
                     //console.log(previousObject)
                     if (previousObject) {
-                        previousObject.removeActiveMember(this.objectowner)
+                        previousObject.removeActiveMember(this.name)
                     }
                     let nextObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: objectID, objectowner: newobjectowner})
                     console.log("print next object")
                     console.log(nextObject)
 
                     if (nextObject) {
-                        nextObject.CallActiveMember(newobjectowner)
+                        nextObject.CallActiveMember(this.name)
                     }
                     console.log("completed")
                     break
@@ -162,7 +162,7 @@ class OneActiveUserClass {
             this.set_active_world(req.body.activeworld, req.body.name)
         }
         if (req.body.activeobject) {
-            await this.set_active_objectID(req.body.activeobject, req.body.objecttype, req.body.name)
+            await this.set_active_objectID(req.body.activeobject, req.body.objecttype, req.body.objectowner)
         }
 
     }
