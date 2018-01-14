@@ -133,7 +133,7 @@ let toMp4V2 = () => {
     }).pipe(fs.createWriteStream('./cat_thumb.jpg'))
     converter.run()
 }
-toMp4V2()
+//toMp4V2()
 let fpscap = async (fpscap) => {
     /*
     let times = 1000/fpscap
@@ -194,7 +194,7 @@ let fpscap = async (fpscap) => {
         }, times
     )
 }
-//fpscap(25)
+fpscap(25)
 
 
 /*
