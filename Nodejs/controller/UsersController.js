@@ -40,6 +40,7 @@ class OneActiveUserClass {
         this.active = false
         this.active_at_world = ""
         this.active_at_objectID = ""
+        this.objectowner = ""
 
         this.heartbeatIntervalTime = 1000 //millisec
         this.heartbeatTimer = null
@@ -55,34 +56,40 @@ class OneActiveUserClass {
         }
     }
 
-    async set_active_objectID (objectID, objecttype, username) {
+    async set_active_objectID (objectID, objecttype, newobjectowner) {
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
 
         if (this.active_at_objectID === objectID){
             console.log("not change active object")
         } else {
             console.log("change activeobject")
-            this.active_at_objectID = objectID
             switch (objecttype) {
                 case "remote":
-                    let previousObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: this.active_at_objectID, username: username})
+                    console.log('----------------------------Receive third from changed active object ')
+                    console.log(' ')
+
+                    let previousObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: this.active_at_objectID, objectowner: this.objectowner})
                     //console.log("show previous object")
                     //console.log(previousObject)
                     if (previousObject) {
-                        previousObject.removeActiveMember(username)
+                        previousObject.removeActiveMember(this.objectowner)
                     }
-                    let nextObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: objectID})
+                    let nextObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: objectID, objectowner: newobjectowner})
+                    console.log("print next object")
+                    console.log(nextObject)
+
                     if (nextObject) {
-                        //console.log(nextObject)
-                        nextObject.CallActiveMember(username)
+                        nextObject.CallActiveMember(newobjectowner)
                     }
                     console.log("completed")
                     break
             }
+            this.active_at_objectID = objectID
+            this.objectowner = newobjectowner
         }
     }
 
-    set_IP (ip) {
+    async set_IP (ip) {
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
         if (this.ipaddr === ip){
             console.log("ip not change")
@@ -93,7 +100,7 @@ class OneActiveUserClass {
         }
     }
 
-    set_port (port) {
+    async set_port (port) {
         if (this.port === port){
             console.log("port not change")
         } else {
@@ -138,7 +145,10 @@ class OneActiveUserClass {
 
     async get_messages (req) {
         //console.log("hello from : " + this.name + "  " + this.persisted_id)
+        console.log('--------------------Receive Second at each User Controller ')
+        console.log()
         this.signal_heartbeat()
+
         if (req.body.standby !== undefined) {
             this.standby = req.body.standby
         }
@@ -267,6 +277,7 @@ class GlobalActiveUserClass {
         let messages = "users\n"
         for (let currentuser of this.Debug_ActiveUsers) {
             messages += "name: " + currentuser.name + " id : " + currentuser.persisted_id + " isActive : " + currentuser.active + " heartbeatscore : " + currentuser.heartbeatScore + "\n"
+            messages += "active at world " + currentuser.active_at_world + "  active at objectID " + currentuser.active_at_objectID + "  with owner  " + currentuser.objectowner + "\n\n"
         }
         res.send(messages)
 
@@ -275,7 +286,8 @@ class GlobalActiveUserClass {
     async get_messages (req) {
         //console.log(JSON.stringify(req.body,null, 4))
         //await this.callUsers(req.body.name)
-        console.log('-----------Global User Get Message ')
+        console.log('-----------Receive First at Global User Controller ')
+        console.log()
         if (!(await this.callUsers(req.body.name))) {
             console.log("user not found in database")
             return false
@@ -287,7 +299,7 @@ class GlobalActiveUserClass {
         switch (req.body.type) {
             case "toone":
                 console.log('-----------One User Get Message ')
-                currentUser.get_messages(req)
+                await currentUser.get_messages(req)
                 break
             case "others":
                 break

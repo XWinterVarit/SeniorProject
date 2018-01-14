@@ -51,6 +51,9 @@ class One_Scheduler_RemoteDesktopP2P {
         this.calculateIntervalTime = 2000 // millisec
     }
     removeActiveMember (username) {
+        console.log('------------------------------------At Remote OBJ : Receive remove message ')
+        console.log()
+
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
         let currentMember = this.activeMembers.get(username)
 
@@ -65,13 +68,18 @@ class One_Scheduler_RemoteDesktopP2P {
         this.changed = true
     }
     CallActiveMember (username) {
+        console.log('------------------------------------At Remote OBJ : Receive call message ')
+        console.log()
+
+
+
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
         let currentMember = this.activeMembers.get(username)
 
         if (!currentMember) {
             let newuser = {name: username, weight: 0, sentto: [], userpointer: globalmemoryController.GlobalActiveUser.callUsersV2(username)}
             this.activeMembers.set(username, newuser)
-            this.Debug_activeMembers.push(newuser)
+            //this.Debug_activeMembers.push(newuser)
             this.changed = true
         } else {
             console.log("user already active")
@@ -109,8 +117,20 @@ class One_Scheduler_RemoteDesktopP2P {
     monitorActiveMember (res) {
         let messages = "RemoteDesktopP2PObj Scheduler Active Member . Object Persisted ID : " + this.persisted_id + "\n" +
             "----------------------------------------------------------------------------------\n"
-        for (let i of this.Debug_activeMembers) {
+        for (let i of this.activeMembers) {
             messages += JSON.stringify(i, null, 4) + "\n"
+        }
+        res.send(messages)
+    }
+    monitorObject (res) {
+        let messages = "RemoteDesktopP2PObj Scheduler Status . Object Persisted ID : " + this.persisted_id + "\n" +
+            "----------------------------------------------------------------------------------\n"
+        messages += "isActive : " + this.active + "  isChanged : " + this.changed + "  isSchedule "
+        if (this.calculateSchedule) {
+            messages += "YES" + "   at " + this.calculateIntervalTime + " millisec. per interval\n"
+        } else {
+            messages += "NO" + "   at " + this.calculateIntervalTime + " millisec. per interval\n"
+
         }
         res.send(messages)
     }
@@ -249,21 +269,27 @@ class Group_RemoteDesktop  {
         this.RemoteDesktopP2PScheduler = new HashArray('id')
         this.Debug_RemoteDesktopP2PScheduler = []
     }
-    async callObject (id, username) {
+    async callObject (id, objectowner) {
+        if (!safeObjectId(id) || !objectowner) {
+            return null
+        }
         let validation = true
         let currentObject = this.RemoteDesktopP2PScheduler.get(id)
         let outputdocs
         if (currentObject) {
             console.log("Object already in Memory")
+            return currentObject
         } else {
             const collection = mongotools.db.collection('users')
-            //console.log("id: " + id)
+            console.log("id: " + safeObjectId(id))
+            console.log("object owner : " + objectowner)
             await new Promise (resolve => {
                 collection.findOne(
 
-                    {/*'name': username,*/ 'clouddrive.remotedobj._id': safeObjectId(id)},
+                    {$and: [{'name': objectowner}, {'clouddrive.remotedobj._id': safeObjectId(id)}]},
 
-                    {'clouddrive.remotedobj._id':1},
+                    /*{'_id': 1},*/
+                    /*{'_id':1},*/
 
                     (err, docs) => {
                         if (err) {
@@ -285,14 +311,14 @@ class Group_RemoteDesktop  {
                 let OneObject = new One_Scheduler_RemoteDesktopP2P(id)
                 this.RemoteDesktopP2PScheduler.add({id: id, data: OneObject})
                 this.Debug_RemoteDesktopP2PScheduler.push(OneObject)
+                return {data:OneObject}
             }
         }
-        return currentObject
     }
 
     async getMessages (messages) {
         console.log('-----------Global Remote Object Get Message ')
-        let currentObject = await this.callObject(messages.objectID, messages.username)
+        let currentObject = await this.callObject(messages.objectID, messages.objectowner)
         if (!currentObject) {
             console.log("object not found in database")
             return null
@@ -301,6 +327,43 @@ class Group_RemoteDesktop  {
         //console.log(currentObject.data)
         console.log("passing remote")
         return currentObject.data
+    }
+
+    monitorglobalobject (res) {
+        let messages = "Global RemoteDesktop OBJ Controller\n" +
+            "----------------------------------------------------------------------------------\n"
+
+        for (let i of this.Debug_RemoteDesktopP2PScheduler) {
+            messages += JSON.stringify(i ,null, 4)
+        }
+        //messages += "good morning"
+        res.send(messages)
+    }
+
+    async Monitor (req, res) {
+        //console.log(req.body)
+        let currentObject = await this.callObject(req.body.objectID, req.body.objectowner)
+
+        switch (req.body.type) {
+            case "activemember":
+                //console.log("show object")
+                //console.log(currentObject.data)
+                currentObject = currentObject.data
+                currentObject.monitorActiveMember(res)
+                break
+            case "object":
+                //console.log("show object")
+                //console.log(currentObject.data)
+                currentObject = currentObject.data
+                currentObject.monitorObject(res)
+                break
+            case "globalobject":
+                this.monitorglobalobject(res)
+                break
+            default:
+                res.end()
+                break
+        }
     }
 }
 

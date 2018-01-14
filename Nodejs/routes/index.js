@@ -49,7 +49,7 @@ router.post('/addMemberInvitation', async (req, res, next) => {
 router.post('/acceptMember', async (req, res, next) => {
     await worldController.WorldMethods.acceptMember(req, res)
 })
-router.post('/sendtoUser', async (req, res, next) => {
+router.post('/usersignal', async (req, res, next) => {
     await globalmemoryController.GlobalActiveUser.get_messages(req)
     res.end()
 })
@@ -59,10 +59,14 @@ router.get('/monitor', (req, res, next) => {
 })
 
 router.post('/seeRemote', async (req, res, next) => {
+    console.log('++++++++++++++++++++++++++++++++++++++')
     await globalmemoryController.GlobalActiveUser.get_messages(req)
     res.end()
 })
 
+router.post('/monremoteUser', async(req, res, next) => {
+    await globalmemoryController.GlobalRemoteDesktopOBJ.Monitor(req, res)
+})
 
 router.post('/pushRecei', async (req, res, next) => {
     remoteDesktopOBJController. remoteP2P1.Push_Receiver("B")
