@@ -7,6 +7,8 @@ const commandLineArgs = require('command-line-args')
 
 const optionDefinitions = [
     { name: 'type', alias: 't', type: Number },
+    { name: 'param', alias: 'p', type: String},
+    { name: 'owner', alias: 'o', type: String}
 ]
 const options = commandLineArgs(optionDefinitions)
 
@@ -31,8 +33,8 @@ let monitor = (cases) => {
                 let args = {
                     data: {
                         type: "activemember",
-                        objectID: "5a53549dd1e30700462426d8",
-                        objectowner: "cheevarit"
+                        objectID: options.param,
+                        objectowner: options.owner
                     },
                     headers: {
                         "Content-Type": "application/json"
@@ -53,8 +55,8 @@ let monitor = (cases) => {
             let args = {
                 data: {
                     type: "object",
-                    objectID: "5a53549dd1e30700462426d8",
-                    objectowner: "cheevarit"
+                    objectID: options.param,
+                    objectowner: options.owner
 
                 },
                 headers: {
@@ -76,7 +78,7 @@ let monitor = (cases) => {
             let args = {
                 data: {
                     type: "globalobject",
-                    objectID: "5a53549dd1e30700462426d8"
+                    objectID: options.param
                 },
                 headers: {
                     "Content-Type": "application/json"
