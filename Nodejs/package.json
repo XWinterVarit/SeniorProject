@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "async-lock": "^1.1.0",
     "body-parser": "~1.17.1",
     "chalk": "^2.1.0",
     "command-line-args": "^4.0.7",
