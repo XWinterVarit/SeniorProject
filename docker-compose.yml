@@ -29,7 +29,7 @@ services:
     volumes:
       - SeniorProject_MongoDB_Data:/data/db
     ports:
-      - 27017:27017
+      - 57017:57017
     command: bash
     tty: true
 

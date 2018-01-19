@@ -1,0 +1,1 @@
+open -a iTerm.app OSX_miniscript1.sh
