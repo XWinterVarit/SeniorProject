@@ -35,3 +35,5 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 module.exports.GlobalActiveUser = new userController.GlobalActiveUserClass()
 
 module.exports.GlobalRemoteDesktopOBJ = new remoteDesktopOBJController.Group_RemoteDesktop()
+
+module.exports.GlobalActiveWorld = new worldController.GlobalActiveWorldClass()

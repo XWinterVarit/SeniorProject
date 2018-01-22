@@ -57,6 +57,13 @@ router.get('/monitor', (req, res, next) => {
     globalmemoryController.GlobalActiveUser.monitor_activeuser(res)
     //res.end()
 })
+router.get('/monitorWorldGlobal', (req, res, next) => {
+    globalmemoryController.GlobalActiveWorld.monitorGlobalWorld(res)
+})
+router.post('/monWorld', async (req, res, next) => {
+    await globalmemoryController.GlobalActiveWorld.Monitor(req, res)
+})
+
 
 router.post('/seeRemote', async (req, res, next) => {
     console.log('++++++++++++++++++++++++++++++++++++++')
@@ -106,23 +113,14 @@ router.post('/addRemoteObject', async (req, res, next) => {
 
 
 
-router.post('/pushRecei', async (req, res, next) => {
-    remoteDesktopOBJController. remoteP2P1.Push_Receiver("B")
-    /*
-    remoteP2P1.Push_Receiver("C")
-    remoteP2P1.Push_Receiver("D")
-    remoteP2P1.Push_Receiver("E")
-    remoteP2P1.Push_Receiver("F")
-    remoteP2P1.Push_Receiver("G")
-    remoteP2P1.Push_Receiver("H")
-    remoteP2P1.Push_Receiver("I")
-    */
+
+router.post('/isMember', async (req, res, next) => {
+    await worldController.WorldMethods.isMember(req.body.name, req.body.worldID)
     res.end()
 })
-router.post('/printDeli', (req, res, next) => {
-    //remoteP2P1.print_Deliver()
-    res.end()
-})
+
+
+
 router.post('/tmp', (req, res, next) => {
     let remoteobj = globalmemoryController.GlobalRemoteDesktopOBJ
     /*

@@ -7,6 +7,8 @@
 
 const chalk = require('chalk')
 const HashArray = require('hasharray')
+const AsyncLock = require('async-lock')
+const CircularJSON = require('circular-json')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -31,8 +33,9 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 //==================================================================================================
 //==================================================================================================
 class One_Scheduler_RemoteDesktopP2P {
-    constructor (persisted_id) {
+    constructor (persisted_id, objectowner) {
 
+        this.objectowner = objectowner
         this.persisted_id = persisted_id
 
         this.setofDeliver = []
@@ -48,7 +51,9 @@ class One_Scheduler_RemoteDesktopP2P {
 
         this.calculateSchedule = null
         this.active = true
-        this.calculateIntervalTime = 2000 // millisec
+        this.calculateIntervalTime = 5000 // millisec
+
+        this.lock_activeMembers = new AsyncLock({maxPending: 1000})
     }
     removeActiveMember (username) {
         console.log('------------------------------------At Remote OBJ : Receive remove message ')
@@ -67,17 +72,16 @@ class One_Scheduler_RemoteDesktopP2P {
     forceChangeActiveMember () {
         this.changed = true
     }
-    CallActiveMember (username) {
+    async CallActiveMember (username) {
         console.log('------------------------------------At Remote OBJ : Receive call message ')
         console.log()
-
-
 
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
         let currentMember = this.activeMembers.get(username)
 
         if (!currentMember) {
-            let newuser = {name: username, weight: 0, sentto: [], userpointer: globalmemoryController.GlobalActiveUser.callUsersV2(username)}
+            let userpointer = await globalmemoryController.GlobalActiveUser.callUsersV2(username)
+            let newuser = {name: username, weight: 0, sentto: [], userpointer: userpointer}
             this.activeMembers.set(username, newuser)
             //this.Debug_activeMembers.push(newuser)
             this.changed = true
@@ -114,14 +118,16 @@ class One_Scheduler_RemoteDesktopP2P {
             }
         }
     }
+
     monitorActiveMember (res) {
         let messages = "RemoteDesktopP2PObj Scheduler Active Member . Object Persisted ID : " + this.persisted_id + "\n" +
             "----------------------------------------------------------------------------------\n"
         for (let i of this.activeMembers) {
-            messages += JSON.stringify(i, null, 4) + "\n"
+            messages += i[1].name + " weight : " + i[1].weight
         }
         res.send(messages)
     }
+
     monitorObject (res) {
         let messages = "RemoteDesktopP2PObj Scheduler Status . Object Persisted ID : " + this.persisted_id + "\n" +
             "----------------------------------------------------------------------------------\n"
@@ -134,20 +140,20 @@ class One_Scheduler_RemoteDesktopP2P {
         }
         res.send(messages)
     }
+
     start_Calculation_Scheduling () {
-        if (this.active === false) {
-            this.active = true
-            this.calculateSchedule = setInterval(
-                () => {
-                    if (this.changed === true) {
-                        this.ReCalculate()
-                        this.changed = false
-                    }
-                }, this.calculateIntervalTime
-            )
-        } else {
-            console.log("already schedule")
-        }
+            if (this.active !== false) {
+                this.calculateSchedule = setInterval(
+                    () => {
+                        if (this.changed === true) {
+                            this.ReCalculate()
+                            this.changed = false
+                        } else {
+                            console.log("this object has not been changed")
+                        }
+                    }, this.calculateIntervalTime
+                )
+            }
     }
 
     stop_Calculation_Scheduling () {
@@ -161,35 +167,33 @@ class One_Scheduler_RemoteDesktopP2P {
     }
 
     ReCalculate () {
-
-
-
-        if (this.read_lock === false) {
-            this.read_lock = true
-
-            for (let i of this.setofDeliver) {
-                this.setofDeliver.push(i)
+            console.log("Recalculating..")
+            this.clearDeliRecei()
+            for (let i of this.activeMembers) {
+                //console.log(`show objectowner name : ${this.objectowner}`)
+                //console.log("active mem : " + JSON.stringify(i[1].name))
+                i[1].sentto = []
+                i[1].weight = 0
+                if (i[1].name !== this.objectowner) {
+                    this.setofReceiver.push(i[1])
+                } else {
+                    this.setofDeliver.push(i[1])
+                }
             }
-            this.Distribute_to_Receiver()
-            this.print_Deliver()
-            this.read_lock = false
-        } else {
-            console.log("there is other operation working")
-        }
+            if (this.setofDeliver.length !== 0) {
+                this.Distribute_to_Receiver()
+                this.print_Deliver()
+            } else {
+                console.log("owner object is not active")
+            }
+
     }
 
     clearDeliRecei () {
-        if (this.read_lock === true) {
-            console.log("there is other operation working")
-        }
-        this.read_lock = true
-
         this.setofDeliver = []
         this.setofFulledDeliver = []
         this.setofReceiver = []
         this.tmpDeliver = []
-
-        this.read_lock = false
     }
 
     Push_Deliver (membername) {
@@ -203,7 +207,7 @@ class One_Scheduler_RemoteDesktopP2P {
     Distribute_to_Receiver () {
         let iterations = 0
         let currentallweight = this.maximumDelivingPerNode
-        while (this.setofReceiver.length !== 0) {
+        while (this.setofReceiver.length !== 0 && iterations <= 50) {
             iterations++
             console.log("iteration : " + iterations)
             if (currentallweight <= 0) {
@@ -218,7 +222,8 @@ class One_Scheduler_RemoteDesktopP2P {
             }
 
             for (let currentdeliver of this.setofDeliver) {
-                //console.log("currentdeliver " + JSON.stringify(currentdeliver, null, 4))
+                //console.log('*************')
+                //console.log(`currentdeliver : ${currentdeliver.name}  weight : ${currentdeliver.weight} sentto : ${currentdeliver.sentto}`)
 
                 if (this.setofReceiver.length === 0) {
                     break
@@ -239,13 +244,22 @@ class One_Scheduler_RemoteDesktopP2P {
         //console.log(this.setofDeliver)
         console.log("printing set of Deliver")
         for (let i of this.setofDeliver) {
-            console.log(i)
+            console.log(i.name + " weight : " + i.weight + " sent to :  ")
+            for (let sentdest of i.sentto) {
+                console.log("      " + sentdest.name)
+            }
         }
         for (let i of this.setofFulledDeliver) {
-            console.log(i)
+            console.log(i.name + " weight : " + i.weight + " sent to :  ")
+            for (let sentdest of i.sentto) {
+                console.log("      " + sentdest.name)
+            }
         }
         for (let i of this.tmpDeliver) {
-            console.log(i)
+            console.log(i.name + " weight : " + i.weight + " sent to :  ")
+            for (let sentdest of i.sentto) {
+                console.log("      " + sentdest.name)
+            }
         }
     }
     print_Receiver () {
@@ -308,7 +322,7 @@ class Group_RemoteDesktop  {
                 )
             })
             if (validation && outputdocs) {
-                let OneObject = new One_Scheduler_RemoteDesktopP2P(id)
+                let OneObject = new One_Scheduler_RemoteDesktopP2P(id, objectowner)
                 this.RemoteDesktopP2PScheduler.add({id: id, data: OneObject})
                 this.Debug_RemoteDesktopP2PScheduler.push(OneObject)
                 return {data:OneObject}
@@ -323,7 +337,7 @@ class Group_RemoteDesktop  {
             console.log("object not found in database")
             return null
         }
-
+        currentObject.data.start_Calculation_Scheduling()
         //console.log(currentObject.data)
         console.log("passing remote")
         return currentObject.data
@@ -367,6 +381,47 @@ class Group_RemoteDesktop  {
     }
 }
 
+/***
+ * To create new remote desktop
+ * @param req
+ * @param req.body.ownername - owner name
+ * @param req.body.objectname
+ * @param req.body.vpath - virtual path
+ */
+class RemoteDesktopMethodClass {
+    static async createRemoteDesktopObject (req, res) {
+        const collection = mongotools.db.collection('world')
+        let validation = true
+        await new Promise(resolve => {
 
+            collection.updateOne(
+
+                {name: req.body.ownername},
+
+                {$push :
+                        {
+                            "clouddrive.remotedobj": {
+                                _id: new ObjectID(),
+                                name: req.body.objectname,
+                                virtualpath: req.body.vpath
+                            }
+                        }
+                },
+
+                (err, response) => {
+                    if (err) {
+                        console.log("Error " + err)
+                    } else {
+                        console.log(response.result)
+                    }
+                    return resolve()
+                }
+            )
+        })
+        res.end()
+
+    }
+}
 module.exports.One_Scheduler_RemoteDesktopP2P = One_Scheduler_RemoteDesktopP2P
 module.exports.Group_RemoteDesktop = Group_RemoteDesktop
+module.exports.RemoteDesktopMethodClass = RemoteDesktopMethodClass

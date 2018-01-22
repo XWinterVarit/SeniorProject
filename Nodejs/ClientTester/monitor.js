@@ -95,6 +95,52 @@ let monitor = (cases) => {
             )
         }
             break
+        case 5: {
+            console.log("calls")
+            let args = {
+                data: {
+                    type: "globalobject",
+                    worldID: options.param
+                },
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+            console.log("calls")
+            setInterval(
+                () => {
+                    client.post("http://localhost:80/monWorld", args, (data, response) => {
+                        term.clear()
+                        term.green(data.toString())
+                    })
+                }, 2000
+            )
+        }
+            break
+        case 6: {
+            console.log("calls")
+            let args = {
+                data: {
+                    type: "activemember",
+                    worldID: options.param
+                },
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+            console.log("calls")
+            setInterval(
+                () => {
+                    client.post("http://localhost:80/monWorld", args, (data, response) => {
+                        term.clear()
+                        term.green(data.toString())
+                    })
+                }, 2000
+            )
+        }
+            break
+
+
     }
 }
 console.log("starting")
