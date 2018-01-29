@@ -1,3 +1,5 @@
+
+
 const stun = require('stun')
 
 const { STUN_BINDING_REQUEST, STUN_ATTR_XOR_MAPPED_ADDRESS } = stun.constants
@@ -13,3 +15,6 @@ server.once('bindingResponse', stunMsg => {
 })
 
 server.send(request, 19302, 'stun.l.google.com')
+
+
+

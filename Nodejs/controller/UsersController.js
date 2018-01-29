@@ -117,8 +117,10 @@ class OneActiveUserClass {
         } else {
             console.log("ip changed")
             this.ipaddr = ip
-            let currentObject = await globalmemoryController.GlobalRemoteDesktopOBJ.get_messages({objectID: this.active_at_objectID, objectowner: this.objectowner})
-            currentObject.forceChangeActiveMember()
+            let currentObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: this.active_at_objectID, objectowner: this.objectowner})
+            if (currentObject) {
+                currentObject.forceChangeActiveMember()
+            }
         }
     }
 
@@ -129,8 +131,10 @@ class OneActiveUserClass {
         } else {
             console.log("port change")
             this.port = port
-            let currentObject = await globalmemoryController.GlobalRemoteDesktopOBJ.get_messages({objectID: this.active_at_objectID, objectowner: this.objectowner})
-            currentObject.forceChangeActiveMember()
+            let currentObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: this.active_at_objectID, objectowner: this.objectowner})
+            if (currentObject) {
+                currentObject.forceChangeActiveMember()
+            }
         }
     }
 
@@ -411,6 +415,7 @@ class UserMethods {
         }
         res.end()
     }
+
 }
 
 module.exports.OneActiveUserClass = OneActiveUserClass

@@ -111,16 +111,35 @@ router.post('/addRemoteObject', async (req, res, next) => {
     res.end()
 })
 
-
-
+router.post('/addObjectLinks', async (req, res, next) => {
+    await worldController.WorldMethods.addObjectLink(req.body.objid, req.body.worldid, req.body.ownername, {name: req.body.name, positionX: req.body.positionX, positionY: req.body.positionY})
+    res.end()
+})
+router.post('/returnall_objectlink', async (req, res, next) => {
+    await worldController.WorldMethods.returnall_objectlink(req.body.worldid)
+    res.end()
+})
 
 router.post('/isMember', async (req, res, next) => {
     await worldController.WorldMethods.isMember(req.body.name, req.body.worldID)
     res.end()
 })
+router.get('/loadAllObj', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    await currentWorld.loadAllObjectLink()
+    res.end()
+})
 
+router.post('/saveObjLink', async (req, res, next) => {
+    await worldController.WorldMethods.saveUpdateObjectLink(req.body.worldID, req.body.objlinkID,{positionX:req.body.positionX, positionY:req.body.positionY})
+    res.end()
+})
 
-
+router.post('/getActiveMem', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    currentWorld.signalBroadcast()
+    res.end()
+})
 router.post('/tmp', (req, res, next) => {
     let remoteobj = globalmemoryController.GlobalRemoteDesktopOBJ
     /*

@@ -35,6 +35,8 @@ let async_setInterval = (syncfunc,intervaltime) => {
 
 let frames = []
 
+
+
 let test = async () => {
 
     for (let iteration = 0; iteration < 200; iteration++) {

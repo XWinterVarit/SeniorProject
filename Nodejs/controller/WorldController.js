@@ -7,6 +7,7 @@
 
 const chalk = require('chalk')
 const HashArray = require('hasharray')
+const Client = require('node-rest-client').Client
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -32,9 +33,11 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 //==================================================================================================
 
 class OneObjectLinks {
-    constructor (persistedID, objectOwner) {
-        this.persistedID = persistedID
-        this.objectOwner = objectOwner
+    constructor (objectlink_persistedID, object_persistedID, owner_persistedID) {
+        this.persistedID = objectlink_persistedID
+        this.object_persistedID = object_persistedID
+        this.owner_persistedID = owner_persistedID
+        this.owner_name = ""
         this.name = ""
         this.positionX = 0
         this.positionY = 0
@@ -46,6 +49,16 @@ class OneObjectLinks {
     changeName (newName) {
         this.name = newName
     }
+    changeOwnerName (newName) {
+        this.owner_name = newName
+    }
+}
+
+class World_Events_Stamp {
+    constructor () {
+        this.eventname = ""
+
+    }
 }
 
 class OneActiveWorldClass {
@@ -55,86 +68,51 @@ class OneActiveWorldClass {
         this.ObjectLinks = new Map()
         this.activeMembers = new Map()
         this.changed = false
+
+        this.BroadcastErrorEvents = []
     }
-    async addnewObjectLink (object_persistedID, world_persistedID, objectOwner_name, optional) {
-        let newObjectLink = new OneObjectLinks(object_persistedID, objectOwner_name)
-        if (optional.name) {
-            newObjectLink.changeName(optional.name)
-        }
-        if (optional.positionX && optional.positionY) {
-            newObjectLink.changePosition(optional.positionX, optional.positionY)
-        }
 
-        let objectOwnerID = ""
-
-        const world_collection = mongotools.db.collection('worlds')
-        const user_collection = mongotools.db.collection('users')
-        let validation = true
-
-        await new Promise(resolve => {
-
-            user_collection.findOne(
-
-                {name: objectOwner_name},
-
-                {_id: 1},
-
-                (err, response) => {
-                    if (err) {
-                        console.log("error " + err)
-                        validation = false
-                    } else if (response) {
-                        console.log(response)
-                        objectOwnerID = response._id
-                    } else {
-                        console.log("error response not found")
-                        validation = false
-                    }
-                    return resolve()
-                }
-
-            )
-
-        })
-
-        await new Promise(resolve => {
-
-            world_collection.updateOne(
-
-                {_id: world_persistedID},
-
-                {$push :
-                    {
-                        "objectlinks": {
-                            owner_name: objectOwner_name,
-                            owner_persisted_id: objectOwnerID,
-                            object_name: optional.name ? optional.name : "",
-                            object_persisted_id: object_persistedID,
-                            positionX: optional.positionX ? optional.positionX : "",
-                            positionY: optional.positionY ? optional.positionY : ""
-                        }
-                    }
-                },
-
-                (err, response) => {
-                    if (err) {
-                        console.log("Error " + err)
-                        validation = false
-                    } else if (response) {
-                        console.log(response.result)
-                    } else {
-                        console.log("error response not found")
-                        validation = false
-                    }
-                    return resolve()
-                }
-
-            )
-
-        })
-
-        this.ObjectLinks.set(world_persistedID, newObjectLink)
+    getObjectLinkReference (object_persistedID) {
+        return this.ObjectLinks.get(object_persistedID)[1]
     }
+
+    async loadAllObjectLink () {
+        let allobj = await WorldMethods.returnall_objectlink(this.persistedID)
+        for (let i of allobj.objectlinks) {
+            //console.log(i)
+            await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY)
+        }
+        console.log(this.ObjectLinks)
+
+    }
+
+
+    async saveAllObjectLink () {
+        for (let i of this.ObjectLinks) {
+            WorldMethods.saveUpdateObjectLink(this.persistedID, i._id, {positionX:i.positionX, positionY:i.positionY})
+        }
+    }
+    async addnewObjectLink (objectlink_persistedID ,object_persistedID, owner_persistedID, owner_name, object_name, positionX, positionY, optional) {
+
+        console.log("links persistedID " + objectlink_persistedID)
+        console.log("delete test : " + this.ObjectLinks.delete(String(objectlink_persistedID)))
+
+        let newObjectLink = new OneObjectLinks(objectlink_persistedID,object_persistedID, owner_persistedID)
+        if (object_name) {
+            newObjectLink.changeName(object_name)
+        }
+        if (owner_name) {
+            newObjectLink.changeOwnerName(owner_name)
+        }
+        if (positionX && positionY) {
+            newObjectLink.changePosition(positionX, positionY)
+        }
+        this.ObjectLinks.set(String(objectlink_persistedID), newObjectLink)
+
+    }
+
+
+
     removeObjectLink (persistedID, optional) {
 
     }
@@ -191,8 +169,29 @@ class OneActiveWorldClass {
         res.end()
     }
 
-    async ReloadAllObjectLink () {
+    signalBroadcast (data) {
+        console.log("show active member")
+        //console.log(this.activeMembers)
 
+        for (let i of this.activeMembers) {
+            console.log("username : " + i[0])
+            console.log("ip : "+i[1].data.ipaddr)
+            console.log("port : "+i[1].data.port)
+            //this.signalUnicast(i[1].data.ipaddr, i[1].data.port, {})
+        }
+
+    }
+
+    signalUnicast (ip, port, data) {
+        let args = {
+            data: data,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+        client.post("http://"+ip+":"+port+"/action", args, (data, response) => {
+
+        })
     }
 }
 class GlobalActiveWorldClass {
@@ -242,6 +241,7 @@ class GlobalActiveWorldClass {
             }
         }
     }
+
 
     async getMessage () {
 
@@ -510,7 +510,155 @@ class WorldMethods {
 
     }
 
+    static async addObjectLink (object_persistedID, world_persistedID, objectOwner_name, optional) {
+        const world_collection = mongotools.db.collection('worlds')
+        const user_collection = mongotools.db.collection('users')
+        let validation = true
+        let objectOwnerID = ""
+        if (validation) {
+            await new Promise(resolve => {
 
+                user_collection.findOne(
+
+                    {name: objectOwner_name, "clouddrive.remotedobj._id": safeObjectId(object_persistedID)},
+
+                    {_id: 1},
+
+                    (err, response) => {
+                        if (err) {
+                            console.log("error " + err)
+                            validation = false
+                        } else if (response) {
+                            console.log(response)
+                            objectOwnerID = response._id
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+
+                )
+
+            })
+        }
+        //console.log("world id : " + world_persistedID)
+        if (validation) {
+            await new Promise(resolve => {
+
+                world_collection.updateOne(
+
+                    {_id: safeObjectId(world_persistedID)},
+
+                    {$push :
+                            {
+                                "objectlinks": {
+                                    _id: new ObjectID(),
+                                    owner_name: objectOwner_name,
+                                    owner_persisted_id: objectOwnerID,
+                                    object_name: optional.name ? optional.name : "",
+                                    object_persisted_id: object_persistedID,
+                                    positionX: optional.positionX ? optional.positionX : "",
+                                    positionY: optional.positionY ? optional.positionY : ""
+                                }
+                            }
+                    },
+
+                    (err, response) => {
+                        if (err) {
+                            console.log("Error " + err)
+                            validation = false
+                        } else if (response) {
+                            console.log(response.result)
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+
+                )
+
+            })
+
+        }
+
+    }
+
+    static async returnall_objectlink (world_persistedID) {
+        const collection = mongotools.db.collection('worlds')
+        let validation = true
+        let outputdocs = null;
+        await new Promise(resolve => {
+            collection.findOne(
+
+                {'_id': safeObjectId(world_persistedID)},
+
+                {objectlinks: 1},
+
+                (err, docs) => {
+                    if (err) {
+                        console.log('database error')
+                        validation = false
+                    } else if (docs) {
+                        console.log("found world in database")
+                        outputdocs = docs
+                        //console.log(docs)
+                    } else {
+                        console.log('data not found in record')
+                        validation = false
+                    }
+                    return resolve()
+                }
+            )
+        })
+        return outputdocs
+    }
+
+    static async saveUpdateObjectLink (world_persistedID, objectlink_persistedID, updatelist) {
+        const collection = mongotools.db.collection('worlds')
+        let validation = true
+
+        let setobject = {}
+        if (updatelist) {
+            if (updatelist.owner_name && updatelist.owner_persisted_id) {
+                setobject["objectlinks.$.owner_name"] = updatelist.owner_name
+                setobject["objectlinks.$.owner_persisted_id"] = updatelist.owner_persisted_id
+            }
+            if (updatelist.positionX || updatelist.positionY) {
+                setobject["objectlinks.$.positionX"] = Number(updatelist.positionX)
+                setobject["objectlinks.$.positionY"] = Number(updatelist.positionY)
+            }
+        }
+        console.log("show setobject ")
+        console.log(setobject)
+
+
+        await new Promise(resolve => {
+            collection.findOneAndUpdate(
+
+                {'_id': safeObjectId(world_persistedID), 'objectlinks._id': safeObjectId(objectlink_persistedID)},
+
+                {$set : setobject},
+
+                (err, docs) => {
+                    if (err) {
+                        console.log('database error')
+                        validation = false
+                    } else if (docs) {
+                        console.log("found world in database")
+                        //outputdocs = docs
+                        console.log(docs)
+                    } else {
+                        console.log('data not found in record')
+                        validation = false
+                    }
+                    return resolve()
+                }
+            )
+        })
+
+    }
 
     static async isMember (userName ,world_persistedID) {
         const collection = mongotools.db.collection('worlds')
@@ -548,6 +696,7 @@ class WorldMethods {
         }
         return validation
     }
+
 
     /**
      * Create new world
