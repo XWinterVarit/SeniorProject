@@ -14,6 +14,7 @@ const globalConfigs = require('../config/GlobalConfigs')
 ///////////////////////From Other Controllers////////////////////////
 
 const toolsController = require(globalConfigs.mpath1.toolsController)
+const messagesController = require(globalConfigs.mpath1.messagesController)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
@@ -108,12 +109,29 @@ class session_Class {
         this.activeMember = new Map()
         this.objectLink = new Map()
 
+        this.heartbeatScheduler = null
+
         this.currentMessageTransactionGet = 0
         this.currentMessageTransactionSent = 0
 
         this.worldsizeX = 15
         this.worldsizeY = 40
     }
+
+    HEARTBEAT_signal_start () {
+        if (this.heartbeatScheduler) {
+            console.log("Heartbeat signal already started")
+        } else {
+            console.log("Starting heartbeat")
+            this.heartbeatScheduler// = setInterval()
+        }
+    }
+    HEARTBEAT_signal_stop () {
+
+    }
+
+
+
     getMatrixInfo () {
         this.worldmatrix.getInfo()
     }
@@ -136,9 +154,9 @@ class session_Class {
 
 
     setPosition_inMatrix (posX, posY, objectReference) {
-        console.log("show object reference " + objectReference)
+        //console.log("show object reference " + objectReference)
         this.worldmatrix.set(posX, posY, objectReference)
-        console.log("show element " + this.worldmatrix.get([posX, posY]))
+        //console.log("show element " + this.worldmatrix.get([posX, posY]))
     }
     getData_inMatrix (posX, posY) {
         return this.worldmatrix.get(posX, posY)
@@ -154,14 +172,20 @@ class session_Class {
 
 
     ACTION_changeObjectPosition (objectReference,newX, newY) {
+        if (this.getData_inMatrix(newX, newY)) {
+            console.log("destination position has already allocated")
+            return false
+        }
         let oldX = objectReference.positionX
         let oldY = objectReference.positionY
         this.removePosition_inMatrix(oldX, oldY)
         objectReference.positionX = newX
         objectReference.positionY = newY
         this.setPosition_inMatrix(newX, newY, objectReference)
+        return true
     }
     ACTION_removeObjectLink (persistedID) {
+        console.log("Action remove object")
         let currentObjectLink = this.objectLink.get(persistedID)
         if (currentObjectLink) {
             let objectpositionX = currentObjectLink.positionX
@@ -184,9 +208,30 @@ class session_Class {
         }
     }
     ACTION_refresh () {
-        this.activeMember = null
-        this.objectLink = null
+        this.activeMember = new Map()
+        this.objectLink = new Map()
+        this.worldmatrix = new toolsController.HashMatrix()
     }
+
+
+
+    CONTROL_MoveToPosition (posX, posY) {
+        let ownuser = this.getOwnMember()
+        if (ownuser) {
+            if (this.ACTION_changeObjectPosition(ownuser, posX, posY)) {
+                messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.moveUserPosition(ownuser,posX, posY))
+            } else {
+                console.log("move error")
+            }
+        } else {
+            console.log("your user not found in memory or database")
+        }
+    }
+
+    getOwnMember () {
+        return this.activeMember.get(globalConfigs.ClientInfo.currentUser_name)
+    }
+
 
     PRINT_activeMembers () {
         let messages = ""

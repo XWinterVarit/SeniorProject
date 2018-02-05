@@ -8,6 +8,9 @@
 const chalk = require('chalk')
 const ndarray = require('ndarray')
 const MatrixHash = require('matrix-hash')
+const AsyncLock = require('async-lock')
+const Client = require('node-rest-client').Client
+let client = new Client()
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -18,7 +21,6 @@ const sessionController = require(globalConfigs.mpath1.sessionController)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
-
 
 //==================================================================================================
 //==================================================================================================
@@ -32,13 +34,89 @@ let incomingMessageTest = {
             {type: "member", name: "A", persistedID: "2", positionX: 21, positionY: 21, standby: false, active: true, IP : "127.0.0.1", PORT : "50000"},
             {type: "member", name: "B", persistedID: "3", positionX: 22, positionY: 22, standby: false, active: true, IP : "127.0.0.1", PORT : "50000"},
             {type: "object", subtype: "remote", persistedID: "10",owner_name: "cheevarit", positionX: 23, positionY: 23},
-            {type: "object", subtype: "remote",persistedID: "11",owner_name: "david", positionX: 24, positionY: 24},
-            {type: "object", subtype: "dummy",persistedID: "12",owner_name: "david", positionX: 25, positionY: 25},
+            {type: "object", subtype: "remote", persistedID: "11",owner_name: "david", positionX: 24, positionY: 24},
+            {type: "object", subtype: "dummy", persistedID: "12",owner_name: "david", positionX: 25, positionY: 25},
         ]
+    }
+}
+class http_in_queue {
+    constructor() {
+        this.queue = []
+        this.worksSize = 0
+        this.LOCK_queue = new AsyncLock()
+        this.frozen = false
+    }
+    ADD_queue (req) {
+        this.LOCK_queue.acquire('key', () => {
+            this.queue.push(req)
+            if (this.worksSize === 0) {
+                this.worksSize++
+                this.DO_queue()
+            } else {
+                this.worksSize++
+            }
+        }).catch(error=>{
+            console.log("Lock error : " + error)
+        })
+    }
+    async REDUCE_queue () {
+        await this.LOCK_queue.acquire('key', ()=>{
+            this.worksSize--
+        }).catch(error=>{
+            console.log("Lock error : " + error)
+        })
+    }
+    async DO_queue () {
+        if (this.frozen) {
+            return
+        }
+        let onequeue
+        await this.LOCK_queue.acquire('key', ()=>{
+            onequeue = this.queue.shift()
+        })
+        if (onequeue) {
+            console.log("start queue")
+            messagesGlobalMethods.httpInput(onequeue)
+            await this.REDUCE_queue()
+            this.DO_queue()
+        } else {
+            console.log("queue is now empty")
+        }
+    }
+    PRINT_allqueue () {
+        for (let i of this.queue) {
+            console.log("show queue")
+            console.log(JSON.stringify(i, null, 4))
+        }
+    }
+    DEBUG_frozenqueue () {
+        this.frozen = true
+    }
+    DEBUG_continuequeue () {
+        this.frozen = false
+        this.DO_queue()
+    }
+}
+
+let requestQueue = new http_in_queue()
+
+class messagesTemplates {
+    static moveUserPosition (userRef, posX, posY) {
+        return {
+            type: "mov",
+            name: userRef.name,
+            positionX: posX,
+            positionY: posY
+        }
     }
 }
 
 class messagesGlobalMethods {
+    static httpInputQueue (req) {
+        requestQueue.ADD_queue(req)
+        //requestQueue.DEBUG_frozenqueue()
+        //requestQueue.PRINT_allqueue()
+    }
     static httpInput (req) {
         switch (req.body.type) {
             case "update":
@@ -53,6 +131,22 @@ class messagesGlobalMethods {
         }
     }
 
+    static httpOutput_POST_SERVER (path, data) {
+        let args = {
+            data: data,
+            header: {
+                "Content-Type": "application/json"
+            }
+        }
+        client.post("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, args, (datareturn, response) => {
+            return datareturn
+        })
+    }
+    static httpOutput_GET_SERVER (path) {
+        client.get("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, (datareturn, response) => {
+            return datareturn
+        })
+    }
 
     static updateSession (lists) {
         console.log("start update")
@@ -93,7 +187,7 @@ class messagesGlobalMethods {
                     sessionController.globalSession.ACTION_removeActiveMember(i.name)
                     break
                 case "object":
-                    sessionController.globalSession.ACTION_removeActiveMember(i.persistedID)
+                    sessionController.globalSession.ACTION_removeObjectLink(i.persistedID)
                     break
             }
         }
@@ -123,3 +217,5 @@ class messagesGlobalMethods {
 }
 
 module.exports.messagesGlobalMethods = messagesGlobalMethods
+module.exports.requestQueue = requestQueue
+module.exports.messagesTemplates = messagesTemplates

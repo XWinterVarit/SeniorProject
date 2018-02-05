@@ -43,6 +43,9 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+process.on('uncaughtException', function(err) {
+    console.log('Caught exception: ' + err);
+});
 
 const PORT = 50000;
 const HOST = '127.0.0.1'

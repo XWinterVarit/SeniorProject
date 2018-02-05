@@ -43,3 +43,36 @@ module.exports.RequestFilter = (request, options) => {
     }
 
 }
+
+class HashMatrix {
+    constructor() {
+        this.matrix = new Map()
+        this.sizeX = 0
+        this.sizeY = 0
+    }
+    set(posX, posY, something) {
+        if (posX > this.sizeX - 1) {
+            this.sizeX = posX + 1
+        }
+        if (posY > this.sizeY - 1) {
+            this.sizeY = posY + 1
+        }
+        this.matrix.set(posX + "," + posY, something)
+    }
+    get(posX, posY) {
+        return this.matrix.get(posX+","+posY)
+    }
+
+    getInfo() {
+        console.log("matrix size X : " + this.sizeX + " Y : " + this.sizeY)
+    }
+    getSizeX(){
+        return this.sizeX
+    }
+    getSizeY() {
+        return this.sizeY
+    }
+
+}
+
+module.exports.HashMatrix = HashMatrix

@@ -67,10 +67,88 @@ class OneActiveWorldClass {
         this.persistedID = world_persistedID
         this.ObjectLinks = new Map()
         this.activeMembers = new Map()
+        this.activeMembers_additionInfo = new Map()
         this.changed = false
 
         this.BroadcastErrorEvents = []
+
+        this.worldmatrix = new toolController.HashMatrix()
+
+        this.memberinfo = class {
+            constructor(positionX, positionY){
+                this.positionX = positionX
+                this.positionY = positionY
+            }
+            changePosition(newX, newY) {
+                this.positionX = newX
+                this.positionY = newY
+            }
+        }
     }
+
+    getMatrixInfo () {
+        this.worldmatrix.getInfo()
+    }
+    setPosition_inMatrix (posX, posY, objectReference) {
+        //console.log("show object reference " + objectReference)
+        this.worldmatrix.set(posX, posY, objectReference)
+        //console.log("show element " + this.worldmatrix.get([posX, posY]))
+    }
+    getData_inMatrix (posX, posY) {
+        return this.worldmatrix.get(posX, posY)
+    }
+    removePosition_inMatrix (posX, posY) {
+        //console.log("remove position occured at posX " + posX + " posY " + posY)
+        //console.log("before remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
+        this.worldmatrix.set(posX, posY, null)
+        //console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
+    }
+
+    ACTION_changeObjectPosition (objectReference,newX, newY) {
+        if (this.getData_inMatrix(newX, newY)) {
+            console.log("destination position has already allocated")
+            return false
+        }
+        let oldX = objectReference.positionX
+        let oldY = objectReference.positionY
+        this.removePosition_inMatrix(oldX, oldY)
+        objectReference.positionX = newX
+        objectReference.positionY = newY
+        this.setPosition_inMatrix(newX, newY, objectReference)
+        return true
+    }
+    ACTION_removeObjectLink (persistedID) {
+        console.log("Action remove object")
+        let currentObjectLink = this.ObjectLinks.get(persistedID)
+        if (currentObjectLink) {
+            let objectpositionX = currentObjectLink.positionX
+            let objectpositionY = currentObjectLink.positionY
+            this.removePosition_inMatrix(objectpositionX, objectpositionY)
+            this.ObjectLinks.delete(persistedID)
+        } else {
+
+        }
+    }
+    ACTION_removeActiveMember (member_name) {
+        let currentActiveMember = this.activeMembers.get(member_name)
+        if (currentActiveMember) {
+            let activeMemberpositionX = currentActiveMember.positionX
+            let activeMemberpositionY = currentActiveMember.positionY
+            this.removePosition_inMatrix(activeMemberpositionX, activeMemberpositionY)
+            this.activeMembers.delete(member_name)
+        } else {
+
+        }
+    }
+
+
+
+
+
+
+
+
+
 
     getObjectLinkReference (object_persistedID) {
         return this.ObjectLinks.get(object_persistedID)[1]
@@ -147,6 +225,7 @@ class OneActiveWorldClass {
             let userpointer = await globalmemoryController.GlobalActiveUser.callUsersV2(username)
 
             this.activeMembers.set(username, userpointer)
+            this.activeMembers.set(username, new this.memberinfo(2,2))
             //this.Debug_activeMembers.push(newuser)
             this.changed = true
         } else {
@@ -168,6 +247,54 @@ class OneActiveWorldClass {
     monitorObject (res) {
         res.end()
     }
+
+    MONITOR_World () {
+        let messages = "**********************Session Monitoring************************\n"
+        messages += "world ID : " + this.persistedID + "\n"
+
+        messages += "Active Member : \n"
+        for (let i of this.activeMembers) {
+            let j = i[1]
+            messages += `{ name :${j.name} posX :${j.positionX} posY:${j.positionY} standby:${j.standby} IP:${j.IP} PORT:${j.PORT} } `
+        }
+        messages += "\n"
+        messages += "Active Object Link : \n"
+
+        for (let i of this.ObjectLinks) {
+            let j = i[1]
+            messages += `{ persistedID :${j.persistedID} owner_name :${j.owner_name} posX :${j.positionX} posY:${j.positionY} } `
+        }
+        messages += "\n"
+
+        messages += "-------------------------------------------------------------------\n"
+
+        for (let inY = 0; inY <= this.worldsizeX; inY++) {
+            for (let inX = 0; inX <= this.worldsizeY; inX++) {
+                //console.log("inX : " + inX + "  inY : " + inY)
+                let data = this.getData_inMatrix(inX, inY)
+                if (data){
+                    /*
+                    console.log("data" + JSON.stringify(data, null, 4))
+                    messages += "U "*/
+
+                    if (data.maintype === "member"){
+                        messages += "U "
+                    } else if (data.maintype === "object") {
+                        messages += "O "
+                    }
+
+                } else {
+                    messages += "* "
+                }
+            }
+            messages += "\n"
+        }
+
+        messages += "-------------------------------------------------------------------"
+        return messages
+    }
+
+
 
     signalBroadcast (data) {
         console.log("show active member")
@@ -507,6 +634,45 @@ class WorldMethods {
             })
         }
         res.end()
+
+    }
+
+    static async addMemberInfo (member_name, world_persistedID, optional) {
+        const world_collection = mongotools.db.collection('worlds')
+        const user_collection = mongotools.db.collection('users')
+        let validation = true
+        if (validation) {
+            await world_collection.updateOne(
+
+                {_id: safeObjectId(world_persistedID)},
+
+                {$push :
+                        {
+                            "memberinfo": {
+                                member_name: member_name,
+                                positionX: optional.positionX,
+                                positionY: optional.positionY
+                            }
+                        }
+                },
+
+                (err, response) => {
+                    if (err) {
+                        console.log("Error " + err)
+                        validation = false
+                    } else if (response) {
+                        console.log(response.result)
+                    } else {
+                        console.log("error response not found")
+                        validation = false
+                    }
+                }
+
+            )
+        }
+    }
+
+    static async removeMemberInfo (member_name, world_persistedID, optional) {
 
     }
 

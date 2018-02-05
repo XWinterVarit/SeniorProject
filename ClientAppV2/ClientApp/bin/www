@@ -8,11 +8,14 @@ var app = require('../app');
 var debug = require('debug')('clientapp:server');
 var http = require('http');
 
+
+let inputPORT = "50000"
+
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '50000');
+var port = normalizePort(process.env.PORT || inputPORT);
 app.set('port', port);
 
 /**

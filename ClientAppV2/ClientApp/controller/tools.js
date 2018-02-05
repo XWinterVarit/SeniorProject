@@ -164,6 +164,7 @@ class HashMatrix {
     get(posX, posY) {
         return this.matrix.get(posX+","+posY)
     }
+
     getInfo() {
         console.log("matrix size X : " + this.sizeX + " Y : " + this.sizeY)
     }

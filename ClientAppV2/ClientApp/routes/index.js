@@ -124,7 +124,7 @@ router.post('/callUser', (req, res, next) => {
         }
     }
 
-    messagesController.messagesGlobalMethods.httpInput(messages)
+    messagesController.messagesGlobalMethods.httpInputQueue(messages)
     res.end()
 })
 
@@ -140,16 +140,53 @@ router.post('/callObjectLink', (req, res, next) => {
     messagesController.messagesGlobalMethods.httpInput(messages)
     res.end()
 })
+router.post('/refreshObjectLink', (req, res, next) => {
+    let messages = {
+        body: {
+            type: "refresh",
+            lists: [
+                {type:"object" ,subtype: "object", owner_name: req.body.owner_name, persistedID: req.body.persistedID, positionX: req.body.positionX, positionY: req.body.positionY}
+            ]
+        }
+    }
+    messagesController.messagesGlobalMethods.httpInput(messages)
+    res.end()
 
+})
+router.post('/drainq', (req, res, next) => {
+    messagesController.requestQueue.DEBUG_continuequeue()
+    res.end()
+})
 router.post('/removeObjectLink', (req, res, next) => {
     let messages = {
         body: {
             type: "remove",
             lists: [
-
+                {type: "object", persistedID: req.body.persistedID}
             ]
         }
     }
+    messagesController.messagesGlobalMethods.httpInput(messages)
+    res.end()
 })
-router.get('/getSessionInfo')
+router.post('/removeMember', (req, res, next) => {
+    let messages = {
+        body: {
+            type: "remove",
+            lists: [
+                {type: "member", name: req.body.name}
+            ]
+        }
+    }
+    messagesController.messagesGlobalMethods.httpInput(messages)
+    res.end()
+})
+
+
+router.post('/moveUserPosition', (req, res, next) => {
+    sessionController.globalSession.CONTROL_MoveToPosition(req.body.positionX, req.body.positionY)
+    res.end()
+})
+
+
 module.exports = router;
