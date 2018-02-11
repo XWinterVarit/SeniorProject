@@ -8,6 +8,7 @@
 const chalk = require('chalk')
 const HashArray = require('hasharray')
 const Client = require('node-rest-client').Client
+const CircularJSON = require('circular-json')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -73,6 +74,9 @@ class OneActiveWorldClass {
         this.BroadcastErrorEvents = []
 
         this.worldmatrix = new toolController.HashMatrix()
+        this.worldsizeX = 15
+        this.worldsizeY = 40
+
 
         this.memberinfo = class {
             constructor(positionX, positionY){
@@ -84,7 +88,22 @@ class OneActiveWorldClass {
                 this.positionY = newY
             }
         }
+        this.OPTIONAL_TEMPLATE_callActiveUser = class {
+            constructor(positionX, positionY, DummySpace1, bypassposition){
+                this.positionX = positionX
+                this.positionY = positionY
+
+                this.bypassposition = bypassposition
+            }
+        }
     }
+
+
+    ////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////Matrix/////////////////////////////////
+    /////////////////////////////////Matrix/////////////////////////////////
+    /////////////////////////////////Matrix/////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
     getMatrixInfo () {
         this.worldmatrix.getInfo()
@@ -102,6 +121,9 @@ class OneActiveWorldClass {
         //console.log("before remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
         this.worldmatrix.set(posX, posY, null)
         //console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
+    }
+    randomSetPosition (objectReference) {
+
     }
 
     ACTION_changeObjectPosition (objectReference,newX, newY) {
@@ -129,31 +151,41 @@ class OneActiveWorldClass {
 
         }
     }
-    ACTION_removeActiveMember (member_name) {
-        let currentActiveMember = this.activeMembers.get(member_name)
-        if (currentActiveMember) {
-            let activeMemberpositionX = currentActiveMember.positionX
-            let activeMemberpositionY = currentActiveMember.positionY
-            this.removePosition_inMatrix(activeMemberpositionX, activeMemberpositionY)
-            this.activeMembers.delete(member_name)
-        } else {
 
-        }
+
+    ////////////////////////////////////////////////////////////////////////
+    /////////////////++++++++++++++++++++++++++++++++++++///////////////////
+    /////////////////++++++++++++++++++++++++++++++++++++///////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+
+
+    ////////////////////////////////////////////////////////////////////////
+    /////////////////////////Background Process/////////////////////////////
+    /////////////////////////Background Process/////////////////////////////
+    /////////////////////////Background Process/////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+
+    async BACKGROUDPROCESS_INTERVAL_SaveAll () {
+
+    }
+    async BACKGROUDPROCESS_INTERVAL_SaveallObjectLinks () {
+
+    }
+    async BACKGROUDPROCESS_INTERVAL_SaveallMemberInfo () {
+
     }
 
-
-
-
-
-
-
-
+    ////////////////////////////////////////////////////////////////////////
+    /////////////////++++++++++++++++++++++++++++++++++++///////////////////
+    /////////////////++++++++++++++++++++++++++++++++++++///////////////////
+    ////////////////////////////////////////////////////////////////////////
 
 
     getObjectLinkReference (object_persistedID) {
-        return this.ObjectLinks.get(object_persistedID)[1]
+        return this.ObjectLinks.get(object_persistedID)
     }
-
     async loadAllObjectLink () {
         let allobj = await WorldMethods.returnall_objectlink(this.persistedID)
         for (let i of allobj.objectlinks) {
@@ -164,12 +196,15 @@ class OneActiveWorldClass {
 
     }
 
-
-    async saveAllObjectLink () {
-        for (let i of this.ObjectLinks) {
-            WorldMethods.saveUpdateObjectLink(this.persistedID, i._id, {positionX:i.positionX, positionY:i.positionY})
+    async saveAllMemberInfo () {
+        for (let i of this.activeMembers) {
+            //console.log("print i")
+            //console.log(i[0])
+            //console.log(i[1].positionX + " " + i[1].positionY)
+            await WorldMethods.changeMemberInfo(i[0], this.persistedID, {positionX:i[1].positionX, positionY:i[1].positionY})
         }
     }
+
     async addnewObjectLink (objectlink_persistedID ,object_persistedID, owner_persistedID, owner_name, object_name, positionX, positionY, optional) {
 
         console.log("links persistedID " + objectlink_persistedID)
@@ -189,6 +224,12 @@ class OneActiveWorldClass {
 
     }
 
+    async saveAllObjectLink () {
+        for (let i of this.ObjectLinks) {
+            await WorldMethods.saveUpdateObjectLink(this.persistedID, i._id, {positionX:i.positionX, positionY:i.positionY})
+        }
+    }
+
 
 
     removeObjectLink (persistedID, optional) {
@@ -198,8 +239,12 @@ class OneActiveWorldClass {
     removeActiveMember (username) {
         console.log('------------------------------------At Remote OBJ : Receive remove message ')
         console.log()
-
-        if (this.activeMembers.delete(username)) {
+        let currentActiveMember = this.activeMembers.get(username)
+        if (currentActiveMember) {
+            //let activeMemberpositionX = currentActiveMember.positionX
+            //let activeMemberpositionY = currentActiveMember.positionY
+            //this.removePosition_inMatrix(activeMemberpositionX, activeMemberpositionY)
+            this.activeMembers.delete(username)
             this.changed = true
         } else {
             console.log("already not in this")
@@ -208,14 +253,44 @@ class OneActiveWorldClass {
     forceChangeActiveMember () {
         this.changed = true
     }
-    async callActiveMember (username) {
-        console.log('------------------------------------At Remote OBJ : Receive call message ')
-        console.log()
+
+
+    GETALL_ObjectLinks_MessageTemplated (previouslist) {
+        for (let i of this.ObjectLinks) {
+            previouslist.push({type: "object",subtype: i.subtype, owner_name: i.owner_name, persistedID: i.persistedID, positionX: i.positionX, positionY: i.positionY})
+        }
+    }
+    GETALL_ActiveMember_MessageTemplated (previouslist) {
+        for (let i of this.activeMembers) {
+            console.log('==============')
+            console.log(i[1].data.name)
+            let info = this.activeMembers_additionInfo.get(i[1].data.name)
+            previouslist.push({type: "member",name: i[1].data.name, persistedID: i[1].data.persisted_ID, positionX: info.positionX, positionY: info.positionY, standby: i[1].data.standby, active: true, IP : i[1].data.ipaddr, PORT : i[1].data.port})
+        }
+    }
+
+    async callObjectLink (persistedID, optional) {
+        let currentObject = this.ObjectLinks.get(persistedID)
+        if (currentObject) {
+            if (currentObject.positionX === optional.positionX && currentObject.positionY === optional.positionY) {
+                console.log("position not changed")
+            } else {
+                console.log("position changed")
+                currentObject.changePosition(optional.positionX, optional.positionY)
+            }
+        } else {
+            console.log("object is not in memory")
+        }
+    }
+
+    async callActiveMember (username, optional) {
+        console.log(chalk.blue("// call world active member //"))
 
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
 
-        if (!(await WorldMethods.isMember(username,this.persistedID))) {
-            console.log("this user is not a member")
+
+        if (!optional) {
+            console.log(chalk.red("require optional parameter"))
             return false
         }
 
@@ -224,14 +299,66 @@ class OneActiveWorldClass {
         if (!currentMember) {
             let userpointer = await globalmemoryController.GlobalActiveUser.callUsersV2(username)
 
+            if (!(await WorldMethods.isMember(username,this.persistedID))) {
+                console.log(chalk.red("this user is not a member"))
+                return false
+            }
+
             this.activeMembers.set(username, userpointer)
-            this.activeMembers.set(username, new this.memberinfo(2,2))
+            if (!optional.bypassposition) {
+                this.activeMembers_additionInfo.set(username, new this.memberinfo(optional.positionX,optional.positionY))
+                await WorldMethods.changeMemberInfo(username, this.persistedID, {positionX: optional.positionX, positionY: optional.positionY})
+            } else {
+                let loadinfo = WorldMethods.loadMemberInfo(this.persistedID, username)
+                if (loadinfo) {
+                    this.activeMembers_additionInfo.set(username, new this.memberinfo(loadinfo.positionX,loadinfo.positionY))
+                } else {
+                    console.log("strange error, no info data in database")
+                    return false
+                }
+            }
+            //this.setPosition_inMatrix(optional.positionX, optional.positionY, userpointer)
             //this.Debug_activeMembers.push(newuser)
             this.changed = true
         } else {
-            console.log("user already active")
+            console.log("user already active , getting info from : " + username)
+            console.log("*******************************************")
+            console.log("*******************************************")
+            console.log("*******************************************")
+            console.log("*******************************************")
+            console.log("*******************************************")
+            console.log("*******************************************")
+
+            let currentMemberInfo = this.activeMembers_additionInfo.get(username)
+            if (currentMemberInfo) {
+                console.log(chalk.red(JSON.stringify(currentMemberInfo, null, 4)))
+                if (currentMemberInfo.positionX === optional.positionX && currentMemberInfo.positionY === optional.positionY) {
+                    //this.ACTION_changeObjectPosition(currentMember, optional.positionX, optional.positionY)
+                    console.log("position not changed")
+                } else {
+                    console.log("position changed")
+                    currentMemberInfo.positionX = optional.positionX
+                    currentMemberInfo.positionY = optional.positionY
+                }
+            } else {
+                console.log("some strange error found")
+                await WorldMethods.changeMemberInfo(username, this.persistedID, {positionX: optional.positionX, positionY: optional.positionY})
+            }
         }
         return true
+    }
+
+    async INPUT_request_message (req) {
+        if (req.body.WO_type) {
+            switch (req.body.WO_type) {
+                case "mov":
+                    break
+                case "signal":
+                    break
+            }
+        } else {
+            console.log("no messages world support")
+        }
     }
 
     monitorActiveMember (res) {
@@ -248,6 +375,34 @@ class OneActiveWorldClass {
         res.end()
     }
 
+    TEMPTEST_printactivemember () {
+        console.log("++++++++++++++++++++++++++++++++++++++")
+        console.log("++++++++++++++++++++++++++++++++++++++")
+        console.log("++++++++++++++++++++++++++++++++++++++")
+        console.log("++++++++++++++++++++++++++++++++++++++")
+        console.log("++++++++++++++++++++++++++++++++++++++")
+
+        for (let i of this.activeMembers) {
+            //console.log(chalk.red(CircularJSON.stringify(i,null, 4)))
+            let j = i[1].data
+            console.log(chalk.yellow(j.persisted_id))
+            console.log(chalk.yellow(j.name))
+            console.log(chalk.yellow(j.ipaddr))
+            console.log(chalk.yellow(j.port))
+            console.log(chalk.yellow(j.active_at_world))
+            console.log(chalk.yellow(j.active_at_objectID))
+            console.log(chalk.yellow(j.objectowner))
+            console.log()
+        }
+    }
+
+    TEMPTEST_printobjectlink () {
+        for (let i of this.ObjectLinks) {
+            console.log(chalk.green(JSON.stringify(i, null, 4)))
+            let j = i[1]
+        }
+    }
+
     MONITOR_World () {
         let messages = "**********************Session Monitoring************************\n"
         messages += "world ID : " + this.persistedID + "\n"
@@ -255,7 +410,7 @@ class OneActiveWorldClass {
         messages += "Active Member : \n"
         for (let i of this.activeMembers) {
             let j = i[1]
-            messages += `{ name :${j.name} posX :${j.positionX} posY:${j.positionY} standby:${j.standby} IP:${j.IP} PORT:${j.PORT} } `
+            messages += `{ name :${i[0]} posX :${j.positionX} posY:${j.positionY} standby:${j.standby} IP:${j.IP} PORT:${j.PORT} } `
         }
         messages += "\n"
         messages += "Active Object Link : \n"
@@ -267,15 +422,13 @@ class OneActiveWorldClass {
         messages += "\n"
 
         messages += "-------------------------------------------------------------------\n"
-
+/*
         for (let inY = 0; inY <= this.worldsizeX; inY++) {
             for (let inX = 0; inX <= this.worldsizeY; inX++) {
                 //console.log("inX : " + inX + "  inY : " + inY)
                 let data = this.getData_inMatrix(inX, inY)
                 if (data){
-                    /*
-                    console.log("data" + JSON.stringify(data, null, 4))
-                    messages += "U "*/
+
 
                     if (data.maintype === "member"){
                         messages += "U "
@@ -291,6 +444,7 @@ class OneActiveWorldClass {
         }
 
         messages += "-------------------------------------------------------------------"
+        */
         return messages
     }
 
@@ -327,6 +481,7 @@ class GlobalActiveWorldClass {
         this.debugactiveWorld = []
     }
     async callWorld (persistedID) {
+        console.log(chalk.blue("// call world //"))
         let validation = true
         let currentWorld = this.activeWorld.get(persistedID)
         //console.log("show query world persisted ID : " + persistedID)
@@ -364,6 +519,7 @@ class GlobalActiveWorldClass {
                 let OneWorld = new OneActiveWorldClass(outputdocs._id, outputdocs.name)
                 this.activeWorld.add({id: outputdocs._id, data: OneWorld})
                 this.debugactiveWorld.push(OneWorld)
+                await OneWorld.loadAllObjectLink()
                 return {data: OneWorld}
             }
         }
@@ -425,101 +581,6 @@ class GlobalActiveWorldClass {
     }
 }
 
-class World {
-    constructor (name, persisted_id) {
-        this.name = name
-        this.persisted_id = persisted_id
-        this.activeMembers = new Map()
-        this.groupofMembers = new Map()
-        this.Objectlinks = new Map()
-        this.invitations = []
-    }
-    force_refresh_from_Persisted ()  {
-
-    }
-    force_refresh_to_Persisted () {
-
-    }
-
-    get_active_member () {
-        console.log("size: " + this.groupofMembers.size)
-        for (let [key, value] of this.activeMembers) {
-            console.log(key + " = " + JSON.stringify(value,null, 4))
-        }
-    }
-
-    set_member_active (membername) {
-        let currentmember = this.activeMembers.get(membername)
-        if (currentmember) {
-            if (currentmember.isActive) {
-                console.log("member already active")
-            } else {
-                currentmember.isActive = true
-            }
-        } else {
-            this.activeMembers.set(
-
-                membername,
-
-                {
-                    isActive: true,
-                    isStandby: false,
-                    mongoid: null,
-                    ipaddress: "192.168.1.1",
-                    port: null,
-                    positionx: 0,
-                    positiony: 0,
-                    peerworkload: [],
-                    peerworkloadweight: 0
-                }
-
-            )
-
-        }
-    }
-
-    set_member_nonactive (membername) {
-        let currentmember = this.activeMembers.get(membername)
-        if (currentmember) {
-            if (!currentmember.isActive) {
-                console.log("member already not active")
-            } else {
-                currentmember.isActive = false
-            }
-        } else {
-            console.log("member not active and not in the cache")
-        }
-    }
-
-    addUser(Username,GroupofMemberName) {
-        let currentgroup = this.groupofMembers.get(GroupofMemberName).members
-        currentgroup.push("cheevarit")
-        currentgroup.push("david")
-        currentgroup.push("sarah")
-        console.log(this.groupofMembers.get(GroupofMemberName))
-
-    }
-    addGroupofMember () {
-        //console.log("hello world")
-
-        this.groupofMembers.set('admin' ,{members: new Set()})
-        this.groupofMembers.set('standard', {members: new Set()})
-        this.getGroupofMemberInfo()
-
-        this.addUser("cheevarit","admin")
-
-    }
-    getGroupofMemberInfo () {
-        console.log("size: " + this.groupofMembers.size)
-        for (let [key, value] of this.groupofMembers) {
-            console.log(key + " = " + JSON.stringify(value,null, 4))
-        }
-    }
-
-
-
-
-}
 
 class WorldMethods {
 
@@ -634,41 +695,109 @@ class WorldMethods {
             })
         }
         res.end()
-
     }
 
-    static async addMemberInfo (member_name, world_persistedID, optional) {
+    static async loadMemberInfo (world_persistedID ,member_name) {
+        const world_collection = mongotools.db.collection('worlds')
+        let validation = true
+        let info = null
+        if (validation) {
+            await new Promise(resolve => {
+                world_collection.findOne(
+
+                    {"_id": safeObjectId(world_persistedID), "memberinfo.member_name": member_name},
+
+                    {"memberinfo.$":1},
+
+                    (err, response) => {
+                        if (err) {
+                            console.log("error " + err)
+                            validation = false
+                        } else if (response) {
+                            //console.log(response)
+                            info = response
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+            })
+            if (validation) {
+                return info.memberinfo[0]
+            } else {
+                return null
+            }
+        }
+
+    }
+    static async changeMemberInfo (member_name, world_persistedID, optional) {
         const world_collection = mongotools.db.collection('worlds')
         const user_collection = mongotools.db.collection('users')
         let validation = true
         if (validation) {
-            await world_collection.updateOne(
+            await new Promise(resolve => {
+                world_collection.findOneAndUpdate(
+                    {_id: safeObjectId(world_persistedID), "memberinfo.member_name": member_name},
 
-                {_id: safeObjectId(world_persistedID)},
+                    {$set: {"memberinfo.$.positionX": optional.positionX, "memberinfo.$.positionY": optional.positionY}},
 
-                {$push :
-                        {
-                            "memberinfo": {
-                                member_name: member_name,
-                                positionX: optional.positionX,
-                                positionY: optional.positionY
+                    {projection: {_id:1}},
+
+                    (err, response) => {
+                        if (err) {
+                            console.log("Error " + err)
+                            validation = false
+                        } else if (response) {
+                            console.log(response.value)
+                            if (response.value) {
+                                console.log("validation goes false")
+                                validation = false
                             }
+                        } else {
+                            console.log("error response not found")
+                            validation = false
                         }
-                },
-
-                (err, response) => {
-                    if (err) {
-                        console.log("Error " + err)
-                        validation = false
-                    } else if (response) {
-                        console.log(response.result)
-                    } else {
-                        console.log("error response not found")
-                        validation = false
+                        return resolve()
                     }
-                }
+                )
+            })
+        }
 
-            )
+        if (validation) {
+            console.log("work")
+            await new Promise(resolve => {
+                world_collection.updateOne(
+
+                    {_id: safeObjectId(world_persistedID)},
+
+                    {$push :
+                            {
+                                "memberinfo": {
+                                    member_name: member_name,
+                                    positionX: optional.positionX,
+                                    positionY: optional.positionY
+                                }
+                            }
+                    },
+
+                    (err, response) => {
+                        if (err) {
+                            console.log("Error " + err)
+                            validation = false
+                        } else if (response) {
+                            console.log(response.result)
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+            })
+
+
         }
     }
 

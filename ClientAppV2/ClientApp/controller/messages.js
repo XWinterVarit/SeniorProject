@@ -101,12 +101,39 @@ class http_in_queue {
 let requestQueue = new http_in_queue()
 
 class messagesTemplates {
-    static moveUserPosition (userRef, posX, posY) {
+    static moveUserPosition (userRef, posX, posY, activeWorld_persistedID) {
         return {
-            type: "mov",
             name: userRef.name,
-            positionX: posX,
-            positionY: posY
+            type: "toone",
+            activeworld: activeWorld_persistedID,
+            WO_type: "mov",
+            WO_name: userRef.name,
+            WO_positionX: posX,
+            WO_positionY: posY
+        }
+    }
+    static changeActiveWorld (world_persistedID, username) {
+        return {
+            name: username,
+            type: "toone",
+            activeworld: world_persistedID,
+        }
+    }
+    static changeActiveObject (object_persistedID, username) {
+        return {
+            name: username,
+            type: "toone",
+            activeobject: object_persistedID,
+        }
+    }
+    static signalHeartBeat (username, activeWorld_persistedID, activeObject_persistedID, IP, PORT) {
+        return {
+            name: username,
+            type: "toone",
+            activeworld: activeWorld_persistedID,
+            activeobject: activeObject_persistedID,
+            ipaddr: IP,
+            port: PORT
         }
     }
 }

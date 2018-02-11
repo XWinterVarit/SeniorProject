@@ -47,11 +47,18 @@ class OneActiveUserClass {
         this.heartbeatScore = 0
     }
 
-    async set_active_world (worldID) {
+    async set_active_world (worldID, req) {
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
+
 
         if (this.active_at_world === worldID){
             console.log("not change active world")
+            let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: this.active_at_world})
+            if (!currentWorld) {
+                console.log("current world not found")
+            } else {
+                await currentWorld.INPUT_request_message(req)
+            }
         } else {
             console.log("change activeworld")
 
@@ -68,13 +75,12 @@ class OneActiveUserClass {
             if (!nextWorld) {
                 console.log("next World not found")
             } else {
-                await nextWorld.callActiveMember(this.name)
+                await nextWorld.callActiveMember(this.name, new nextWorld.OPTIONAL_TEMPLATE_callActiveUser(null, null, null, true))
                 this.active_at_world = worldID
+                await nextWorld.INPUT_request_message(req)
             }
-
-
-
         }
+
     }
 
     async set_active_objectID (objectID, objecttype, newobjectowner) {
@@ -86,8 +92,8 @@ class OneActiveUserClass {
             console.log("change activeobject")
             switch (objecttype) {
                 case "remote":
-                    console.log('----------------------------Receive third from changed active object ')
-                    console.log(' ')
+                    console.log(chalk.blue("// call remote object //"))
+
 
                     let previousObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: this.active_at_objectID, objectowner: this.objectowner})
                     //console.log("show previous object")
@@ -183,17 +189,17 @@ class OneActiveUserClass {
         }
 
         if (req.body.activeworld) {
-            await this.set_active_world(req.body.activeworld, req.body.name)
+            await this.set_active_world(req.body.activeworld, req)
         }
         if (req.body.activeobject) {
             await this.set_active_objectID(req.body.activeobject, req.body.objecttype, req.body.objectowner)
         }
 
         if (req.body.ipaddr) {
-            this.set_IP(req.body.ipaddr, req.body.name)
+            await this.set_IP(req.body.ipaddr, req.body.name)
         }
         if (req.body.port) {
-            this.set_port(req.body.port, req.body.name)
+            await this.set_port(req.body.port, req.body.name)
         }
 
 
@@ -321,7 +327,7 @@ class GlobalActiveUserClass {
      * @param req.body.name - current username
      * @param req.body.type - type of call : toone (call only one user) , other
      * optional 0
-     * @param req.body.standby - is user stanby
+     * @param req.body.standby - is user standby
      * optional 1
      * @param req.body.activeworld - current world persistedID user is in
      * @param req.body.activeobject - current object persistedID user focus on

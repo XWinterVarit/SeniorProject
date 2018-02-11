@@ -140,6 +140,7 @@ router.post('/getActiveMem', async (req, res, next) => {
     currentWorld.signalBroadcast()
     res.end()
 })
+
 router.post('/tmp', (req, res, next) => {
     let remoteobj = globalmemoryController.GlobalRemoteDesktopOBJ
     /*
@@ -160,6 +161,70 @@ router.post('/tmp', (req, res, next) => {
     */
     res.end()
 
+})
+
+
+
+router.post('/saveAllMemberInfo', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    await currentWorld.callActiveMember("Nutmos",{positionX: 20, positionY:50})
+    await currentWorld.callActiveMember("Wanwipa",{positionX: 20, positionY:40})
+    await currentWorld.callActiveMember("BoonLEDTV",{positionX: 20, positionY:30})
+
+    //await currentWorld.saveAllMemberInfo()
+    currentWorld.GETALL_ActiveMember_MessageTemplated()
+    res.end()
+})
+
+router.post('/moveUserPosition', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    res.end()
+})
+// Real path
+router.post('/userGateway', async(req, res, next) => {
+    let vreq = {
+        body: {
+            name: "Nutmos",
+            type: "toone",
+            activeworld: "5a5b50a146f399051f99b4c4",
+            ipaddr: "127.0.0.1",
+            port: "50001",
+        }
+    }
+    await globalmemoryController.GlobalActiveUser.get_messages(vreq)
+
+    vreq = {
+        body: {
+            name: "Wanwipa",
+            type: "toone",
+            activeworld: "5a5b50a146f399051f99b4c4",
+            ipaddr: "127.0.0.1",
+            port: "50002"
+        }
+    }
+    await globalmemoryController.GlobalActiveUser.get_messages(vreq)
+    vreq = {
+        body: {
+            name: "BoonLEDTV",
+            type: "toone",
+            activeworld: "5a5b50a146f399051f99b4c4",
+            ipaddr: "127.0.0.1",
+            port: "50003"
+        }
+    }
+
+    await globalmemoryController.GlobalActiveUser.get_messages(vreq)
+
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    currentWorld.TEMPTEST_printactivemember()
+    currentWorld.TEMPTEST_printobjectlink()
+    res.end()
+})
+
+router.post('/testinfo', async (req, res, next) => {
+    let message = await worldController.WorldMethods.loadMemberInfo("5a5b50a146f399051f99b4c4", "Nutmos")
+    console.log(chalk.green(JSON.stringify(message, null, 4)))
+    res.end()
 })
 
 router.post('/')

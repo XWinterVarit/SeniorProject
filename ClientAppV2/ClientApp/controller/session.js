@@ -99,9 +99,11 @@ class session_Class {
         this.active_at_object_persistedID = ""
         this.object_owner_name = ""
 
-        this.currentUser_persistedID = ""
-        this.currentUser_name = ""
-        this.currentUser_password = ""
+        this.currentUser_persistedID = globalConfigs.ClientInfo.currentUser_persistedID
+        this.currentUser_name = globalConfigs.ClientInfo.currentUser_name
+        this.currentUser_password = "abcd"
+        this.currentUser_IP = globalConfigs.ClientInfo.clientIP
+        this.currentUser_PORT = globalConfigs.ClientInfo.clientPORT
 
         //this.worldmatrix = new MatrixHash(2)
         this.worldmatrix = new toolsController.HashMatrix()
@@ -219,7 +221,7 @@ class session_Class {
         let ownuser = this.getOwnMember()
         if (ownuser) {
             if (this.ACTION_changeObjectPosition(ownuser, posX, posY)) {
-                messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.moveUserPosition(ownuser,posX, posY))
+                messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.moveUserPosition(ownuser,posX, posY, this.active_at_world_persistedID))
             } else {
                 console.log("move error")
             }
@@ -227,6 +229,16 @@ class session_Class {
             console.log("your user not found in memory or database")
         }
     }
+    CONTROL_ChangeActiveWorld (newActiveWorld_persistedID) {
+        this.active_at_world_persistedID = newActiveWorld_persistedID
+        messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.changeActiveWorld(newActiveWorld_persistedID, this.currentUser_name))
+    }
+    CONTROL_ChangeActiveObject (newObject_persistedID) {
+        this.active_at_object_persistedID = newObject_persistedID
+        messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.changeActiveObject(newObject_persistedID, this.currentUser_name))
+    }
+
+
 
     getOwnMember () {
         return this.activeMember.get(globalConfigs.ClientInfo.currentUser_name)

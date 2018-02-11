@@ -75,4 +75,85 @@ class HashMatrix {
 
 }
 
+class messagesTemplated {
+    static BROADCAST_moveUserPosition (name, persistedID, standby, IP, PORT, posX, posY) {
+        return {
+            type: "update",
+            lists: [
+                {
+                    type: "member",
+                    name: name,
+                    persistedID: persistedID,
+                    positionX: posX,
+                    positionY: posY,
+                    standby: standby,
+                    active: true,
+                    IP: IP,
+                    PORT: PORT
+                }
+            ]
+        }
+    }
+    static BROADCAST_moveObjectPosition (subtype, persistedID, owner_name, posX, posY) {
+        return {
+            type: "update",
+            lists: [
+                {
+                    type: "object",
+                    subtype: subtype,
+                    persistedID: persistedID,
+                    owner_name: owner_name,
+                    positionX: posX,
+                    positionY: posY
+                }
+            ]
+        }
+    }
+    static BROADCAST_REFRESH_all (refreshlist) {
+        return {
+            type: "refresh",
+            lists: null
+        }
+    }
+    static CRAFT_one_user (name, persistedID, standby, IP, PORT, posX, posY) {
+        return {
+            type: "member",
+            name: name,
+            persistedID: persistedID,
+            positionX: posX,
+            positionY: posY,
+            standby: standby,
+            active: true,
+            IP: IP,
+            PORT: PORT
+        }
+    }
+    static CRAFT_one_object (subtype, persistedID, owner_name, posX, posY) {
+        return {
+            type: "object",
+            subtype: subtype,
+            persistedID: persistedID,
+            owner_name: owner_name,
+            positionX: posX,
+            positionY: posY
+        }
+    }
+
+
+    static BROADCAST_UserOut (name) {
+        return {
+            type: "remove",
+            name: name,
+        }
+    }
+    static BROADCAST_ObjectOut (persistedID) {
+        return {
+            type: "remove",
+            name: persistedID
+        }
+    }
+}
+
+
 module.exports.HashMatrix = HashMatrix
+module.exports.messageTemplated = messagesTemplated
