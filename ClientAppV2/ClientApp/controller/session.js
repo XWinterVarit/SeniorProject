@@ -116,8 +116,8 @@ class session_Class {
         this.currentMessageTransactionGet = 0
         this.currentMessageTransactionSent = 0
 
-        this.worldsizeX = 15
-        this.worldsizeY = 40
+        this.worldsizeX = 40
+        this.worldsizeY = 15
     }
 
     HEARTBEAT_signal_start () {
@@ -132,7 +132,11 @@ class session_Class {
 
     }
 
-
+    SET_CurrentUSER (name, persistedID, password) {
+        this.currentUser_name = name
+        this.currentUser_persistedID = persistedID
+        this.currentUser_password = password
+    }
 
     getMatrixInfo () {
         this.worldmatrix.getInfo()
@@ -238,10 +242,27 @@ class session_Class {
         messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.changeActiveObject(newObject_persistedID, this.currentUser_name))
     }
 
-
+    FORUI_getallactivemember() {
+        let lists = []
+        for (let i of this.activeMember) {
+            lists.push(i)
+        }
+        return lists
+    }
+    FORUI_getallobjectlinks () {
+        let lists = []
+        for (let i of this.objectLink) {
+            lists.push(i)
+        }
+        return lists
+    }
+    FORUI_getinfo_fromPosition (posX, posY) {
+        return this.getData_inMatrix(posX, posY)
+    }
 
     getOwnMember () {
-        return this.activeMember.get(globalConfigs.ClientInfo.currentUser_name)
+        console.log("getting : " + this.currentUser_name)
+        return this.activeMember.get(this.currentUser_name)
     }
 
 
@@ -294,8 +315,8 @@ class session_Class {
 
         messages += "-------------------------------------------------------------------\n"
 
-        for (let inY = 0; inY <= this.worldsizeX; inY++) {
-            for (let inX = 0; inX <= this.worldsizeY; inX++) {
+        for (let inY = 0; inY <= this.worldsizeY; inY++) {
+            for (let inX = 0; inX <= this.worldsizeX; inX++) {
                 //console.log("inX : " + inX + "  inY : " + inY)
                 let data = this.getData_inMatrix(inX, inY)
                 if (data){
@@ -380,8 +401,22 @@ class session_Class {
 
     }
 }
-
-
 const globalSession = new session_Class()
+//////This code is for tester //////////////
+globalSession.SET_CurrentUSER("chee", "aaaa", "1234")
+
+globalSession.callActiveMember("chee","aaaa",{positionX: 2, positionY:2, IP: "122.15.26.5", PORT: 50000})
+globalSession.callActiveMember("david","bbbb",{positionX: 3, positionY:3, IP: "122.15.26.6", PORT: 50000})
+globalSession.callActiveMember("christin","cccc",{positionX: 4, positionY:4, IP: "122.15.26.7", PORT: 50000})
+globalSession.callActiveMember("sarah","dddd",{positionX: 5, positionY:5, IP: "122.15.26.8", PORT: 50000})
+globalSession.callActiveMember("james","eeee",{positionX: 6, positionY:6, IP: "122.15.26.9", PORT: 50000})
+
+globalSession.callObjectLink("00000","chee","remote",{positionX: 10,positionY: 10})
+globalSession.callObjectLink("00001","chee","remote",{positionX: 12,positionY: 10})
+globalSession.callObjectLink("00002","david","remote",{positionX: 14,positionY: 10})
+
+
+////////////////////////////////////////////
+
 module.exports.session_Class = session_Class
 module.exports.globalSession = globalSession

@@ -188,5 +188,14 @@ router.post('/moveUserPosition', (req, res, next) => {
     res.end()
 })
 
-
+router.post('/testGAT', (req, res, next) => {
+    console.log(JSON.stringify(sessionController.globalSession.FORUI_getallactivemember(), null, 4))
+})
+router.post('/testGAO', (req, res, next) => {
+    console.log(JSON.stringify(sessionController.globalSession.FORUI_getallobjectlinks(), null, 4))
+})
+router.post('/testGFromPos', (req, res, next) => {
+    console.log(sessionController.globalSession.FORUI_getinfo_fromPosition(req.body.positionX, req.body.positionY))
+    res.end()
+})
 module.exports = router;

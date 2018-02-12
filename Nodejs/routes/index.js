@@ -217,7 +217,7 @@ router.post('/userGateway', async(req, res, next) => {
 
     let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
     currentWorld.TEMPTEST_printactivemember()
-    currentWorld.TEMPTEST_printobjectlink()
+    //currentWorld.TEMPTEST_printobjectlink()
     res.end()
 })
 
@@ -226,6 +226,12 @@ router.post('/testinfo', async (req, res, next) => {
     console.log(chalk.green(JSON.stringify(message, null, 4)))
     res.end()
 })
+
+router.post('/MONITOR_WORLD', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.worldID})
+    res.send(currentWorld.MONITOR_World())
+})
+
 
 router.post('/')
 

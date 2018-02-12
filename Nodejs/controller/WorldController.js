@@ -35,6 +35,8 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 
 class OneObjectLinks {
     constructor (objectlink_persistedID, object_persistedID, owner_persistedID) {
+        this.maintype = "object"
+        this.subtype = ""
         this.persistedID = objectlink_persistedID
         this.object_persistedID = object_persistedID
         this.owner_persistedID = owner_persistedID
@@ -74,12 +76,13 @@ class OneActiveWorldClass {
         this.BroadcastErrorEvents = []
 
         this.worldmatrix = new toolController.HashMatrix()
-        this.worldsizeX = 15
-        this.worldsizeY = 40
+        this.worldsizeX = 40
+        this.worldsizeY = 15
 
 
         this.memberinfo = class {
             constructor(positionX, positionY){
+                this.maintype = "member"
                 this.positionX = positionX
                 this.positionY = positionY
             }
@@ -96,6 +99,12 @@ class OneActiveWorldClass {
                 this.bypassposition = bypassposition
             }
         }
+        this.OPTIONAL_TEMPLATE_callObjectLink = class {
+            constructor(positionX, positionY, DummySpace1) {
+                this.positionX = positionY
+                this.positionY = positionY
+            }
+        }
     }
 
 
@@ -109,7 +118,8 @@ class OneActiveWorldClass {
         this.worldmatrix.getInfo()
     }
     setPosition_inMatrix (posX, posY, objectReference) {
-        //console.log("show object reference " + objectReference)
+        console.log(chalk.green("setMatrixPosition"))
+        console.log("show object reference " + objectReference)
         this.worldmatrix.set(posX, posY, objectReference)
         //console.log("show element " + this.worldmatrix.get([posX, posY]))
     }
@@ -123,7 +133,19 @@ class OneActiveWorldClass {
         //console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
     }
     randomSetPosition (objectReference) {
-
+        let posX = toolController.randomInteger(0,this.worldsizeX)
+        let posY = toolController.randomInteger(0,this.worldsizeY)
+        let attemp = 0
+        while (this.getData_inMatrix(posX, posY)) {
+            if (attemp > 10) {
+                console.log("strange error, there are so much attempt to place your charector")
+                return null
+            }
+            posX = toolController.randomInteger(0,this.worldsizeX)
+            posY = toolController.randomInteger(0,this.worldsizeY)
+            attemp++
+        }
+        return [posX, posY]
     }
 
     ACTION_changeObjectPosition (objectReference,newX, newY) {
@@ -154,13 +176,6 @@ class OneActiveWorldClass {
 
 
     ////////////////////////////////////////////////////////////////////////
-    /////////////////++++++++++++++++++++++++++++++++++++///////////////////
-    /////////////////++++++++++++++++++++++++++++++++++++///////////////////
-    ////////////////////////////////////////////////////////////////////////
-
-
-
-    ////////////////////////////////////////////////////////////////////////
     /////////////////////////Background Process/////////////////////////////
     /////////////////////////Background Process/////////////////////////////
     /////////////////////////Background Process/////////////////////////////
@@ -177,10 +192,118 @@ class OneActiveWorldClass {
 
     }
 
+
     ////////////////////////////////////////////////////////////////////////
-    /////////////////++++++++++++++++++++++++++++++++++++///////////////////
-    /////////////////++++++++++++++++++++++++++++++++++++///////////////////
+    //////////////////////////Realtime Monitor//////////////////////////////
+    //////////////////////////Realtime Monitor//////////////////////////////
+    //////////////////////////Realtime Monitor//////////////////////////////
     ////////////////////////////////////////////////////////////////////////
+
+    monitorActiveMember (res) {
+        let messages = "RemoteDesktopP2PObj Scheduler Active Member . Object Persisted ID : " + this.persistedID + "\n" +
+            "----------------------------------------------------------------------------------\n"
+        for (let i of this.activeMembers) {
+            //console.log(i)
+            messages += i[1].name + "\n"
+        }
+        res.send(messages)
+    }
+
+
+    MONITOR_World () {
+        let messages = "**********************Session Monitoring************************\n"
+        messages += "world ID : " + this.persistedID + "\n"
+
+        messages += "Active Member : \n"
+        for (let i of this.activeMembers) {
+            let j = i[1].data
+            let info = this.activeMembers_additionInfo.get(j.name)
+            messages += `{ name :${j.name} posX :${info.positionX} posY:${info.positionY} standby:${j.standby} IP:${j.ipaddr} PORT:${j.port} } `
+        }
+        messages += "\n"
+        messages += "Active Object Link : \n"
+
+        for (let i of this.ObjectLinks) {
+            let j = i[1]
+            messages += `{ persistedID :${j.persistedID} owner_name :${j.owner_name} posX :${j.positionX} posY:${j.positionY} } `
+        }
+        messages += "\n"
+
+        messages += "-------------------------------------------------------------------\n"
+
+                for (let inY = 0; inY <= this.worldsizeY; inY++) {
+                    for (let inX = 0; inX <= this.worldsizeX; inX++) {
+                        //console.log("inX : " + inX + "  inY : " + inY)
+                        let data = this.getData_inMatrix(inX, inY)
+                        if (data){
+                            console.log(chalk.red("DEBUG found data in matrix"))
+                            console.log(CircularJSON.stringify(data, null, 4))
+                            if (data.maintype === "member"){
+                                messages += "U "
+                            } else if (data.maintype === "object") {
+                                messages += "O "
+                            }
+                        } else {
+                            messages += "* "
+                        }
+                    }
+                    messages += "\n"
+                }
+
+                messages += "-------------------------------------------------------------------"
+
+        return messages
+    }
+
+
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////Console Print///////////////////////////////
+    ////////////////////////////Console Print///////////////////////////////
+    ////////////////////////////Console Print///////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+
+    TEMPTEST_printactivemember () {
+        console.log("++++++++++++++++++++++++++++++++++++++")
+        console.log("++++++++++++++++++++++++++++++++++++++")
+        console.log("++++++++++++++++++++++++++++++++++++++")
+        console.log("++++++++++++++++++++++++++++++++++++++")
+        console.log("++++++++++++++++++++++++++++++++++++++")
+
+        for (let i of this.activeMembers) {
+            //console.log(chalk.red(CircularJSON.stringify(i,null, 4)))
+            let j = i[1].data
+            console.log(chalk.yellow(j.persisted_id))
+            console.log(chalk.yellow(j.name))
+            console.log(chalk.yellow(j.ipaddr))
+            console.log(chalk.yellow(j.port))
+            console.log(chalk.yellow(j.active_at_world))
+            console.log(chalk.yellow(j.active_at_objectID))
+            console.log(chalk.yellow(j.objectowner))
+            console.log()
+        }
+    }
+
+    TEMPTEST_printobjectlink () {
+        for (let i of this.ObjectLinks) {
+            console.log(chalk.green(JSON.stringify(i, null, 4)))
+            let j = i[1]
+        }
+    }
+
+
+
+    ////////////////////////////////////////////////////////////////////////
+    /////////////////////////////Uncatagorise///////////////////////////////
+    /////////////////////////////Uncatagorise///////////////////////////////
+    /////////////////////////////Uncatagorise///////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+
 
 
     getObjectLinkReference (object_persistedID) {
@@ -297,30 +420,53 @@ class OneActiveWorldClass {
         let currentMember = this.activeMembers.get(username)
 
         if (!currentMember) {
-            let userpointer = await globalmemoryController.GlobalActiveUser.callUsersV2(username)
-
             if (!(await WorldMethods.isMember(username,this.persistedID))) {
                 console.log(chalk.red("this user is not a member"))
                 return false
             }
+            console.log(chalk.red("DEBUG POINT 1"))
+            let userpointer = await globalmemoryController.GlobalActiveUser.callUsersV2(username)
 
+            if (!userpointer) {
+                console.log("strange error : user not found in main database")
+                return false
+            }
+            console.log(chalk.red("DEBUG POINT 2"))
+
+            let loadinfo = await WorldMethods.loadMemberInfo(this.persistedID, username)
+            console.log(chalk.red("DEBUG loadinfo : " + loadinfo))
             this.activeMembers.set(username, userpointer)
-            if (!optional.bypassposition) {
-                this.activeMembers_additionInfo.set(username, new this.memberinfo(optional.positionX,optional.positionY))
-                await WorldMethods.changeMemberInfo(username, this.persistedID, {positionX: optional.positionX, positionY: optional.positionY})
+            if (!loadinfo) {
+                console.log(chalk.red("DEBUG POINT 3"))
+
+                console.log("user is newly member, adding user info")
+                let randomPosition = this.randomSetPosition()
+                console.log(`get random position x : ${randomPosition[0]} y : ${randomPosition[1]}`)
+                let newmemberinfo = new this.memberinfo(randomPosition[0],randomPosition[1])
+                this.activeMembers_additionInfo.set(username, newmemberinfo)
+                await WorldMethods.changeMemberInfo(username, this.persistedID, {positionX: randomPosition[0],positionY: randomPosition[1]})
+                this.setPosition_inMatrix(randomPosition[0],randomPosition[1], newmemberinfo)
             } else {
-                let loadinfo = WorldMethods.loadMemberInfo(this.persistedID, username)
-                if (loadinfo) {
-                    this.activeMembers_additionInfo.set(username, new this.memberinfo(loadinfo.positionX,loadinfo.positionY))
+                console.log(chalk.red("DEBUG POINT 4"))
+
+                let newmemberinfo = new this.memberinfo(loadinfo.positionX,loadinfo.positionY)
+                this.activeMembers_additionInfo.set(username, newmemberinfo)
+                if (!optional.bypassposition) {
+                    console.log(chalk.red("DEBUG POINT 5"))
+
+                    this.ACTION_changeObjectPosition( newmemberinfo,optional.positionX, optional.positionY)
                 } else {
-                    console.log("strange error, no info data in database")
-                    return false
+                    console.log(chalk.red("DEBUG POINT 6"))
+
+                    this.setPosition_inMatrix(newmemberinfo.positionX, newmemberinfo.positionY, newmemberinfo)
                 }
             }
+
             //this.setPosition_inMatrix(optional.positionX, optional.positionY, userpointer)
             //this.Debug_activeMembers.push(newuser)
             this.changed = true
         } else {
+  /*
             console.log("user already active , getting info from : " + username)
             console.log("*******************************************")
             console.log("*******************************************")
@@ -328,17 +474,22 @@ class OneActiveWorldClass {
             console.log("*******************************************")
             console.log("*******************************************")
             console.log("*******************************************")
+*/
+            console.log(chalk.red("DEBUG POINT 5"))
 
             let currentMemberInfo = this.activeMembers_additionInfo.get(username)
             if (currentMemberInfo) {
+                console.log(chalk.red("DEBUG POINT 6"))
+
                 console.log(chalk.red(JSON.stringify(currentMemberInfo, null, 4)))
                 if (currentMemberInfo.positionX === optional.positionX && currentMemberInfo.positionY === optional.positionY) {
                     //this.ACTION_changeObjectPosition(currentMember, optional.positionX, optional.positionY)
                     console.log("position not changed")
                 } else {
                     console.log("position changed")
-                    currentMemberInfo.positionX = optional.positionX
-                    currentMemberInfo.positionY = optional.positionY
+                    //currentMemberInfo.positionX = optional.positionX
+                    //currentMemberInfo.positionY = optional.positionY
+                    this.ACTION_changeObjectPosition(currentMemberInfo, optional.positionX, optional.positionY)
                 }
             } else {
                 console.log("some strange error found")
@@ -352,6 +503,7 @@ class OneActiveWorldClass {
         if (req.body.WO_type) {
             switch (req.body.WO_type) {
                 case "mov":
+
                     break
                 case "signal":
                     break
@@ -359,93 +511,6 @@ class OneActiveWorldClass {
         } else {
             console.log("no messages world support")
         }
-    }
-
-    monitorActiveMember (res) {
-        let messages = "RemoteDesktopP2PObj Scheduler Active Member . Object Persisted ID : " + this.persistedID + "\n" +
-            "----------------------------------------------------------------------------------\n"
-        for (let i of this.activeMembers) {
-            //console.log(i)
-            messages += i[1].name + "\n"
-        }
-        res.send(messages)
-    }
-
-    monitorObject (res) {
-        res.end()
-    }
-
-    TEMPTEST_printactivemember () {
-        console.log("++++++++++++++++++++++++++++++++++++++")
-        console.log("++++++++++++++++++++++++++++++++++++++")
-        console.log("++++++++++++++++++++++++++++++++++++++")
-        console.log("++++++++++++++++++++++++++++++++++++++")
-        console.log("++++++++++++++++++++++++++++++++++++++")
-
-        for (let i of this.activeMembers) {
-            //console.log(chalk.red(CircularJSON.stringify(i,null, 4)))
-            let j = i[1].data
-            console.log(chalk.yellow(j.persisted_id))
-            console.log(chalk.yellow(j.name))
-            console.log(chalk.yellow(j.ipaddr))
-            console.log(chalk.yellow(j.port))
-            console.log(chalk.yellow(j.active_at_world))
-            console.log(chalk.yellow(j.active_at_objectID))
-            console.log(chalk.yellow(j.objectowner))
-            console.log()
-        }
-    }
-
-    TEMPTEST_printobjectlink () {
-        for (let i of this.ObjectLinks) {
-            console.log(chalk.green(JSON.stringify(i, null, 4)))
-            let j = i[1]
-        }
-    }
-
-    MONITOR_World () {
-        let messages = "**********************Session Monitoring************************\n"
-        messages += "world ID : " + this.persistedID + "\n"
-
-        messages += "Active Member : \n"
-        for (let i of this.activeMembers) {
-            let j = i[1]
-            messages += `{ name :${i[0]} posX :${j.positionX} posY:${j.positionY} standby:${j.standby} IP:${j.IP} PORT:${j.PORT} } `
-        }
-        messages += "\n"
-        messages += "Active Object Link : \n"
-
-        for (let i of this.ObjectLinks) {
-            let j = i[1]
-            messages += `{ persistedID :${j.persistedID} owner_name :${j.owner_name} posX :${j.positionX} posY:${j.positionY} } `
-        }
-        messages += "\n"
-
-        messages += "-------------------------------------------------------------------\n"
-/*
-        for (let inY = 0; inY <= this.worldsizeX; inY++) {
-            for (let inX = 0; inX <= this.worldsizeY; inX++) {
-                //console.log("inX : " + inX + "  inY : " + inY)
-                let data = this.getData_inMatrix(inX, inY)
-                if (data){
-
-
-                    if (data.maintype === "member"){
-                        messages += "U "
-                    } else if (data.maintype === "object") {
-                        messages += "O "
-                    }
-
-                } else {
-                    messages += "* "
-                }
-            }
-            messages += "\n"
-        }
-
-        messages += "-------------------------------------------------------------------"
-        */
-        return messages
     }
 
 
