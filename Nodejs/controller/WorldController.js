@@ -101,7 +101,7 @@ class OneActiveWorldClass {
         }
         this.OPTIONAL_TEMPLATE_callObjectLink = class {
             constructor(positionX, positionY, DummySpace1) {
-                this.positionX = positionY
+                this.positionX = positionX
                 this.positionY = positionY
             }
         }
@@ -127,7 +127,8 @@ class OneActiveWorldClass {
         return this.worldmatrix.get(posX, posY)
     }
     removePosition_inMatrix (posX, posY) {
-        //console.log("remove position occured at posX " + posX + " posY " + posY)
+        console.log(chalk.green("removeMatrixPosition"))
+        console.log("remove position occured at posX " + posX + " posY " + posY)
         //console.log("before remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
         this.worldmatrix.set(posX, posY, null)
         //console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
@@ -236,8 +237,8 @@ class OneActiveWorldClass {
                         //console.log("inX : " + inX + "  inY : " + inY)
                         let data = this.getData_inMatrix(inX, inY)
                         if (data){
-                            console.log(chalk.red("DEBUG found data in matrix"))
-                            console.log(CircularJSON.stringify(data, null, 4))
+                            //console.log(chalk.red("DEBUG found data in matrix"))
+                            //console.log(CircularJSON.stringify(data, null, 4))
                             if (data.maintype === "member"){
                                 messages += "U "
                             } else if (data.maintype === "object") {
@@ -344,6 +345,7 @@ class OneActiveWorldClass {
             newObjectLink.changePosition(positionX, positionY)
         }
         this.ObjectLinks.set(String(objectlink_persistedID), newObjectLink)
+        this.setPosition_inMatrix(positionX,positionY, newObjectLink)
 
     }
 
@@ -395,14 +397,18 @@ class OneActiveWorldClass {
     async callObjectLink (persistedID, optional) {
         let currentObject = this.ObjectLinks.get(persistedID)
         if (currentObject) {
-            if (currentObject.positionX === optional.positionX && currentObject.positionY === optional.positionY) {
-                console.log("position not changed")
-            } else {
-                console.log("position changed")
-                currentObject.changePosition(optional.positionX, optional.positionY)
+            if (optional.positionX != null) {
+                if (currentObject.positionX === optional.positionX && currentObject.positionY === optional.positionY) {
+                    console.log("position not changed")
+                } else {
+                    console.log("position changed")
+                    this.ACTION_changeObjectPosition(currentObject, optional.positionX, optional.positionY)
+                }
             }
+            return true
         } else {
             console.log("object is not in memory")
+            return false
         }
     }
 
@@ -410,7 +416,6 @@ class OneActiveWorldClass {
         console.log(chalk.blue("// call world active member //"))
 
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
-
 
         if (!optional) {
             console.log(chalk.red("require optional parameter"))
@@ -482,14 +487,16 @@ class OneActiveWorldClass {
                 console.log(chalk.red("DEBUG POINT 6"))
 
                 console.log(chalk.red(JSON.stringify(currentMemberInfo, null, 4)))
-                if (currentMemberInfo.positionX === optional.positionX && currentMemberInfo.positionY === optional.positionY) {
-                    //this.ACTION_changeObjectPosition(currentMember, optional.positionX, optional.positionY)
-                    console.log("position not changed")
-                } else {
-                    console.log("position changed")
-                    //currentMemberInfo.positionX = optional.positionX
-                    //currentMemberInfo.positionY = optional.positionY
-                    this.ACTION_changeObjectPosition(currentMemberInfo, optional.positionX, optional.positionY)
+                if (optional.positionX != null) {
+                    if (currentMemberInfo.positionX === optional.positionX && currentMemberInfo.positionY === optional.positionY) {
+                        //this.ACTION_changeObjectPosition(currentMember, optional.positionX, optional.positionY)
+                        console.log("position not changed")
+                    } else {
+                        console.log("position changed")
+                        //currentMemberInfo.positionX = optional.positionX
+                        //currentMemberInfo.positionY = optional.positionY
+                        this.ACTION_changeObjectPosition(currentMemberInfo, optional.positionX, optional.positionY)
+                    }
                 }
             } else {
                 console.log("some strange error found")

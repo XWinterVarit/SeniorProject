@@ -14,8 +14,10 @@ let MPath1_controller_WorldController = MPath1_controller + 'WorldController'
 let MPath1_controller_CameraController = MPath1_controller + 'CameraController'
 let MPath1_controller_GlobalMemory = MPath1_controller + 'GlobalMemory'
 let MPath1_controller_RemoteDesktopOBJController = MPath1_controller + 'RemoteDesktopOBJController'
+let MPath1_controller_messagesController = MPath1_controller + 'messagesController'
 
 let MPath1_clouddrive = nodepath + 'clouddrive/'
+
 module.exports.mpath1= {
                 nodepath: nodepath,
                 config: MPath1_config,
@@ -28,8 +30,8 @@ module.exports.mpath1= {
                 cameraController: MPath1_controller_CameraController,
                 worldController: MPath1_controller_WorldController,
                 globalmemoryController: MPath1_controller_GlobalMemory,
-                remotedesktopobjController: MPath1_controller_RemoteDesktopOBJController
-
+                remotedesktopobjController: MPath1_controller_RemoteDesktopOBJController,
+                messagesController: MPath1_controller_messagesController
 }
 
 module.exports.connections = {

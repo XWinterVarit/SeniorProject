@@ -45,6 +45,11 @@ class OneActiveUserClass {
         this.heartbeatIntervalTime = 1000 //millisec
         this.heartbeatTimer = null
         this.heartbeatScore = 0
+
+
+
+        this.requestQueue = []
+        this.firstLOCK = true //first load from database
     }
 
     async set_active_world (worldID, req) {

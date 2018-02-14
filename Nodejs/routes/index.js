@@ -178,6 +178,12 @@ router.post('/saveAllMemberInfo', async (req, res, next) => {
 
 router.post('/moveUserPosition', async (req, res, next) => {
     let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    currentWorld.callActiveMember(req.body.name,new currentWorld.OPTIONAL_TEMPLATE_callActiveUser(req.body.positionX, req.body.positionY, null, true))
+    res.end()
+})
+router.post('/moveObjectPosition', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    currentWorld.callObjectLink(req.body.persistedID, new currentWorld.OPTIONAL_TEMPLATE_callObjectLink(req.body.positionX, req.body.positionY, null))
     res.end()
 })
 // Real path
