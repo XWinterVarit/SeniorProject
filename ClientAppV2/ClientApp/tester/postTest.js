@@ -7,28 +7,23 @@ const commandLineArgs = require('command-line-args')
 
 const optionDefinitions = [
     { name: 'type', alias: 't', type: Number },
-    { name: 'port', alias: 'p', type: String},
+    { name: 'param', alias: 'p', type: String},
     { name: 'owner', alias: 'o', type: String}
 ]
 const options = commandLineArgs(optionDefinitions)
 
-
-process.on('uncaughtException', function(err) {
-    console.log('Caught exception: ' + err);
-});
-
 let client = new Client()
 
 
-//console.log(options.type)
+console.log(options.type)
 
 let monitor = () => {
     setInterval(
         () => {
-                client.get("http://localhost:"+options.port+"/sessionMonitor", (data, response) => {
-                    term.clear()
-                    term.green(data.toString())
-                })
+            client.post("http://localhost:50000/sessionMonitor", (data, response) => {
+                term.clear()
+                term.green(data.toString())
+            })
         }, 1000
     )
 }

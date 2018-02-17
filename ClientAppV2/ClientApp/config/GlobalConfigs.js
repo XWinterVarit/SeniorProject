@@ -13,7 +13,7 @@ const MPath1_controller_tools = MPath1_controller + 'tools'
 const serverIP = "127.0.0.1"
 const serverPort = "80"
 
-let clientIP = "127.0.0.1"
+let clientIP = "docker.for.mac.localhost"
 let clientPORT = "50000"
 
 let currentUser_name = "cheevarit"
@@ -21,7 +21,7 @@ let currentUser_password = "1234"
 let currentUser_persistedID = ""
 
 
-const user_messages_serverpath = "userGateway//"
+const user_messages_serverpath = "userGateway/"
 
 module.exports.mpath1 = {
     nodepath: nodepath,

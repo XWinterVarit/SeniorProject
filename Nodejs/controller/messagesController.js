@@ -7,7 +7,6 @@
 
 const chalk = require('chalk')
 const ndarray = require('ndarray')
-const MatrixHash = require('matrix-hash')
 const AsyncLock = require('async-lock')
 const Client = require('node-rest-client').Client
 let client = new Client()
@@ -29,7 +28,7 @@ const ClientPathTempleted = {
     clientUserGateway: "clientUserGateway"
 }
 
-class messagesTemplated {
+class messagesTemplates {
     static BROADCAST_moveUserPosition (name, persistedID, standby, IP, PORT, posX, posY) {
         return {
             type: "update",
@@ -66,7 +65,7 @@ class messagesTemplated {
     static BROADCAST_REFRESH_all (refreshlist) {
         return {
             type: "refresh",
-            lists: null
+            lists: refreshlist
         }
     }
     static CRAFT_one_user (name, persistedID, standby, IP, PORT, posX, posY) {
@@ -189,11 +188,25 @@ class messagesGlobalMethods {
         }
         */
     }
-
-    static httpOutput_POST_SERVER (IP, PORT, path, data) {
+    static httpOutput_BROADCAST_POST (addressLists,path, data) {
         let args = {
             data: data,
-            header: {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+        for (let i of addressLists) {
+            console.log(`sent to IP : ${i[0]} PORT : ${i[1]}`)
+            client.post("http://" + i[0] + ":" + i[1] +"/" + path, args, (datareturn, response) => {
+                console.log(chalk.red(datareturn))
+            })
+        }
+
+    }
+    static httpOutput_POST (IP, PORT, path, data) {
+        let args = {
+            data: data,
+            headers: {
                 "Content-Type": "application/json"
             }
         }
@@ -207,51 +220,6 @@ class messagesGlobalMethods {
         })
     }
 
-    static updateSession (lists) {
-        console.log("start update")
-        for (let i of lists) {
-            switch (i.type) {
-                case "member":
-                    sessionController.globalSession.callActiveMember(i.name, i.persistedID, {positionX: i.positionX, positionY: i.positionY, standby: i.standby, IP: i.IP, PORT: i.PORT})
-                    break
-                case "object":
-                    //console.log("IGNORE object")
-                    sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY})
-                    break
-            }
-        }
-        console.log("end update")
-    }
-    static refreshSession (lists) {
-        console.log("start refresh")
-        sessionController.globalSession.ACTION_refresh()
-        for (let i of lists) {
-            switch (i.type) {
-                case "member":
-                    sessionController.globalSession.callActiveMember(i.name, i.persistedID, {positionX: i.positionX, positionY: i.positionY, standby: i.standby, IP: i.IP, PORT: i.PORT})
-                    break
-                case "object":
-                    //console.log("IGNORE object")
-                    sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY})
-                    break
-            }
-        }
-        console.log("end refresh")
-    }
-    static removeInSession (lists) {
-        console.log("start remove")
-        for (let i of lists) {
-            switch (i.type) {
-                case "member":
-                    sessionController.globalSession.ACTION_removeActiveMember(i.name)
-                    break
-                case "object":
-                    sessionController.globalSession.ACTION_removeObjectLink(i.persistedID)
-                    break
-            }
-        }
-        console.log("end remove")
-    }
 
     static test (){
         let str = JSON.stringify(incomingMessageTest)
@@ -275,6 +243,6 @@ class messagesGlobalMethods {
     }
 }
 
-module.exports.messageTemplated = messagesTemplated
+module.exports.messagesTemplates = messagesTemplates
 module.exports.ClientPathTemplated = ClientPathTempleted
 module.exports.messagesGlobalMethods = messagesGlobalMethods

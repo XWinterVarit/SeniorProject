@@ -9,12 +9,14 @@ const chalk = require('chalk')
 const HashArray = require('hasharray')
 const Client = require('node-rest-client').Client
 const CircularJSON = require('circular-json')
+
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
 ///////////////////////From Other Controllers////////////////////////
 
 const toolController = require(globalConfigs.mpath1.toolsController)
+const messagesController = require(globalConfigs.mpath1.messagesController)
 /////////////////////////////From Mongo//////////////////////////////
 
 const mongotools = require(globalConfigs.mpath1.mongodb).tools
@@ -79,6 +81,14 @@ class OneActiveWorldClass {
         this.worldsizeX = 40
         this.worldsizeY = 15
 
+        this.INTERVAL_TIME_BROADCAST_FRESH_EVENT = 10000 //ms
+        this.INTERVAL_BROADCAST_FRESH_EVENT = setInterval(
+            () => {
+                console.log(chalk.blueBright("SENT REFRESH SIGNAL TO CLIENTS"))
+                this.REFRESH_ALL_toClient()
+            }
+            , this.INTERVAL_TIME_BROADCAST_FRESH_EVENT
+        )
 
         this.memberinfo = class {
             constructor(positionX, positionY){
@@ -129,22 +139,22 @@ class OneActiveWorldClass {
     removePosition_inMatrix (posX, posY) {
         console.log(chalk.green("removeMatrixPosition"))
         console.log("remove position occured at posX " + posX + " posY " + posY)
-        //console.log("before remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
+        console.log("before remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
         this.worldmatrix.set(posX, posY, null)
-        //console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
+        console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
     }
     randomSetPosition (objectReference) {
         let posX = toolController.randomInteger(0,this.worldsizeX)
         let posY = toolController.randomInteger(0,this.worldsizeY)
-        let attemp = 0
+        let attempt = 0
         while (this.getData_inMatrix(posX, posY)) {
-            if (attemp > 10) {
+            if (attempt > 10) {
                 console.log("strange error, there are so much attempt to place your charector")
                 return null
             }
             posX = toolController.randomInteger(0,this.worldsizeX)
             posY = toolController.randomInteger(0,this.worldsizeY)
-            attemp++
+            attempt++
         }
         return [posX, posY]
     }
@@ -162,6 +172,7 @@ class OneActiveWorldClass {
         this.setPosition_inMatrix(newX, newY, objectReference)
         return true
     }
+
     ACTION_removeObjectLink (persistedID) {
         console.log("Action remove object")
         let currentObjectLink = this.ObjectLinks.get(persistedID)
@@ -171,7 +182,6 @@ class OneActiveWorldClass {
             this.removePosition_inMatrix(objectpositionX, objectpositionY)
             this.ObjectLinks.delete(persistedID)
         } else {
-
         }
     }
 
@@ -299,6 +309,52 @@ class OneActiveWorldClass {
 
 
     ////////////////////////////////////////////////////////////////////////
+    //////////////////////////Interval Process//////////////////////////////
+    //////////////////////////Interval Process//////////////////////////////
+    //////////////////////////Interval Process//////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+
+    REFRESH_ALL_toClient () {
+        let lists = []
+        let ALLIPPORT = []
+        this.GETALL_ActiveMember_MessageTemplated(lists, ALLIPPORT)
+        this.GETALL_ObjectLinks_MessageTemplated(lists)
+
+        messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(ALLIPPORT, messagesController.ClientPathTemplated.clientUserGateway,messagesController.messagesTemplates.BROADCAST_REFRESH_all(lists))
+
+/*
+        console.log('++++')
+        console.log(chalk.yellow(JSON.stringify(ALLIPPORT, null, 4)))
+        console.log('++++')
+        console.log(chalk.yellow(JSON.stringify(lists, null, 4)))
+        */
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////Client Action///////////////////////////////
+    ////////////////////////////Client Action///////////////////////////////
+    ////////////////////////////Client Action///////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+    ACTION_moveUser_position (name, newX, newY) {
+        let currentUserInfo = this.activeMembers_additionInfo.get(name)
+        let currentUserMainInfo = this.activeMembers.get(name)
+        if (currentUserInfo && currentUserMainInfo) {
+            if (this.ACTION_changeObjectPosition(currentUserInfo, newX, newY)) {
+                let message = messagesController.messagesTemplates.BROADCAST_moveUserPosition(name, currentUserMainInfo.data.persistedID, currentUserMainInfo.data.standby, currentUserMainInfo.data.ipaddr, currentUserMainInfo.data.port, currentUserInfo.positionX, currentUserInfo.positionY)
+                messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(this.GETALL_NETWORK_ADDRESS, messagesController.ClientPathTemplated.clientUserGateway, message)
+            } else {
+                console.log("Your position can't changed due to some error")
+            }
+        } else {
+            console.log("Strange error, user not found")
+        }
+    }
+
+
+
+    ////////////////////////////////////////////////////////////////////////
     /////////////////////////////Uncatagorise///////////////////////////////
     /////////////////////////////Uncatagorise///////////////////////////////
     /////////////////////////////Uncatagorise///////////////////////////////
@@ -364,11 +420,12 @@ class OneActiveWorldClass {
     removeActiveMember (username) {
         console.log('------------------------------------At Remote OBJ : Receive remove message ')
         console.log()
-        let currentActiveMember = this.activeMembers.get(username)
+        let currentActiveMember = this.activeMembers_additionInfo.get(username)
         if (currentActiveMember) {
-            //let activeMemberpositionX = currentActiveMember.positionX
-            //let activeMemberpositionY = currentActiveMember.positionY
-            //this.removePosition_inMatrix(activeMemberpositionX, activeMemberpositionY)
+            let activeMemberpositionX = currentActiveMember.positionX
+            let activeMemberpositionY = currentActiveMember.positionY
+            console.log(chalk.red("Remove position"))
+            this.removePosition_inMatrix(activeMemberpositionX, activeMemberpositionY)
             this.activeMembers.delete(username)
             this.changed = true
         } else {
@@ -382,16 +439,34 @@ class OneActiveWorldClass {
 
     GETALL_ObjectLinks_MessageTemplated (previouslist) {
         for (let i of this.ObjectLinks) {
-            previouslist.push({type: "object",subtype: i.subtype, owner_name: i.owner_name, persistedID: i.persistedID, positionX: i.positionX, positionY: i.positionY})
+            let j = i[1]
+            //console.log(chalk.yellow(JSON.stringify(i,null, 4)))
+            let newlist = messagesController.messagesTemplates.CRAFT_one_object(j.subtype, j.persistedID, j.owner_name, j.positionX, j.positionY)
+            previouslist.push(newlist)
         }
+        //console.log(chalk.yellow(JSON.stringify(previouslist, null, 4)))
     }
-    GETALL_ActiveMember_MessageTemplated (previouslist) {
+    GETALL_ActiveMember_MessageTemplated (previouslist, optional_sentback_allIPPORT) {
         for (let i of this.activeMembers) {
-            console.log('==============')
-            console.log(i[1].data.name)
+            //console.log('==============')
+            //console.log(i[1].data.name)
             let info = this.activeMembers_additionInfo.get(i[1].data.name)
-            previouslist.push({type: "member",name: i[1].data.name, persistedID: i[1].data.persisted_ID, positionX: info.positionX, positionY: info.positionY, standby: i[1].data.standby, active: true, IP : i[1].data.ipaddr, PORT : i[1].data.port})
+            let maininfo = i[1].data
+            let newlist = messagesController.messagesTemplates.CRAFT_one_user(maininfo.name, maininfo.persistedID, maininfo.standby, maininfo.ipaddr, maininfo.port, info.positionX, info.positionY)
+            if (optional_sentback_allIPPORT) {
+                optional_sentback_allIPPORT.push([maininfo.ipaddr,  maininfo.port])
+            }
+            previouslist.push(newlist)
         }
+        //console.log(chalk.yellow(JSON.stringify(previouslist, null, 4)))
+    }
+    GETALL_NETWORK_ADDRESS () {
+        let lists = []
+        for (let i of this.activeMembers) {
+            let maininfo = i[1].data
+            lists.push([maininfo.ipaddr, maininfo.port])
+        }
+        return lists
     }
 
     async callObjectLink (persistedID, optional) {
@@ -510,7 +585,7 @@ class OneActiveWorldClass {
         if (req.body.WO_type) {
             switch (req.body.WO_type) {
                 case "mov":
-
+                    this.ACTION_moveUser_position(req.body.WO_name, req.body.WO_positionX, req.body.WO_positionY)
                     break
                 case "signal":
                     break
@@ -520,7 +595,7 @@ class OneActiveWorldClass {
         }
     }
 
-
+/*
 
     signalBroadcast (data) {
         console.log("show active member")
@@ -534,7 +609,8 @@ class OneActiveWorldClass {
         }
 
     }
-
+    */
+/*
     signalUnicast (ip, port, data) {
         let args = {
             data: data,
@@ -546,6 +622,7 @@ class OneActiveWorldClass {
 
         })
     }
+    */
 }
 class GlobalActiveWorldClass {
     constructor () {

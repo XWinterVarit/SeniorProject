@@ -9,6 +9,8 @@ const express = require('express');
 const router = express.Router();
 const chalk = require('chalk')
 const HashArray = require('hasharray')
+const CircularJSON = require('circular-json')
+const requestIP = require('request-ip')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -163,6 +165,22 @@ router.post('/tmp', (req, res, next) => {
 
 })
 
+router.post('/testGETALLactivemem', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    currentWorld.GETALL_ActiveMember_MessageTemplated([])
+    res.end()
+})
+router.post('/testGETALLobject', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    currentWorld.GETALL_ObjectLinks_MessageTemplated([])
+    res.end()
+})
+router.post('/testREFRESH', async (req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    currentWorld.REFRESH_ALL_toClient()
+    res.end()
+})
+
 
 
 router.post('/saveAllMemberInfo', async (req, res, next) => {
@@ -187,7 +205,15 @@ router.post('/moveObjectPosition', async (req, res, next) => {
     res.end()
 })
 // Real path
+
 router.post('/userGateway', async(req, res, next) => {
+    let clientIP = requestIP.getClientIp(req)
+    //console.log(chalk.green("IP : " + clientIP))
+    //console.log(chalk.green(CircularJSON.stringify(req, null, 4)))
+    await globalmemoryController.GlobalActiveUser.get_messages(req)
+    res.end()
+})
+router.post('/testuserGateway', async(req, res, next) => {
     let vreq = {
         body: {
             name: "Nutmos",
@@ -234,9 +260,12 @@ router.post('/testinfo', async (req, res, next) => {
 })
 
 router.post('/MONITOR_WORLD', async (req, res, next) => {
+    console.log(chalk.green(JSON.stringify(req.body)))
     let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.worldID})
     res.send(currentWorld.MONITOR_World())
 })
+
+
 
 
 router.post('/')

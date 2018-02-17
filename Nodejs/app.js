@@ -7,13 +7,15 @@ const bodyParser = require('body-parser');
 
 const index = require('./routes/index');
 const junior = require('./routes/junior');
-
+const cors = require('cors')
 const app = express();
 
 
 const mongodb = require('./config/MongoDB')
 const redis = require('./config/Redis')
 
+
+app.use(cors())
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -45,6 +47,10 @@ app.use(function(err, req, res, next) {
         // render the error page
         res.status(err.status || 500);
         res.render('error');
+});
+
+process.on('uncaughtException', function(err) {
+    console.log('Caught exception: ' + err);
 });
 
 module.exports = app;

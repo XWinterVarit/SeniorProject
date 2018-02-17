@@ -161,14 +161,34 @@ class messagesGlobalMethods {
     static httpOutput_POST_SERVER (path, data) {
         let args = {
             data: data,
-            header: {
+            headers: {
                 "Content-Type": "application/json"
             }
         }
+  /*
+        console.log(chalk.green("Show args"))
+        console.log(chalk.green(JSON.stringify(args, null, 4)))
+*/
         client.post("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, args, (datareturn, response) => {
             return datareturn
         })
     }
+
+    static httpOutput_POST_ANY (IP, PORT, path, data) {
+        let args = {
+            data: data,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+        console.log(chalk.green("Show args"))
+        console.log(chalk.green(JSON.stringify(args, null, 4)))
+
+        client.post("http://" + IP + ":" + PORT +"/" + path, args, (datareturn, response) => {
+            return datareturn
+        })
+    }
+
     static httpOutput_GET_SERVER (path) {
         client.get("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, (datareturn, response) => {
             return datareturn

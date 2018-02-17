@@ -93,6 +93,33 @@ class objectLink_Class {
     }
 }
 
+
+
+
+class sessionObjectMemory_Class {
+    constructor () {
+        this.objectPointer = new Map()
+    }
+    ADD_newObjectMemory (id_or_name,ObjectMemory_Pointer) {
+        if (this.objectPointer.has(id_or_name)) {
+            console.log("this id or name already allocate memory")
+        } else {
+            this.objectPointer.set(id_or_name, ObjectMemory_Pointer)
+            console.log("create new in memory completed")
+        }
+    }
+    REMOVE_ObjectMemory (id_or_name) {
+        if (this.objectPointer.delete(id_or_name)) {
+            console.log("delete completed")
+        } else {
+            console.log("object memory not found")
+        }
+    }
+    GET_ObjectMemoryReference (id_or_name) {
+        return this.objectPointer.get(id_or_name)
+    }
+}
+
 class session_Class {
     constructor () {
         this.active_at_world_persistedID = ""
@@ -112,12 +139,16 @@ class session_Class {
         this.objectLink = new Map()
 
         this.heartbeatScheduler = null
+        this.heartbeatIntervalTime = 5000 //ms
 
         this.currentMessageTransactionGet = 0
         this.currentMessageTransactionSent = 0
 
         this.worldsizeX = 40
         this.worldsizeY = 15
+
+        this.ALLTASK = []
+        this.HEARTBEAT_signal_start()
     }
 
     HEARTBEAT_signal_start () {
@@ -125,11 +156,20 @@ class session_Class {
             console.log("Heartbeat signal already started")
         } else {
             console.log("Starting heartbeat")
-            this.heartbeatScheduler// = setInterval()
+            this.heartbeatScheduler = setInterval(
+                () => {
+                    messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath,messagesController.messagesTemplates.signalHeartBeat(this.currentUser_name, this.active_at_world_persistedID, this.active_at_object_persistedID, this.currentUser_IP, this.currentUser_PORT))
+                    console.log("Sent heartbeat")
+                }
+                , this.heartbeatIntervalTime
+            )
         }
     }
     HEARTBEAT_signal_stop () {
-
+        if (this.heartbeatScheduler) {
+            clearInterval(this.heartbeatScheduler)
+            this.heartbeatScheduler = null
+        }
     }
 
     SET_CurrentUSER (name, persistedID, password) {
@@ -137,7 +177,12 @@ class session_Class {
         this.currentUser_persistedID = persistedID
         this.currentUser_password = password
     }
-
+    SET_CurrentWorld (persistedID) {
+        this.active_at_world_persistedID = persistedID
+    }
+    SET_CurrentObjectLink (persistedID) {
+        this.active_at_object_persistedID = persistedID
+    }
     getMatrixInfo () {
         this.worldmatrix.getInfo()
     }
@@ -403,8 +448,11 @@ class session_Class {
 }
 const globalSession = new session_Class()
 //////This code is for tester //////////////
-globalSession.SET_CurrentUSER("chee", "aaaa", "1234")
 
+globalSession.SET_CurrentUSER("Nutmos", "5a5b4fe146f399051f99b4c1", "1234")
+globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
+
+/*
 globalSession.callActiveMember("chee","aaaa",{positionX: 2, positionY:2, IP: "122.15.26.5", PORT: 50000})
 globalSession.callActiveMember("david","bbbb",{positionX: 3, positionY:3, IP: "122.15.26.6", PORT: 50000})
 globalSession.callActiveMember("christin","cccc",{positionX: 4, positionY:4, IP: "122.15.26.7", PORT: 50000})
@@ -414,7 +462,7 @@ globalSession.callActiveMember("james","eeee",{positionX: 6, positionY:6, IP: "1
 globalSession.callObjectLink("00000","chee","remote",{positionX: 10,positionY: 10})
 globalSession.callObjectLink("00001","chee","remote",{positionX: 12,positionY: 10})
 globalSession.callObjectLink("00002","david","remote",{positionX: 14,positionY: 10})
-
+*/
 
 ////////////////////////////////////////////
 

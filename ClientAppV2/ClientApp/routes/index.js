@@ -198,4 +198,15 @@ router.post('/testGFromPos', (req, res, next) => {
     console.log(sessionController.globalSession.FORUI_getinfo_fromPosition(req.body.positionX, req.body.positionY))
     res.end()
 })
+
+
+// Official Path
+
+router.post('/clientUserGateway', (req, res, next) => {
+    //console.log(chalk.blueBright(JSON.stringify(req.body, null, 4)))
+    messagesController.messagesGlobalMethods.httpInput(req)
+    res.end()
+})
+
+//
 module.exports = router;

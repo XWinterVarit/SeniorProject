@@ -170,6 +170,7 @@ class OneActiveUserClass {
                 if (this.heartbeatScore <= 0) {
                     clearInterval(this.heartbeatTimer)
                     this.active = false
+                    this.set_active_world("",{})
                 }
             }, this.heartbeatIntervalTime
         )
@@ -258,6 +259,7 @@ class GlobalActiveUserClass {
             if (validation && outputdocs) {
 
                 let OneUser = new OneActiveUserClass(outputdocs._id, name)
+                //for concurrency bug : this.ActiveUsers.has()
                 this.ActiveUsers.add({name: name, data: OneUser})
                 this.Debug_ActiveUsers.push(OneUser)
             }
