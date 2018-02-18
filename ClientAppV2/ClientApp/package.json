@@ -9,6 +9,7 @@
     "async-lock": "^1.1.0",
     "body-parser": "~1.17.1",
     "chalk": "^2.3.0",
+    "circular-json": "^0.5.1",
     "command-line-args": "^5.0.1",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.3",

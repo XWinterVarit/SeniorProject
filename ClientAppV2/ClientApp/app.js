@@ -7,7 +7,7 @@ var bodyParser = require('body-parser');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
-
+const fs = require('fs')
 var app = express();
 
 // view engine setup
@@ -46,18 +46,25 @@ app.use(function(err, req, res, next) {
 process.on('uncaughtException', function(err) {
     console.log('Caught exception: ' + err);
 });
+let fsport = fs.readFileSync('./PORT_SET.txt')
+console.log("UDP PORT read from file : " + fsport)
 
-const PORT = 50000;
+let PORT = 50000;
 const HOST = '127.0.0.1'
+if (fsport) {
+    if (fsport !== "") {
+        PORT = fsport
+    }
+}
 
 const dgram = require('dgram')
 
 const server = dgram.createSocket('udp4')
-console.log("start listen udp on port 50000")
+console.log("start listen udp on port " + PORT)
 server.on ('message', (message, remote) => {
     console.log(remote.address + ':' + remote.port +' - ' + message);
 })
-server.bind(50000)
+server.bind(PORT)
 
 
 module.exports = app;

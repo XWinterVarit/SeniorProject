@@ -183,6 +183,12 @@ class session_Class {
     SET_CurrentObjectLink (persistedID) {
         this.active_at_object_persistedID = persistedID
     }
+    SET_IP_PORT (ip, port) {
+        this.currentUser_IP = ip
+        this.currentUser_PORT = port
+    }
+
+
     getMatrixInfo () {
         this.worldmatrix.getInfo()
     }
@@ -333,10 +339,14 @@ class session_Class {
         console.log("Active at object ID : " + this.active_at_object_persistedID + " owner name : " + this.object_owner_name)
 
         console.log("User information || ID : " + this.currentUser_persistedID + " name : " + this.currentUser_name + " password " + this.currentUser_password)
+        console.log("                 || PORT : " + this.currentUser_IP + " PORT : " + this.currentUser_PORT)
 
-        this.PRINT_activeMembers()
-        this.PRINT_objectLink()
+        //this.PRINT_activeMembers()
+        //this.PRINT_objectLink()
     }
+
+
+
 
     MONITOR_Session () {
         let messages = "**********************Session Monitoring************************\n"

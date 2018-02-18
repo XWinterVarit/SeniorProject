@@ -3,19 +3,26 @@
 /**
  * Module dependencies.
  */
-
+const fs = require('fs')
 var app = require('../app');
 var debug = require('debug')('clientapp:server');
 var http = require('http');
 
+let fsport = fs.readFileSync('./PORT_SET.txt')
+console.log("EXPRESS PORT read from file : " + fsport)
 
 let inputPORT = "50000"
-
+if (fsport) {
+    if (fsport !== "") {
+        inputPORT = fsport
+    }
+}
 /**
  * Get port from environment and store in Express.
  */
 
 var port = normalizePort(process.env.PORT || inputPORT);
+console.log("Express start with PORT : " + port)
 app.set('port', port);
 
 /**

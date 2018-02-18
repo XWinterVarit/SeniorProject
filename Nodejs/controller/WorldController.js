@@ -89,6 +89,13 @@ class OneActiveWorldClass {
             }
             , this.INTERVAL_TIME_BROADCAST_FRESH_EVENT
         )
+        this.INTERVAL_TIME_SAVE_MEMBER_INFO = 20000
+        this.INTERVAL_SAVE_MEMBER_INFO = setInterval(
+            () => {
+                console.log(chalk.blueBright("SAVE MEMBER INFO"))
+                this.saveAllMemberInfo()
+            }, this.INTERVAL_TIME_SAVE_MEMBER_INFO
+        )
 
         this.memberinfo = class {
             constructor(positionX, positionY){
@@ -343,7 +350,17 @@ class OneActiveWorldClass {
         if (currentUserInfo && currentUserMainInfo) {
             if (this.ACTION_changeObjectPosition(currentUserInfo, newX, newY)) {
                 let message = messagesController.messagesTemplates.BROADCAST_moveUserPosition(name, currentUserMainInfo.data.persistedID, currentUserMainInfo.data.standby, currentUserMainInfo.data.ipaddr, currentUserMainInfo.data.port, currentUserInfo.positionX, currentUserInfo.positionY)
-                messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(this.GETALL_NETWORK_ADDRESS, messagesController.ClientPathTemplated.clientUserGateway, message)
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
+
+                messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(this.GETALL_NETWORK_ADDRESS(), messagesController.ClientPathTemplated.clientUserGateway, message)
             } else {
                 console.log("Your position can't changed due to some error")
             }
@@ -368,11 +385,16 @@ class OneActiveWorldClass {
     }
     async loadAllObjectLink () {
         let allobj = await WorldMethods.returnall_objectlink(this.persistedID)
-        for (let i of allobj.objectlinks) {
-            //console.log(i)
-            await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY)
+        console.log(chalk.red(JSON.stringify(allobj, null, 4)))
+        if (allobj) {
+            for (let i of allobj.objectlinks) {
+                //console.log(i)
+                await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY)
+            }
+            console.log(this.ObjectLinks)
+        } else {
+            console.log("no object in this world")
         }
-        console.log(this.ObjectLinks)
 
     }
 
@@ -381,7 +403,9 @@ class OneActiveWorldClass {
             //console.log("print i")
             //console.log(i[0])
             //console.log(i[1].positionX + " " + i[1].positionY)
-            await WorldMethods.changeMemberInfo(i[0], this.persistedID, {positionX:i[1].positionX, positionY:i[1].positionY})
+            let info = this.activeMembers_additionInfo.get(i[1].data.name)
+
+            await WorldMethods.changeMemberInfo(i[0], this.persistedID, {positionX:info.positionX, positionY:info.positionY})
         }
     }
 
@@ -462,10 +486,12 @@ class OneActiveWorldClass {
     }
     GETALL_NETWORK_ADDRESS () {
         let lists = []
+        console.log(chalk.red("GETALL ADDRESS"))
         for (let i of this.activeMembers) {
             let maininfo = i[1].data
             lists.push([maininfo.ipaddr, maininfo.port])
         }
+        //console.log(lists)
         return lists
     }
 
@@ -1057,6 +1083,7 @@ class WorldMethods {
             )
         })
         return outputdocs
+        //please fix bug when world have no any object links
     }
 
     static async saveUpdateObjectLink (world_persistedID, objectlink_persistedID, updatelist) {

@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const chalk = require('chalk')
 const Queue = require('queue')
+const CircularJSON = require('circular-json')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -207,6 +208,13 @@ router.post('/clientUserGateway', (req, res, next) => {
     messagesController.messagesGlobalMethods.httpInput(req)
     res.end()
 })
-
+router.post('/setFirstStart', (req, res, next) => {
+    //console.log("req " + CircularJSON.stringify(req ,null, 4))
+    sessionController.globalSession.SET_CurrentUSER(req.body.name, req.body.userID, req.body.password)
+    sessionController.globalSession.SET_CurrentWorld(req.body.worldID)
+    sessionController.globalSession.SET_IP_PORT(req.body.IP, req.body.PORT)
+    sessionController.globalSession.PRINT_info()
+    res.end()
+})
 //
 module.exports = router;

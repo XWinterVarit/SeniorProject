@@ -171,6 +171,9 @@ class messagesGlobalMethods {
 */
         client.post("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, args, (datareturn, response) => {
             return datareturn
+        }).on('error', (err) => {
+            console.log("Error " + err)
+            return null
         })
     }
 
@@ -186,12 +189,18 @@ class messagesGlobalMethods {
 
         client.post("http://" + IP + ":" + PORT +"/" + path, args, (datareturn, response) => {
             return datareturn
+        }).on('error', (err) => {
+            console.log("Error " + err)
+            return null
         })
     }
 
     static httpOutput_GET_SERVER (path) {
         client.get("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, (datareturn, response) => {
             return datareturn
+        }).on('error', (err) => {
+            console.log("Error " + err)
+            return null
         })
     }
 
