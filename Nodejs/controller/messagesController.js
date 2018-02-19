@@ -92,6 +92,9 @@ class messagesTemplates {
         }
     }
 
+    static CRAFT_one_REMOTE_P2P_TASK (name, persistedID) {
+        return null
+    }
 
     static BROADCAST_UserOut (name) {
         return {

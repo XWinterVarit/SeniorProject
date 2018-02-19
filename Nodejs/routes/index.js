@@ -213,6 +213,16 @@ router.post('/userGateway', async(req, res, next) => {
     await globalmemoryController.GlobalActiveUser.get_messages(req)
     res.end()
 })
+
+router.post('/getMemberedWorlds', async(req, res, next) => {
+    res.json(await userController.UserMethods.readAllMembered_Worlds(req.body.name))
+})
+
+router.post('/getWorldMembers', async(req, res, next) => {
+    res.json(await worldController.WorldMethods.getAllMember(req.body.worldID))
+})
+
+
 router.post('/testuserGateway', async(req, res, next) => {
     let vreq = {
         body: {

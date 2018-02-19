@@ -155,6 +155,8 @@ class messagesGlobalMethods {
             case "remove":
                 this.removeInSession(req.body.lists)
                 break
+            case "p2pframe":
+                break
         }
     }
 

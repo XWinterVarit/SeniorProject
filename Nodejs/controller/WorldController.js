@@ -16,6 +16,7 @@ const globalConfigs = require('../config/GlobalConfigs')
 ///////////////////////From Other Controllers////////////////////////
 
 const toolController = require(globalConfigs.mpath1.toolsController)
+const userController = require(globalConfigs.mpath1.userscontroller)
 const messagesController = require(globalConfigs.mpath1.messagesController)
 /////////////////////////////From Mongo//////////////////////////////
 
@@ -813,6 +814,7 @@ class WorldMethods {
      *
      * @param req
      * @param req.body.worldname - name of destination world
+     * @param req.body.worldID - ID of destination world
      * @param req.body.name - name of user to add
      * @param res
      * @returns {Promise<void>}
@@ -868,6 +870,9 @@ class WorldMethods {
                 )
 
             })
+        }
+        if (validation) {
+            await userController.UserMethods.addMembered_WorldID(req.body.name,req.body.worldID)
         }
         res.end()
     }
@@ -978,6 +983,38 @@ class WorldMethods {
 
     static async removeMemberInfo (member_name, world_persistedID, optional) {
 
+    }
+
+    static async getWorldName (world_persistedID) {
+        const world_collection = mongotools.db.collection('worlds')
+        let validation = true
+        let returndocs = null
+        if (validation) {
+            await new Promise(resolve => {
+                world_collection.findOne(
+
+                    {_id: safeObjectId(world_persistedID)},
+
+                    {name: 1},
+
+                    (err, docs) => {
+                        if (err) {
+                            console.log("Error " + err)
+                            validation = false
+                        } else if (docs) {
+                            //console.log(docs)
+                            returndocs = docs
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+            })
+            return returndocs
+        }
+        return null
     }
 
     static async addObjectLink (object_persistedID, world_persistedID, objectOwner_name, optional) {
@@ -1168,7 +1205,37 @@ class WorldMethods {
         return validation
     }
 
+    static async getAllMember (world_persistedID) {
+        const world_collection = mongotools.db.collection('worlds')
+        let validation = true
+        let returndocs = null
+        if (validation) {
+            await new Promise(resolve => {
+                world_collection.findOne(
 
+                    {_id: safeObjectId(world_persistedID)},
+
+                    {"member.standard": 1},
+
+                    (err, docs) => {
+                        if (err) {
+                            console.log("Error " + err)
+                            validation = false
+                        } else if (docs) {
+                            //console.log(docs)
+                            returndocs = docs
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+            })
+            return returndocs
+        }
+        return null
+    }
     /**
      * Create new world
      * @param req

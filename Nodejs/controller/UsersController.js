@@ -17,6 +17,7 @@ const toolController = require(globalConfigs.mpath1.toolsController)
 
 const mongotools = require(globalConfigs.mpath1.mongodb).tools
 let ObjectID = require('mongodb').ObjectID
+const safeObjectId = s => ObjectID.isValid(s) ? new ObjectID(s) : null
 /////////////////////////////from redis//////////////////////////////
 
 const redistools = require(globalConfigs.mpath1.redis).tools
@@ -427,6 +428,85 @@ class UserMethods {
             console.log("write completed")
         }
         res.end()
+    }
+
+    static async addMembered_WorldID (user_name,world_persistedID) {
+        const user_collection = mongotools.db.collection('users')
+        let validation = true
+        if (validation) {
+            await new Promise(resolve => {
+                user_collection.updateOne(
+
+                    {name: user_name},
+
+                    {$addToSet :
+                            {
+                                "membertoworld": [String(world_persistedID)]
+                            }
+                    },
+
+                    (err, response) => {
+                        if (err) {
+                            console.log("Error " + err)
+                            validation = false
+                        } else if (response) {
+                            console.log(response.result)
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+
+
+            })
+        }
+    }
+
+    static async readAllMembered_Worlds (user_name) {
+        const user_collection = mongotools.db.collection('users')
+        const worldController = require(globalConfigs.mpath1.worldController)
+
+        let memberedWorlds = []
+        let validation = true
+        let firstdocs = null
+        if (validation) {
+            await new Promise(resolve => {
+                user_collection.findOne(
+
+                    {name: user_name},
+
+                    {"membertoworld": 1},
+
+                    (err, docs) => {
+                        if (err) {
+                            console.log("Error " + err)
+                            validation = false
+                        } else if (docs) {
+                            //console.log(docs)
+                            firstdocs = docs
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+            })
+        } else {
+            return null
+        }
+        if (validation) {
+            for (let i of firstdocs.membertoworld) {
+                //console.log(i[0])
+                let data = await worldController.WorldMethods.getWorldName(i[0])
+                memberedWorlds.push(data)
+            }
+        } else {
+            return null
+        }
+        return memberedWorlds
     }
 
 }
