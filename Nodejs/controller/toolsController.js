@@ -75,6 +75,26 @@ class HashMatrix {
 
 }
 
+class ObjectQuickInfo_Class {
+    constructor () {
+        this.objects = new Map()
+    }
+    ADD_object (persistedID,object) {
+        persistedID = String(persistedID)
+        if (this.objects.delete(persistedID) ) {
+            console.log("replace object")
+        } else {
+            this.objects.set(persistedID, object)
+        }
+    }
+    REMOVE_object (persistedID) {
+        this.objects.delete(persistedID)
+    }
 
+    GET_object (persistedID) {
+        return this.objects.get(persistedID)
+    }
+}
 
 module.exports.HashMatrix = HashMatrix
+module.exports.ObjectQuickInfo_Class = ObjectQuickInfo_Class

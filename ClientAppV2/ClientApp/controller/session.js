@@ -124,6 +124,8 @@ class session_Class {
     constructor () {
         this.active_at_world_persistedID = ""
         this.active_at_object_persistedID = ""
+        //this.active_at_object_objectowner = ""
+        //this.active_at_object_type = ""
         this.object_owner_name = ""
 
         this.currentUser_persistedID = globalConfigs.ClientInfo.currentUser_persistedID
@@ -180,8 +182,10 @@ class session_Class {
     SET_CurrentWorld (persistedID) {
         this.active_at_world_persistedID = persistedID
     }
-    SET_CurrentObjectLink (persistedID) {
+    SET_CurrentObject (persistedID) {
         this.active_at_object_persistedID = persistedID
+        //this.active_at_object_objectowner = ownername
+        //this.active_at_object_type = type
     }
     SET_IP_PORT (ip, port) {
         this.currentUser_IP = ip

@@ -128,7 +128,7 @@ class One_Scheduler_RemoteDesktopP2P {
         res.send(messages)
     }
 
-    monitorObject (res) {
+    monitorObject () {
         let messages = "RemoteDesktopP2PObj Scheduler Status . Object Persisted ID : " + this.persisted_id + "\n" +
             "----------------------------------------------------------------------------------\n"
         messages += "isActive : " + this.active + "  isChanged : " + this.changed + "  isSchedule "
@@ -138,7 +138,11 @@ class One_Scheduler_RemoteDesktopP2P {
             messages += "NO" + "   at " + this.calculateIntervalTime + " millisec. per interval\n"
 
         }
-        res.send(messages)
+        for (let i of this.activeMembers) {
+            messages += i[1].name + " weight : " + i[1].weight + " "
+        }
+
+        return messages
     }
 
     start_Calculation_Scheduling () {
@@ -303,7 +307,7 @@ class Group_RemoteDesktop  {
                     {$and: [{'name': objectowner}, {'clouddrive.remotedobj._id': safeObjectId(id)}]},
 
                     /*{'_id': 1},*/
-                    /*{'_id':1},*/
+                    {'_id':1},
 
                     (err, docs) => {
                         if (err) {
@@ -389,21 +393,22 @@ class Group_RemoteDesktop  {
  * @param req.body.vpath - virtual path
  */
 class RemoteDesktopMethodClass {
-    static async createRemoteDesktopObject (req, res) {
-        const collection = mongotools.db.collection('world')
+    static async createRemoteDesktopObject (ownername, objectname, vpath) {
+        const collection = mongotools.db.collection('users')
         let validation = true
+        let objectID = new ObjectID()
         await new Promise(resolve => {
 
             collection.updateOne(
 
-                {name: req.body.ownername},
+                {name: ownername},
 
                 {$push :
                         {
                             "clouddrive.remotedobj": {
-                                _id: new ObjectID(),
-                                name: req.body.objectname,
-                                virtualpath: req.body.vpath
+                                _id: objectID,
+                                name: objectname,
+                                virtualpath: vpath
                             }
                         }
                 },
@@ -418,8 +423,7 @@ class RemoteDesktopMethodClass {
                 }
             )
         })
-        res.end()
-
+        return objectID.toString()
     }
 }
 module.exports.One_Scheduler_RemoteDesktopP2P = One_Scheduler_RemoteDesktopP2P

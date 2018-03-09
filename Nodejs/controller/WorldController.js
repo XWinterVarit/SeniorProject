@@ -17,6 +17,7 @@ const globalConfigs = require('../config/GlobalConfigs')
 
 const toolController = require(globalConfigs.mpath1.toolsController)
 const userController = require(globalConfigs.mpath1.userscontroller)
+const remoteController = require(globalConfigs.mpath1.remotedesktopobjController)
 const messagesController = require(globalConfigs.mpath1.messagesController)
 /////////////////////////////From Mongo//////////////////////////////
 
@@ -123,6 +124,21 @@ class OneActiveWorldClass {
                 this.positionY = positionY
             }
         }
+
+        this.OPTIONAL_TEMPLATE_createobject_remotedesktop = class {
+            constructor (ownername, objectname, vpath, positionX, positionY) {
+                this.ownername = ownername
+                this.objectname = objectname
+                this.vpath = vpath
+
+                this.positionX = positionX
+                this.positionY = positionY
+            }
+        }
+
+        this.OPTIONAL_TEMPLATE_createobject_objectstack = class {
+
+        }
     }
 
 
@@ -151,6 +167,7 @@ class OneActiveWorldClass {
         this.worldmatrix.set(posX, posY, null)
         console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
     }
+
     randomSetPosition (objectReference) {
         let posX = toolController.randomInteger(0,this.worldsizeX)
         let posY = toolController.randomInteger(0,this.worldsizeY)
@@ -370,6 +387,54 @@ class OneActiveWorldClass {
         }
     }
 
+    async ACTION_createObject(objecttype, argumentTemplate) {
+        switch (objecttype) {
+            case "remote":
+                if (this.getData_inMatrix(argumentTemplate.positionX, argumentTemplate.positionY)) {
+                    console.log("position already allocated")
+                    return false
+                }
+                const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
+                let userdata = await globalmemoryController.GlobalActiveUser.callUsersV2(argumentTemplate.ownername)
+                let objectID = await remoteController.RemoteDesktopMethodClass.createRemoteDesktopObject(argumentTemplate.ownername, argumentTemplate.objectname, argumentTemplate.vpath)
+                console.log(chalk.red("Debug 1"))
+                let objectlinkedID = await WorldMethods.addObjectLink(objectID, this.persistedID, argumentTemplate.ownername, {name: argumentTemplate.objectname, positionX:argumentTemplate.positionX, positionY:argumentTemplate.positionY})
+                console.log(chalk.red("Debug 2"))
+
+                if (!objectID || !objectlinkedID || !userdata) {
+                    console.log("Create Object : some operation error")
+                    return false
+                }
+                console.log(chalk.red("Debug 3"))
+                console.log(chalk.green(CircularJSON.stringify(userdata, null, 4)))
+                console.log(`objectID : ${objectID}   objectlinkedID : ${objectlinkedID}    user persisted ID ${userdata.persisted_id}`)
+                let currentobject = this.callObjectLink(objectlinkedID)
+                console.log(JSON.stringify(currentobject, null, 4))
+                console.log("show argument template")
+                console.log(argumentTemplate)
+                await this.addnewObjectLink(objectlinkedID, objectID, userdata.persisted_id, argumentTemplate.owner_name, argumentTemplate.objectname, argumentTemplate.positionX, argumentTemplate.positionY)
+                break
+            default:
+                break
+        }
+    }
+
+    async ACTION_changeActiveObject (newobjectlinkID) {
+        /*
+        let newobjectinfo = this.GET_realObjectInfo(newobjectlinkID)
+        if (newobjectinfo) {
+            switch (newobjectinfo.type) {
+                case "remote":
+
+                    break
+                default:
+                    break
+            }
+        } else {
+
+        }
+        */
+    }
 
 
     ////////////////////////////////////////////////////////////////////////
@@ -388,11 +453,15 @@ class OneActiveWorldClass {
         let allobj = await WorldMethods.returnall_objectlink(this.persistedID)
         console.log(chalk.red(JSON.stringify(allobj, null, 4)))
         if (allobj) {
-            for (let i of allobj.objectlinks) {
-                //console.log(i)
-                await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY)
+            if (allobj.objectlinks) {
+                for (let i of allobj.objectlinks) {
+                    //console.log(i)
+                    await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY)
+                }
+                console.log(this.ObjectLinks)
+            } else {
+                console.log("no object in this world")
             }
-            console.log(this.ObjectLinks)
         } else {
             console.log("no object in this world")
         }
@@ -496,6 +565,20 @@ class OneActiveWorldClass {
         return lists
     }
 
+    GET_realObjectInfo (objectlinkID) {
+        let objectlink = this.ObjectLinks.get(objectlinkID)
+        if (objectlink) {
+            return {
+                persistedID : objectlink.object_persistedID,
+                owner_name : objectlink.owner_name,
+                type: objectlink.subtype
+            }
+        } else {
+            console.log("objectlink not found in this world")
+            return false
+        }
+    }
+
     async callObjectLink (persistedID, optional) {
         let currentObject = this.ObjectLinks.get(persistedID)
         if (currentObject) {
@@ -507,7 +590,7 @@ class OneActiveWorldClass {
                     this.ACTION_changeObjectPosition(currentObject, optional.positionX, optional.positionY)
                 }
             }
-            return true
+            return currentObject
         } else {
             console.log("object is not in memory")
             return false
@@ -1050,6 +1133,7 @@ class WorldMethods {
             })
         }
         //console.log("world id : " + world_persistedID)
+        let objectlinksID = new ObjectID()
         if (validation) {
             await new Promise(resolve => {
 
@@ -1060,7 +1144,7 @@ class WorldMethods {
                     {$push :
                             {
                                 "objectlinks": {
-                                    _id: new ObjectID(),
+                                    _id: objectlinksID,
                                     owner_name: objectOwner_name,
                                     owner_persisted_id: objectOwnerID,
                                     object_name: optional.name ? optional.name : "",
@@ -1088,6 +1172,11 @@ class WorldMethods {
 
             })
 
+        }
+        if (validation) {
+            return objectlinksID
+        } else {
+            return false
         }
 
     }

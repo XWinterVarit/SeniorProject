@@ -78,38 +78,7 @@ router.post('/monremoteUser', async(req, res, next) => {
 })
 
 router.post('/addRemoteObject', async (req, res, next) => {
-    const collection = mongotools.db.collection('users')
-    let validation = true
-    let remotedobj_template = {
-        persisted_id: "0",
-        virtualpath: "\\good\\well",
-    }
-    await new Promise(resolve => {
-
-        collection.updateOne(
-
-            {name: req.body.name},
-
-            {$push :
-                    {
-                        "clouddrive.remotedobj": {
-                            _id: new ObjectID(),
-                            name: req.body.objectname,
-                            virtualpath: req.body.vpath
-                        }
-                    }
-            },
-
-            (err, response) => {
-                if (err) {
-                    console.log("Error " + err)
-                } else {
-                    console.log(response.result)
-                }
-                return resolve()
-            }
-        )
-    })
+    await remoteDesktopOBJController.RemoteDesktopMethodClass.createRemoteDesktopObject(req.body.ownername, req.body.objectname, req.body.vpath)
     res.end()
 })
 
@@ -269,13 +238,32 @@ router.post('/testinfo', async (req, res, next) => {
     res.end()
 })
 
+router.post('/testCreateObject', async (req, res, next) => {
+    let currentworld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+
+    if (currentworld) {
+        await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop("Nutmos", "myremote", "/", "7","9"))
+    } else {
+        console.log("no world found")
+    }
+
+    res.end()
+})
+
 router.post('/MONITOR_WORLD', async (req, res, next) => {
     console.log(chalk.green(JSON.stringify(req.body)))
     let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.worldID})
     res.send(currentWorld.MONITOR_World())
 })
 
-
+router.post('/MONITOR_REMOTEDESKTOPOBJ', async (req, res, next) => {
+    let currentObject = await globalmemoryController.GlobalRemoteDesktopOBJ.callObject(req.body.objectID, req.body.ownername)
+    //console.log("show current object")
+    //console.log(chalk.yellow(CircularJSON.stringify(currentObject, null, 4)))
+    //console.log(JSON.stringify(currentObject, null, 4))
+    let messages = currentObject.data.monitorObject()
+    res.send(messages)
+})
 
 
 router.post('/')

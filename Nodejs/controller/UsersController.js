@@ -64,6 +64,17 @@ class OneActiveUserClass {
                 console.log("current world not found")
             } else {
                 await currentWorld.INPUT_request_message(req)
+
+
+                //////////////////
+                if (req.body.activeobject === this.active_at_objectID) {
+                    console.log("active object not changed")
+                } else {
+                    console.log("active object changed")
+                    let previousRealObjectID = currentWorld.GET_realObjectInfo(this.active_at_objectID)
+                    let nextRealObjectID = currentWorld.GET_realObjectInfo(req.body.activeobject)
+                }
+
             }
         } else {
             console.log("change activeworld")
@@ -119,6 +130,18 @@ class OneActiveUserClass {
             }
             this.active_at_objectID = objectID
             this.objectowner = newobjectowner
+        }
+    }
+
+    async set_active_objectlinkID (objectlinkID) {
+        const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
+
+        if (this.active_at_objectID === objectlinkID) {
+            console.log("not change active object")
+        } else {
+            console.log("change activeobject")
+
+
         }
     }
 
@@ -304,6 +327,7 @@ class GlobalActiveUserClass {
                 let OneUser = new OneActiveUserClass(outputdocs._id, name)
                 this.ActiveUsers.add({name: name, data: OneUser})
                 this.Debug_ActiveUsers.push(OneUser)
+                currentUser = OneUser
             }
         }
         return currentUser

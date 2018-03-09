@@ -34,7 +34,9 @@ let sent = async () => {
             password: "1234",
             worldID: "5a5837f7e79e0d017e88cd8b",
             IP: "docker.for.mac.localhost",
-            PORT: "50001"
+            PORT: "50001",
+
+            objectID: "5aa24abfcd525e004c28b066",
         },
         headers: {
             "Content-Type": "application/json"

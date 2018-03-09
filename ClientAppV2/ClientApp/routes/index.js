@@ -211,6 +211,9 @@ router.post('/clientUserGateway', (req, res, next) => {
 router.post('/setFirstStart', (req, res, next) => {
     //console.log("req " + CircularJSON.stringify(req ,null, 4))
     sessionController.globalSession.SET_CurrentUSER(req.body.name, req.body.userID, req.body.password)
+    if (req.body.objectID) {
+        sessionController.globalSession.SET_CurrentObjectLink(req.body.objectID, req.body.ownername, req.body.objecttype)
+    }
     sessionController.globalSession.SET_CurrentWorld(req.body.worldID)
     sessionController.globalSession.SET_IP_PORT(req.body.IP, req.body.PORT)
     sessionController.globalSession.PRINT_info()
