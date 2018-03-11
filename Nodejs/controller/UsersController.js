@@ -42,11 +42,12 @@ class OneActiveUserClass {
         this.active_at_world = "" //ID
         this.active_at_objectID = ""
         this.objectowner = ""
+        this.objecttype = ""
 
         this.heartbeatIntervalTime = 1000 //millisec
         this.heartbeatTimer = null
         this.heartbeatScore = 0
-
+        this.max_heartbeatScore = 6
 
 
         this.requestQueue = []
@@ -67,6 +68,7 @@ class OneActiveUserClass {
 
 
                 //////////////////
+                /*
                 if (req.body.activeobject === this.active_at_objectID) {
                     console.log("active object not changed")
                 } else {
@@ -74,6 +76,7 @@ class OneActiveUserClass {
                     let previousRealObjectID = currentWorld.GET_realObjectInfo(this.active_at_objectID)
                     let nextRealObjectID = currentWorld.GET_realObjectInfo(req.body.activeobject)
                 }
+                */
 
             }
         } else {
@@ -100,25 +103,80 @@ class OneActiveUserClass {
 
     }
 
-    async set_active_objectID (objectID, objecttype, newobjectowner) {
+    async set_active_objectID (objectLinkID) {
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
 
-        if (this.active_at_objectID === objectID){
+        let previousobjectID = ""
+        let previousownerID = ""
+        let previousobjecttype = ""
+
+        let nextobjectID = ""
+        let nextownerID = ""
+        let nextobjecttype = ""
+
+        //let previousObjectLink = globalmemoryController.ObjectQuickInfo.GET_object(this.active_at_objectID)
+
+
+            previousobjectID = this.active_at_objectID
+            previousownerID = this.objectowner
+            previousobjecttype = this.objecttype
+
+
+        let nextObjectLink = globalmemoryController.ObjectQuickInfo.GET_object(objectLinkID)
+
+        console.log(chalk.red(JSON.stringify(nextObjectLink, null, 4)))
+        if (nextObjectLink) {
+            nextobjectID = nextObjectLink.objectID
+            nextownerID = nextObjectLink.ownerID
+            nextobjecttype = nextObjectLink.objecttype
+        } else {
+            console.log(chalk.red("real next object not found"))
+        }
+
+
+/*
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        */
+        console.log(chalk.red("previous active object ID" + this.active_at_objectID))
+        console.log(chalk.red("next active object ID" + nextobjectID))
+
+        if (this.active_at_objectID === nextobjectID){
             console.log("not change active object")
         } else {
             console.log("change activeobject")
-            switch (objecttype) {
+            console.log(chalk.red("nextobjecttype " + nextobjecttype))
+
+
+
+
+            switch (nextobjecttype) {
                 case "remote":
                     console.log(chalk.blue("// call remote object //"))
 
-
-                    let previousObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: this.active_at_objectID, objectowner: this.objectowner})
+                    let previousObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: previousobjectID, objectowner: this.objectowner})
                     //console.log("show previous object")
-                    //console.log(previousObject)
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+                    console.log(previousObject)
                     if (previousObject) {
                         previousObject.removeActiveMember(this.name)
                     }
-                    let nextObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: objectID, objectowner: newobjectowner})
+                    let nextObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: nextobjectID, objectowner: nextownerID})
                     console.log("print next object")
                     //console.log(nextObject)
 
@@ -128,9 +186,11 @@ class OneActiveUserClass {
                     console.log("completed")
                     break
             }
-            this.active_at_objectID = objectID
-            this.objectowner = newobjectowner
+            this.active_at_objectID = nextobjectID
+            this.objectowner = nextownerID
+            this.objecttype = nextobjecttype
         }
+
     }
 
     async set_active_objectlinkID (objectlinkID) {
@@ -195,6 +255,7 @@ class OneActiveUserClass {
                     clearInterval(this.heartbeatTimer)
                     this.active = false
                     this.set_active_world("",{})
+                    this.set_active_objectID("")
                 }
             }, this.heartbeatIntervalTime
         )
@@ -202,7 +263,7 @@ class OneActiveUserClass {
     }
 
     signal_heartbeat () {
-        this.heartbeatScore = 20
+        this.heartbeatScore = this.max_heartbeatScore
         if (this.active === false) {
             this.start_heartbeat()
         }
@@ -221,8 +282,9 @@ class OneActiveUserClass {
         if (req.body.activeworld) {
             await this.set_active_world(req.body.activeworld, req)
         }
+
         if (req.body.activeobject) {
-            await this.set_active_objectID(req.body.activeobject, req.body.objecttype, req.body.objectowner)
+            await this.set_active_objectID(req.body.activeobject)
         }
 
         if (req.body.ipaddr) {

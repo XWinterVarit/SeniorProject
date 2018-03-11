@@ -25,6 +25,7 @@ let client = new Client()
 
 
 let sent = async () => {
+    /*
     let args = {
         requestConfig: {timeout: 1000},
         response: {timeout: 2000},
@@ -32,7 +33,7 @@ let sent = async () => {
             name: "David",
             userID: "5a4f10dcd61917007cf00bfa",
             password: "1234",
-            worldID: "5a5837f7e79e0d017e88cd8b",
+            worldID: "5a5b50a146f399051f99b4c4",
             IP: "docker.for.mac.localhost",
             PORT: "50001",
 
@@ -42,6 +43,26 @@ let sent = async () => {
             "Content-Type": "application/json"
         }
     }
+    */
+    let args = {
+        requestConfig: {timeout: 1000},
+        response: {timeout: 2000},
+        data: {
+            name: "Nutmos",
+            userID: "5a5b4fe146f399051f99b4c1",
+            password: "1234",
+            worldID: "5a5b50a146f399051f99b4c4",
+            IP: "docker.for.mac.localhost",
+            PORT: "50001",
+
+            objectID: "5aa543f6e6ca25042f106712",
+        },
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }
+
+
     await new Promise(resolve => {
 
             client.post("http://localhost:"+50001+"/setFirstStart",args, (data, response) => {

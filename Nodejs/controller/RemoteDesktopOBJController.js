@@ -35,7 +35,7 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 class One_Scheduler_RemoteDesktopP2P {
     constructor (persisted_id, objectowner) {
 
-        this.objectowner = objectowner
+        this.objectowner = objectowner //ID
         this.persisted_id = persisted_id
 
         this.setofDeliver = []
@@ -288,7 +288,9 @@ class Group_RemoteDesktop  {
         this.Debug_RemoteDesktopP2PScheduler = []
     }
     async callObject (id, objectowner) {
-        if (!safeObjectId(id) || !objectowner) {
+        console.log(chalk.red(`ID ${id}  ownerID ${objectowner}`))
+
+        if (!safeObjectId(id) || !safeObjectId(objectowner)) {
             return null
         }
         let validation = true
@@ -304,7 +306,7 @@ class Group_RemoteDesktop  {
             await new Promise (resolve => {
                 collection.findOne(
 
-                    {$and: [{'name': objectowner}, {'clouddrive.remotedobj._id': safeObjectId(id)}]},
+                    {$and: [{'_id': safeObjectId(objectowner)}, {'clouddrive.remotedobj._id': safeObjectId(id)}]},
 
                     /*{'_id': 1},*/
                     {'_id':1},
@@ -336,6 +338,8 @@ class Group_RemoteDesktop  {
 
     async getMessages (messages) {
         console.log('-----------Global Remote Object Get Message ')
+
+
         let currentObject = await this.callObject(messages.objectID, messages.objectowner)
         if (!currentObject) {
             console.log("object not found in database")

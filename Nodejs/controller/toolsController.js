@@ -1,5 +1,6 @@
 
 
+const chalk = require('chalk')
 
 
 module.exports.randomInteger = (min, max) => {
@@ -78,21 +79,41 @@ class HashMatrix {
 class ObjectQuickInfo_Class {
     constructor () {
         this.objects = new Map()
+
     }
-    ADD_object (persistedID,object) {
-        persistedID = String(persistedID)
-        if (this.objects.delete(persistedID) ) {
+    ADD_object (linkpersistedID,object) {
+        linkpersistedID = String(linkpersistedID)
+        if (this.objects.has(linkpersistedID) ) {
             console.log("replace object")
         } else {
-            this.objects.set(persistedID, object)
+            console.log(chalk.yellow("Show link persistedID" + linkpersistedID))
+            console.log(chalk.yellow("Show object"))
+            console.log(JSON.stringify(object, null, 4))
+            this.objects.set(linkpersistedID, object)
         }
     }
-    REMOVE_object (persistedID) {
-        this.objects.delete(persistedID)
+    REMOVE_object (linkpersistedID) {
+        this.objects.delete(linkpersistedID)
     }
 
-    GET_object (persistedID) {
-        return this.objects.get(persistedID)
+    GET_object (linkpersistedID) {
+        return this.objects.get(linkpersistedID)
+    }
+
+    MONITOR () {
+        let messages = ""
+        /*
+        for (let i in this.objects) {
+            messages += i
+        }
+        */
+        //console.log(chalk.yellow(JSON.stringify(this.objects, null, 4)))
+        //console.log(chalk.yellow(this.apps))
+
+        for (let i of this.objects) {
+            messages += JSON.stringify(i) + " \n"
+        }
+        return messages
     }
 }
 

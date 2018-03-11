@@ -209,7 +209,7 @@ router.post('/clientUserGateway', (req, res, next) => {
     res.end()
 })
 router.post('/setFirstStart', (req, res, next) => {
-    //console.log("req " + CircularJSON.stringify(req ,null, 4))
+    console.log("req " + CircularJSON.stringify(req ,null, 4))
     sessionController.globalSession.SET_CurrentUSER(req.body.name, req.body.userID, req.body.password)
     if (req.body.objectID) {
         sessionController.globalSession.SET_CurrentObjectLink(req.body.objectID, req.body.ownername, req.body.objecttype)

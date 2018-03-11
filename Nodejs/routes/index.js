@@ -83,7 +83,7 @@ router.post('/addRemoteObject', async (req, res, next) => {
 })
 
 router.post('/addObjectLinks', async (req, res, next) => {
-    await worldController.WorldMethods.addObjectLink(req.body.objid, req.body.worldid, req.body.ownername, {name: req.body.name, positionX: req.body.positionX, positionY: req.body.positionY})
+    await worldController.WorldMethods.addObjectLink(req.body.objid, req.body.worldid, req.body.ownername, {name: req.body.name, positionX: req.body.positionX, positionY: req.body.positionY, objecttype: "remote"})
     res.end()
 })
 router.post('/returnall_objectlink', async (req, res, next) => {
@@ -242,7 +242,9 @@ router.post('/testCreateObject', async (req, res, next) => {
     let currentworld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
 
     if (currentworld) {
-        await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop("Nutmos", "myremote", "/", "7","9"))
+        //await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop("Nutmos", "myremote", "/", "7","9"))
+        await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop("Wanwipa", "myremote", "/", "7","10"))
+
     } else {
         console.log("no world found")
     }
@@ -259,13 +261,15 @@ router.post('/MONITOR_WORLD', async (req, res, next) => {
 router.post('/MONITOR_REMOTEDESKTOPOBJ', async (req, res, next) => {
     let currentObject = await globalmemoryController.GlobalRemoteDesktopOBJ.callObject(req.body.objectID, req.body.ownername)
     //console.log("show current object")
-    //console.log(chalk.yellow(CircularJSON.stringify(currentObject, null, 4)))
+    //console.log(chalk.yellow(CircularJSON.stringify(currentObject.data, null, 4)))
     //console.log(JSON.stringify(currentObject, null, 4))
     let messages = currentObject.data.monitorObject()
     res.send(messages)
 })
 
-
+router.post('/MONITOR_QUICKOBJECTINFO', (req, res, next) => {
+    res.send(globalmemoryController.ObjectQuickInfo.MONITOR())
+})
 router.post('/')
 
 module.exports = router;

@@ -133,6 +133,7 @@ class OneActiveWorldClass {
 
                 this.positionX = positionX
                 this.positionY = positionY
+                this.objecttype = "remote"
             }
         }
 
@@ -398,7 +399,7 @@ class OneActiveWorldClass {
                 let userdata = await globalmemoryController.GlobalActiveUser.callUsersV2(argumentTemplate.ownername)
                 let objectID = await remoteController.RemoteDesktopMethodClass.createRemoteDesktopObject(argumentTemplate.ownername, argumentTemplate.objectname, argumentTemplate.vpath)
                 console.log(chalk.red("Debug 1"))
-                let objectlinkedID = await WorldMethods.addObjectLink(objectID, this.persistedID, argumentTemplate.ownername, {name: argumentTemplate.objectname, positionX:argumentTemplate.positionX, positionY:argumentTemplate.positionY})
+                let objectlinkedID = await WorldMethods.addObjectLink(objectID, this.persistedID, argumentTemplate.ownername, {name: argumentTemplate.objectname, positionX:argumentTemplate.positionX, positionY:argumentTemplate.positionY, objecttype: "remote"})
                 console.log(chalk.red("Debug 2"))
 
                 if (!objectID || !objectlinkedID || !userdata) {
@@ -412,7 +413,7 @@ class OneActiveWorldClass {
                 console.log(JSON.stringify(currentobject, null, 4))
                 console.log("show argument template")
                 console.log(argumentTemplate)
-                await this.addnewObjectLink(objectlinkedID, objectID, userdata.persisted_id, argumentTemplate.owner_name, argumentTemplate.objectname, argumentTemplate.positionX, argumentTemplate.positionY)
+                await this.addnewObjectLink(objectlinkedID, objectID, userdata.persisted_id, argumentTemplate.owner_name, argumentTemplate.objectname, argumentTemplate.positionX, argumentTemplate.positionY, {objecttype: argumentTemplate.objecttype})
                 break
             default:
                 break
@@ -446,8 +447,8 @@ class OneActiveWorldClass {
 
 
 
-    getObjectLinkReference (object_persistedID) {
-        return this.ObjectLinks.get(object_persistedID)
+    getObjectLinkReference (objectlink_persistedID) {
+        return this.ObjectLinks.get(objectlink_persistedID)
     }
     async loadAllObjectLink () {
         let allobj = await WorldMethods.returnall_objectlink(this.persistedID)
@@ -456,7 +457,7 @@ class OneActiveWorldClass {
             if (allobj.objectlinks) {
                 for (let i of allobj.objectlinks) {
                     //console.log(i)
-                    await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY)
+                    await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY, {objecttype: i.objecttype})
                 }
                 console.log(this.ObjectLinks)
             } else {
@@ -496,7 +497,9 @@ class OneActiveWorldClass {
         }
         this.ObjectLinks.set(String(objectlink_persistedID), newObjectLink)
         this.setPosition_inMatrix(positionX,positionY, newObjectLink)
-
+        const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
+        globalmemoryController.ObjectQuickInfo.ADD_object(objectlink_persistedID, {objectID: object_persistedID, ownerID:owner_persistedID, objecttype: optional.objecttype})
+        //globalmemoryController.ObjectQuickInfo.MONITOR()
     }
 
     async saveAllObjectLink () {
@@ -512,7 +515,7 @@ class OneActiveWorldClass {
     }
 
     removeActiveMember (username) {
-        console.log('------------------------------------At Remote OBJ : Receive remove message ')
+        console.log('------------------------------------At World Controller : Receive remove message ')
         console.log()
         let currentActiveMember = this.activeMembers_additionInfo.get(username)
         if (currentActiveMember) {
@@ -1150,7 +1153,8 @@ class WorldMethods {
                                     object_name: optional.name ? optional.name : "",
                                     object_persisted_id: object_persistedID,
                                     positionX: optional.positionX ? optional.positionX : "",
-                                    positionY: optional.positionY ? optional.positionY : ""
+                                    positionY: optional.positionY ? optional.positionY : "",
+                                    objecttype: optional.objecttype ? optional.objecttype : ""
                                 }
                             }
                     },

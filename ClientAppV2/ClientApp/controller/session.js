@@ -181,9 +181,12 @@ class session_Class {
     }
     SET_CurrentWorld (persistedID) {
         this.active_at_world_persistedID = persistedID
+        console.log(chalk.cyanBright("SET CURRENT WORLD TO ID : " +  persistedID))
     }
-    SET_CurrentObject (persistedID) {
+    SET_CurrentObjectLink (persistedID) {
         this.active_at_object_persistedID = persistedID
+        console.log(chalk.cyanBright("SET CURRENT OBJECT TO ID : " +  persistedID))
+
         //this.active_at_object_objectowner = ownername
         //this.active_at_object_type = type
     }
