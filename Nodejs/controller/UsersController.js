@@ -154,28 +154,21 @@ class OneActiveUserClass {
             console.log("change activeobject")
             console.log(chalk.red("nextobjecttype " + nextobjecttype))
 
-
-
-
-            switch (nextobjecttype) {
+            switch (previousobjecttype) {
                 case "remote":
                     console.log(chalk.blue("// call remote object //"))
 
                     let previousObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: previousobjectID, objectowner: this.objectowner})
-                    //console.log("show previous object")
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-                    console.log(previousObject)
+                    //console.log(previousObject)
                     if (previousObject) {
                         previousObject.removeActiveMember(this.name)
                     }
+
+                    break
+            }
+
+            switch (nextobjecttype) {
+                case "remote":
                     let nextObject = await globalmemoryController.GlobalRemoteDesktopOBJ.getMessages({objectID: nextobjectID, objectowner: nextownerID})
                     console.log("print next object")
                     //console.log(nextObject)
@@ -183,9 +176,11 @@ class OneActiveUserClass {
                     if (nextObject) {
                         await nextObject.CallActiveMember(this.name)
                     }
-                    console.log("completed")
+
                     break
             }
+
+
             this.active_at_objectID = nextobjectID
             this.objectowner = nextownerID
             this.objecttype = nextobjecttype

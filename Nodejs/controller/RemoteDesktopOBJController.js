@@ -146,10 +146,11 @@ class One_Scheduler_RemoteDesktopP2P {
     }
 
     start_Calculation_Scheduling () {
-            if (this.active !== false) {
+            if (this.active !== false && this.calculateSchedule == null) {
                 this.calculateSchedule = setInterval(
                     () => {
                         if (this.changed === true) {
+
                             this.ReCalculate()
                             this.changed = false
                         } else {
