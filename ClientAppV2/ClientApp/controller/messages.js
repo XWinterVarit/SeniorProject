@@ -155,7 +155,7 @@ class messagesGlobalMethods {
             case "remove":
                 this.removeInSession(req.body.lists)
                 break
-            case "p2pframe":
+            case "p2ptask":
                 break
         }
     }
@@ -250,6 +250,12 @@ class messagesGlobalMethods {
             }
         }
         console.log("end remove")
+    }
+
+
+    //////Remote Section
+    static updateTask () {
+
     }
 
     static test (){

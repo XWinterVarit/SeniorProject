@@ -25,7 +25,8 @@ const globalConfigs = require('../config/GlobalConfigs')
 //==================================================================================================
 
 const ClientPathTempleted = {
-    clientUserGateway: "clientUserGateway"
+    clientUserGateway: "clientUserGateway",
+    clientRemoteGateway: "clientRemoteGateway"
 }
 
 class messagesTemplates {
@@ -92,10 +93,24 @@ class messagesTemplates {
         }
     }
 
-    static CRAFT_one_REMOTE_P2P_TASK (name, persistedID) {
-        return null
+    static CRAFT_one_REMOTE_P2P_TASK (destname, destIP, destPORT) {
+        return {
+            destclientname : destname,
+            destclientIP : destIP,
+            destclientPORT : destPORT,
+        }
     }
-
+    static UNICAST_REMOTE_P2P_TASK (tasked_clientname, tasked_clientedID, objectID, objectownername, objectownerID, destclient) {
+        return {
+            type: "P2PTask",
+            taskedclientname: tasked_clientname,
+            taskedclientID: tasked_clientedID,
+            objectID: objectID,
+            objectownername: objectownername,
+            objectownerID: objectownerID,
+            destclient : destclient
+        }
+    }
     static BROADCAST_UserOut (name) {
         return {
             type: "remove",

@@ -33,9 +33,10 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 //==================================================================================================
 //==================================================================================================
 class One_Scheduler_RemoteDesktopP2P {
-    constructor (persisted_id, objectowner) {
+    constructor (persisted_id, objectowner, objectowner_name) {
 
         this.objectowner = objectowner //ID
+        this.objectowner_name = objectowner_name
         this.persisted_id = persisted_id
 
         this.setofDeliver = []
@@ -44,7 +45,7 @@ class One_Scheduler_RemoteDesktopP2P {
         this.tmpDeliver = []
 
         this.changed = false
-        this.maximumDelivingPerNode = 5
+        this.maximumDelivingPerNode = 3
         this.activeMembers = new Map()
         this.Debug_activeMembers = []
         this.read_lock = false
@@ -149,8 +150,9 @@ class One_Scheduler_RemoteDesktopP2P {
             if (this.active !== false && this.calculateSchedule == null) {
                 this.calculateSchedule = setInterval(
                     () => {
-                        if (this.changed === true) {
 
+                        this.print_Deliver()
+                        if (this.changed === true) {
                             this.ReCalculate()
                             this.changed = false
                         } else {
@@ -174,12 +176,21 @@ class One_Scheduler_RemoteDesktopP2P {
     ReCalculate () {
             console.log("Recalculating..")
             this.clearDeliRecei()
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
             for (let i of this.activeMembers) {
-                //console.log(`show objectowner name : ${this.objectowner}`)
-                //console.log("active mem : " + JSON.stringify(i[1].name))
+                console.log(`show objectowner name : ${this.objectowner_name}`)
+                console.log("active mem : " + JSON.stringify(i[1].name))
                 i[1].sentto = []
                 i[1].weight = 0
-                if (i[1].name !== this.objectowner) {
+                if (i[1].name !== this.objectowner_name) {
                     this.setofReceiver.push(i[1])
                 } else {
                     this.setofDeliver.push(i[1])
@@ -310,7 +321,7 @@ class Group_RemoteDesktop  {
                     {$and: [{'_id': safeObjectId(objectowner)}, {'clouddrive.remotedobj._id': safeObjectId(id)}]},
 
                     /*{'_id': 1},*/
-                    {'_id':1},
+                    {'_id':1, 'name':1},
 
                     (err, docs) => {
                         if (err) {
@@ -329,7 +340,7 @@ class Group_RemoteDesktop  {
                 )
             })
             if (validation && outputdocs) {
-                let OneObject = new One_Scheduler_RemoteDesktopP2P(id, objectowner)
+                let OneObject = new One_Scheduler_RemoteDesktopP2P(id, objectowner, outputdocs.name)
                 this.RemoteDesktopP2PScheduler.add({id: id, data: OneObject})
                 this.Debug_RemoteDesktopP2PScheduler.push(OneObject)
                 return {data:OneObject}
