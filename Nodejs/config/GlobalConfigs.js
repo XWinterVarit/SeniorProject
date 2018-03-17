@@ -7,6 +7,9 @@ let MPath1_config_globalconfigs = MPath1_config + "GlobalConfigs"
 let MPath1_config_mongodb = MPath1_config + "MongoDB"
 let MPath1_config_redis = MPath1_config + "Redis"
 
+let MPathT_remotetest = nodepath + 'ClientTester/remotetest/'
+
+
 let MPath1_controller = nodepath + 'controller/'
 let MPath1_controller_toolscontroller = MPath1_controller + 'toolsController'
 let MPath1_controller_UsersController = MPath1_controller + 'UsersController'
@@ -31,7 +34,9 @@ module.exports.mpath1= {
                 worldController: MPath1_controller_WorldController,
                 globalmemoryController: MPath1_controller_GlobalMemory,
                 remotedesktopobjController: MPath1_controller_RemoteDesktopOBJController,
-                messagesController: MPath1_controller_messagesController
+                messagesController: MPath1_controller_messagesController,
+
+                remotetest: MPathT_remotetest
 }
 
 module.exports.connections = {

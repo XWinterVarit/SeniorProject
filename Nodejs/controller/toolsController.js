@@ -117,5 +117,73 @@ class ObjectQuickInfo_Class {
     }
 }
 
+class BufferUtility {
+
+
+
+    static array_prepared (arrays_of_buffer) {
+        let newArray = []
+        newArray.push(new Buffer(String(arrays_of_buffer.length),'utf-8'))
+        for (let i of arrays_of_buffer) {
+            let slength = String(i.length)
+            if (slength.length > 9) {
+                console.log("too much length")
+                return null
+            }
+            let slengthoflength = String(slength.length)
+
+            newArray.push(new Buffer(slengthoflength, 'utf-8'))
+            newArray.push(new Buffer(slength, 'utf-8'))
+            if (Buffer.isBuffer(i) === false) {
+                newArray.push(new Buffer(i, 'utf-8'))
+            } else {
+                newArray.push(i)
+            }
+        }
+        return newArray
+    }
+    static combinebuffer (prepared_array) {
+        return Buffer.concat(prepared_array)
+    }
+
+    static extractbuffer (combinebuffer) {
+        let outputArray = []
+        try {
+            let elementlength = combinebuffer.slice(0,1)
+            console.log("show element length " + elementlength)
+            console.log("show buffer length " + combinebuffer.length)
+            let offset = 1
+            for (let i = 0; i < elementlength; i++) {
+                let slengthoflength = Number(combinebuffer.slice(offset,offset+1))
+                offset++
+                let slength = Number(combinebuffer.slice(offset, offset+slengthoflength))
+                offset+=slengthoflength
+                console.log("at element : " + (i+1) + " this has length : " + slength + " from offset : " + offset  + "  to " + (offset+slength))
+
+                outputArray.push(combinebuffer.slice(offset, offset+slength))
+                offset+=slength
+            }
+        } catch (error) {
+            console.log("extract error cause by : " + error)
+        }
+        return outputArray
+    }
+    static createBuffer (anyarray) {
+        return this.combinebuffer(this.array_prepared(anyarray))
+    }
+    static printArrayofBuffer (arrays) {
+        arrays.map((i)=>{
+            if (i.length >= 30) {
+                console.log("LARGE")
+            } else {
+                console.log(i.toString())
+            }
+        })
+    }
+}
+
+
+
 module.exports.HashMatrix = HashMatrix
 module.exports.ObjectQuickInfo_Class = ObjectQuickInfo_Class
+module.exports.BufferUtility = BufferUtility

@@ -53,4 +53,19 @@ process.on('uncaughtException', function(err) {
     console.log('Caught exception: ' + err);
 });
 
+let PORT = 3001;
+const HOST = '127.0.0.1'
+
+const dgram = require('dgram')
+
+const server = dgram.createSocket('udp4')
+console.log("Server start listen udp on port " + PORT)
+server.on ('message', (message, remote) => {
+    console.log(remote.address + ':' + remote.port +' - ');
+})
+server.bind(PORT, HOST)
+
+
+
+
 module.exports = app;

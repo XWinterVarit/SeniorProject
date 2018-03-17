@@ -10,6 +10,7 @@ const ndarray = require('ndarray')
 const AsyncLock = require('async-lock')
 const Client = require('node-rest-client').Client
 let client = new Client()
+const dgram = require('dgram');
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -183,12 +184,76 @@ class http_in_queue {
         this.DO_queue()
     }
 }
+class udp_out_queue {
+    constructor() {
+        this.queue = []
+        this.worksSize = 0
+        this.LOCK_queue = new AsyncLock()
+        this.frozen = false
+    }
+    ADD_queue (req) {
+        this.LOCK_queue.acquire('key', () => {
+            this.queue.push(req)
+            if (this.worksSize === 0) {
+                this.worksSize++
+                this.DO_queue()
+            } else {
+                this.worksSize++
+            }
+        }).catch(error=>{
+            console.log("Lock error : " + error)
+        })
+    }
+    async REDUCE_queue () {
+        await this.LOCK_queue.acquire('key', ()=>{
+            this.worksSize--
+        }).catch(error=>{
+            console.log("Lock error : " + error)
+        })
+    }
+    async DO_queue () {
+        if (this.frozen) {
+            return
+        }
+        let onequeue
+        await this.LOCK_queue.acquire('key', ()=>{
+            onequeue = this.queue.shift()
+        })
+        if (onequeue) {
+            console.log("start queue")
+            await messagesGlobalMethods.udpOutput(onequeue)
+            await this.REDUCE_queue()
+            this.DO_queue()
+        } else {
+            console.log("queue is now empty")
+        }
+    }
+    PRINT_allqueue () {
+        for (let i of this.queue) {
+            console.log("show queue")
+            console.log(JSON.stringify(i, null, 4))
+        }
+    }
+    DEBUG_frozenqueue () {
+        this.frozen = true
+    }
+    DEBUG_continuequeue () {
+        this.frozen = false
+        this.DO_queue()
+    }
+}
+let requestQueue = new http_in_queue()
+let udpoutQueue = new udp_out_queue()
+
 
 class messagesGlobalMethods {
     static httpInputQueue (req) {
         requestQueue.ADD_queue(req)
         //requestQueue.DEBUG_frozenqueue()
         //requestQueue.PRINT_allqueue()
+    }
+    static udpOutputQueue (IP, PORT, data) {
+        udpoutQueue.ADD_queue([IP,PORT,data])
     }
     static httpInput (req) {
         // not implement yet, now it all redirect to userController first.
@@ -244,6 +309,26 @@ class messagesGlobalMethods {
             console.log("Error " + err)
             return null
         })
+    }
+
+
+    static async udpOutput (onequeue) {
+        let client = dgram.createSocket('udp4');
+
+        client.bind({
+            address: 'localhost',
+            port: 55555,
+            exclusive: true
+        })
+        console.log("destination : IP " + onequeue[0] + "  PORT : " + onequeue[1])
+        await new Promise(resolve => {
+            client.send(onequeue[2], 0, onequeue[2].length, Number(onequeue[1]), onequeue[0], function (err, bytes) {
+                if (err) throw err;
+                console.log('UDP message sent to ' + onequeue[0] + ':' + onequeue[1]);
+                resolve()
+            })
+        })
+        client.close();
     }
 
 

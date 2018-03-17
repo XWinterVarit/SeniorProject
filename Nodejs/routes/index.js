@@ -11,12 +11,15 @@ const chalk = require('chalk')
 const HashArray = require('hasharray')
 const CircularJSON = require('circular-json')
 const requestIP = require('request-ip')
+const fs = require('fs')
+const path = require('path')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
 ///////////////////////From Other Controllers////////////////////////
 
 const toolController = require(globalConfigs.mpath1.toolsController)
+const messagesController = require(globalConfigs.mpath1.messagesController)
 const userController = require(globalConfigs.mpath1.userscontroller)
 const worldController = require(globalConfigs.mpath1.worldController)
 const remoteDesktopOBJController = require(globalConfigs.mpath1.remotedesktopobjController)
@@ -270,6 +273,27 @@ router.post('/MONITOR_REMOTEDESKTOPOBJ', async (req, res, next) => {
 router.post('/MONITOR_QUICKOBJECTINFO', (req, res, next) => {
     res.send(globalmemoryController.ObjectQuickInfo.MONITOR())
 })
+
 router.post('/')
+
+
+router.post('/testimage', (req, res, next) => {
+    //let imagebuffer = fs.readFileSync(path.join(globalConfigs.mpath1.remotetest, 'cat.jpg'))
+    let imagebuffer = new Buffer("Well")
+    console.log(imagebuffer.length)
+    let prearray = [
+        "REMF", //route
+        "123", //objectID
+        "456", //ownerID
+        "789", //ownerName
+        "1", //framenumber
+        "125489498", //timestamp
+        imagebuffer //framebuffer
+    ]
+    let combinedbuffer = toolController.BufferUtility.createBuffer(prearray)
+    messagesController.messagesGlobalMethods.udpOutputQueue("127.0.0.1", "44444", combinedbuffer)
+    res.end()
+})
+
 
 module.exports = router;

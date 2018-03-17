@@ -51,9 +51,10 @@ console.log("UDP PORT read from file : " + fsport)
 
 let PORT = 50000;
 const HOST = '127.0.0.1'
+
 if (fsport) {
     if (fsport !== "") {
-        PORT = fsport
+        PORT = Number(fsport)
     }
 }
 
@@ -62,9 +63,9 @@ const dgram = require('dgram')
 const server = dgram.createSocket('udp4')
 console.log("start listen udp on port " + PORT)
 server.on ('message', (message, remote) => {
-    console.log(remote.address + ':' + remote.port +' - ' + message);
+    console.log(remote.address + ':' + remote.port +' - ');
 })
-server.bind(PORT)
+server.bind(PORT, HOST)
 
 
 module.exports = app;

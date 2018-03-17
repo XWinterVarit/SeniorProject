@@ -1,12 +1,12 @@
 const fs = require('fs')
-const screenshot = require('desktop-screenshot')
+//const screenshot = require('desktop-screenshot')
 const screenshot2 = require('screenshot-desktop')
 const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
 let converter
 let input
 
-var PORT = 44444;
-var HOST = '127.0.0.1';
+var PORT = 3001;
+var IP = '127.0.0.1';
 
 var dgram = require('dgram');
 var message = new Buffer('My KungFu is Good!');
@@ -39,7 +39,7 @@ let frames = []
 
 let test = async () => {
 
-    for (let iteration = 0; iteration < 200; iteration++) {
+    for (let iteration = 0; iteration < 1; iteration++) {
 
         for (let i = 0; i < 30; i++) {
             let client = dgram.createSocket('udp4');
@@ -51,9 +51,9 @@ let test = async () => {
             })
 
             await new Promise(resolve => {
-                client.send(frame_message, 0, frame_message.length, PORT, HOST, function (err, bytes) {
+                client.send(frame_message, 0, frame_message.length, PORT, IP, function (err, bytes) {
                     if (err) throw err;
-                    //console.log('UDP message sent to ' + HOST + ':' + PORT);
+                    console.log('UDP message sent to ' + IP + ':' + PORT);
                     resolve()
                 })
             })
@@ -67,6 +67,10 @@ let test = async () => {
 
 
 }
+test()
+
+
+
 let well = async() => {
     await async_setInterval(
         () => {
@@ -76,7 +80,6 @@ let well = async() => {
     )
     console.log("well")
 }
-//test()
 let screen = () => {
     screenshot("screenshot.png", {width:400, quality: 60},function(error, complete) {
         if(error)
@@ -196,7 +199,7 @@ let fpscap = async (fpscap) => {
         }, times
     )
 }
-fpscap(25)
+//fpscap(25)
 
 
 /*

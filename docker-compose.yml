@@ -16,12 +16,13 @@ services:
       #- ./Nodejs:/var/www/node
     command: bash      #npm run nf
     tty: true # Only for Dev
-    environment:
-      PORT: 3000 # process.env.PORT
-
+    ports:
+      - 3000 # process.env.PORT
   redis:
     container_name: redis
     build: ./DockerConfigs/Redis
+    ports:
+      - 6379:6379
 
   mongo:
     container_name: mongo
@@ -29,7 +30,7 @@ services:
     volumes:
       - SeniorProject_MongoDB_Data:/data/db
     ports:
-      - 57017:57017
+      - 27017:27017
     command: bash
     tty: true
 

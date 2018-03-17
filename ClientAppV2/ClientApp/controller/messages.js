@@ -11,12 +11,14 @@ const MatrixHash = require('matrix-hash')
 const AsyncLock = require('async-lock')
 const Client = require('node-rest-client').Client
 let client = new Client()
+const dgram = require('dgram');
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
 ///////////////////////From Other Controllers////////////////////////
 
 const sessionController = require(globalConfigs.mpath1.sessionController)
+const toolsController = require(globalConfigs.mpath1.toolsController)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
@@ -97,9 +99,68 @@ class http_in_queue {
         this.DO_queue()
     }
 }
+class udp_out_queue {
+    constructor() {
+        this.queue = []
+        this.worksSize = 0
+        this.LOCK_queue = new AsyncLock()
+        this.frozen = false
+    }
+    ADD_queue (req) {
+        this.LOCK_queue.acquire('key', () => {
+            this.queue.push(req)
+            if (this.worksSize === 0) {
+                this.worksSize++
+                this.DO_queue()
+            } else {
+                this.worksSize++
+            }
+        }).catch(error=>{
+            console.log("Lock error : " + error)
+        })
+    }
+    async REDUCE_queue () {
+        await this.LOCK_queue.acquire('key', ()=>{
+            this.worksSize--
+        }).catch(error=>{
+            console.log("Lock error : " + error)
+        })
+    }
+    async DO_queue () {
+        if (this.frozen) {
+            return
+        }
+        let onequeue
+        await this.LOCK_queue.acquire('key', ()=>{
+            onequeue = this.queue.shift()
+        })
+        if (onequeue) {
+            console.log("start queue")
+            await messagesGlobalMethods.udpOutput(onequeue)
+            await this.REDUCE_queue()
+            this.DO_queue()
+        } else {
+            console.log("queue is now empty")
+        }
+    }
+    PRINT_allqueue () {
+        for (let i of this.queue) {
+            console.log("show queue")
+            console.log(JSON.stringify(i, null, 4))
+        }
+    }
+    DEBUG_frozenqueue () {
+        this.frozen = true
+    }
+    DEBUG_continuequeue () {
+        this.frozen = false
+        this.DO_queue()
+    }
+}
+
 
 let requestQueue = new http_in_queue()
-
+let udpoutQueue = new udp_out_queue()
 class messagesTemplates {
     static moveUserPosition (userRef, posX, posY, activeWorld_persistedID) {
         return {
@@ -205,6 +266,28 @@ class messagesGlobalMethods {
             return null
         })
     }
+    static udpOutputQueue (IP, PORT, data) {
+        udpoutQueue.ADD_queue([IP,PORT,data])
+    }
+    static async udpOutput (onequeue) {
+        let client = dgram.createSocket('udp4');
+
+        client.bind({
+            address: 'localhost',
+            port: 50005,
+            exclusive: true
+        })
+
+        await new Promise(resolve => {
+            client.send(onequeue[2], 0, onequeue[2].length, onequeue[1], onequeue[0], function (err, bytes) {
+                if (err) throw err;
+                console.log('UDP message sent to ' + HOST + ':' + PORT);
+                resolve()
+            })
+        })
+        client.close();
+    }
+
 
     static updateSession (lists) {
         console.log("start update")
@@ -253,10 +336,45 @@ class messagesGlobalMethods {
     }
 
 
+    static udpInput (allbuffer) {
+        let arraydatas = toolsController.BufferUtility.extractbuffer(allbuffer)
+        if (!arraydatas) {
+            console.log("udp extracted error")
+            return false
+        }
+        let route = arraydatas[0].toString()
+        console.log(chalk.green("found route : " + route))
+        toolsController.BufferUtility.printArrayofBuffer(arraydatas)
+        switch (route) {
+            case "REMF":
+                console.log("go to Remote frame route")
+                //this.udpRemoteFrame(arraydatas)
+                break
+            default:
+                console.log("message route not found")
+                break
+        }
+    }
+
     //////Remote Section
     static updateTask () {
 
     }
+    static udpRemoteFrame (arraydatas) {
+        /*
+        *  arrayindex
+        *  0 route
+        *  1 objectID
+        *  2 ownerID
+        *  3 ownerName
+        *  4 framenumber
+        *  5 timestamp
+        *  6 framebuffer
+        *
+        * */
+        sessionController.globalSession.ACTION_REMOTEDESKTOP_updateframe(arraydatas[1], arraydatas[2], arraydatas[3], arraydatas[4], arraydatas[6], arraydatas[5])
+    }
+
 
     static test (){
         let str = JSON.stringify(incomingMessageTest)

@@ -15,6 +15,7 @@ const globalConfigs = require('../config/GlobalConfigs')
 
 const toolsController = require(globalConfigs.mpath1.toolsController)
 const messagesController = require(globalConfigs.mpath1.messagesController)
+const streamController = require(globalConfigs.mpath1.streamController)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
@@ -150,7 +151,9 @@ class session_Class {
         this.worldsizeY = 15
 
         this.ALLTASK = []
-        this.HEARTBEAT_signal_start()
+        //this.HEARTBEAT_signal_start()
+
+        this.globalObjectMemory = new sessionObjectMemory_Class()
     }
 
     HEARTBEAT_signal_start () {
@@ -193,6 +196,10 @@ class session_Class {
     SET_IP_PORT (ip, port) {
         this.currentUser_IP = ip
         this.currentUser_PORT = port
+    }
+
+    GET_activeObjectID () {
+        return this.active_at_object_persistedID
     }
 
 
@@ -277,7 +284,57 @@ class session_Class {
         this.worldmatrix = new toolsController.HashMatrix()
     }
 
+    ACTION_REMOTEDESKTOP_refreshtask (object_persistedID, ownerID, ownerName, peers) {
+        if (this.active_at_object_persistedID !== object_persistedID) {
+            console.log("false receive remote desktop task")
+            return false
+        }
+        let currentObject = this.CALL_RemoteObject(object_persistedID, ownerID, ownerName)
+        currentObject = currentObject.GET_RedirectTaskController()
+        currentObject.REFRESH_PEERS(peers)
 
+    }
+    ACTION_REMOTEDESKTOP_updateframe (object_persistedID, ownerID, ownerName, framenumber,framebufferRef, timestamp) {
+        if (this.active_at_object_persistedID !== object_persistedID) {
+            console.log("false receive remote desktop task")
+            return false
+        }
+        let currentObject = this.CALL_RemoteObject(object_persistedID, ownerID, ownerName)
+        currentObject = currentObject.GET_frameBufferController()
+        currentObject.SET_frame(framenumber, framebufferRef, timestamp, ownerID, ownerName)
+    }
+    GET_REMOTEDESKTOP_frame (object_persistedID) {
+        if (this.active_at_object_persistedID !== object_persistedID) {
+            console.log("false receive remote desktop task")
+            return false
+        }
+        let currentObject = this.CALL_RemoteObject(object_persistedID, ownerID, ownerName)
+        currentObject = currentObject.GET_frameBufferController()
+        return currentObject.GET_frame()
+    }
+
+    CALL_RemoteObject (object_persistedID, ownerID, ownerName) {
+        let  getObject = this.globalObjectMemory.GET_ObjectMemoryReference(object_persistedID)
+        if (getObject) {
+            console.log("found remote object")
+            return getObject
+        } else {
+            console.log("not found remote object, so create new remote object")
+            let newObject = new streamController.OneObjectRemoteDesktop_Class(object_persistedID, ownerID, ownerName)
+            this.globalObjectMemory.ADD_newObjectMemory(object_persistedID, newObject)
+            return newObject
+        }
+    }
+    GETREF_RemoteObject (object_persistedID) {
+        let  getObject = this.globalObjectMemory.GET_ObjectMemoryReference(object_persistedID)
+        if (getObject) {
+            console.log("found remote object")
+            return getObject
+        } else {
+            console.log("not found remote object, so create new remote object")
+            return null
+        }
+    }
 
     CONTROL_MoveToPosition (posX, posY) {
         let ownuser = this.getOwnMember()

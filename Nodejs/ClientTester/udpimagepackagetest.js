@@ -64,8 +64,8 @@ let extractbuffer = (combinebuffer) => {
         console.log("extract error cause by : " + error)
     }
     return outputArray
-
 }
+
 let printArrayofBuffer = (arrays) => {
     arrays.map((i)=>{
         if (i.length >= 30) {
