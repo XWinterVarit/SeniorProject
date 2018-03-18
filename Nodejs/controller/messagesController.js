@@ -8,6 +8,8 @@
 const chalk = require('chalk')
 const ndarray = require('ndarray')
 const AsyncLock = require('async-lock')
+const pad = require('pad')
+
 const Client = require('node-rest-client').Client
 let client = new Client()
 const dgram = require('dgram');
@@ -191,10 +193,15 @@ class udp_out_queue {
         this.LOCK_queue = new AsyncLock()
         this.frozen = false
     }
-    ADD_queue (req) {
-        this.LOCK_queue.acquire('key', () => {
+    async ADD_queue (req) {
+        console.log("DEBUG1")
+        await this.LOCK_queue.acquire('key2', () => {
             this.queue.push(req)
+            console.log("DEBUG2")
+
             if (this.worksSize === 0) {
+                console.log("DEBUG3")
+
                 this.worksSize++
                 this.DO_queue()
             } else {
@@ -205,7 +212,7 @@ class udp_out_queue {
         })
     }
     async REDUCE_queue () {
-        await this.LOCK_queue.acquire('key', ()=>{
+        await this.LOCK_queue.acquire('key2', ()=>{
             this.worksSize--
         }).catch(error=>{
             console.log("Lock error : " + error)
@@ -216,9 +223,10 @@ class udp_out_queue {
             return
         }
         let onequeue
-        await this.LOCK_queue.acquire('key', ()=>{
+        await this.LOCK_queue.acquire('key2', ()=>{
             onequeue = this.queue.shift()
         })
+
         if (onequeue) {
             console.log("start queue")
             await messagesGlobalMethods.udpOutput(onequeue)
@@ -252,8 +260,9 @@ class messagesGlobalMethods {
         //requestQueue.DEBUG_frozenqueue()
         //requestQueue.PRINT_allqueue()
     }
-    static udpOutputQueue (IP, PORT, data) {
-        udpoutQueue.ADD_queue([IP,PORT,data])
+    static async udpOutputQueue (IP, PORT, data) {
+        await udpoutQueue.ADD_queue([IP,PORT,data])
+        console.log(udpoutQueue.worksSize)
     }
     static httpInput (req) {
         // not implement yet, now it all redirect to userController first.
@@ -320,15 +329,87 @@ class messagesGlobalMethods {
             port: 55555,
             exclusive: true
         })
-        console.log("destination : IP " + onequeue[0] + "  PORT : " + onequeue[1])
+        //console.log("destination : IP " + onequeue[0] + "  PORT : " + onequeue[1])
         await new Promise(resolve => {
             client.send(onequeue[2], 0, onequeue[2].length, Number(onequeue[1]), onequeue[0], function (err, bytes) {
                 if (err) throw err;
-                console.log('UDP message sent to ' + onequeue[0] + ':' + onequeue[1]);
+                //console.log('UDP message sent to ' + onequeue[0] + ':' + onequeue[1]);
                 resolve()
             })
         })
         client.close();
+    }
+
+    static async udpOutputV2 (onequeue) {
+        let IP = onequeue[0]
+        let PORT = onequeue[1]
+        let largebuffer = onequeue[2]
+
+        let largebuffer_length = largebuffer.length
+        console.log("Buffer length : " + largebuffer_length)
+        //let arrayofcuttedbuffer = []
+        let currentTime = new Date().getTime()
+        let cutlength = 1400 //byte
+        let allpiecelength = largebuffer_length % cutlength
+
+        let maximumcutloop = 10000000
+        let offset = 0
+        let endoffset = 0
+        for (let i = 0; i < maximumcutloop; i++) {
+            if (largebuffer_length <= 0) {
+                break
+            }
+            if (largebuffer_length < cutlength) {
+                endoffset = offset + largebuffer_length
+                largebuffer_length = 0
+            } else {
+                endoffset = offset + Number(cutlength)
+                largebuffer_length -= cutlength
+            }
+            let slicedbuffer = largebuffer.slice(offset, endoffset)
+            let header = String(currentTime) + i + "/" + allpiecelength
+            let headerlength = pad (2,String(header.length),"0")
+            console.log("*" + header)
+            console.log(headerlength)
+            let allheader = new Buffer(headerlength+header, 'utf-8')
+            console.log("**"+allheader.toString())
+            let newcombinebuffer = Buffer.concat([allheader,slicedbuffer])
+            await this.udpOutput([IP,PORT, newcombinebuffer])
+            //arrayofcuttedbuffer.push(slicedbuffer)
+            //console.log(slicedbuffer.toString())
+
+            //console.log("isBuffer " + Buffer.isBuffer(slicedbuffer))
+            //console.log(`Cutting at offset : ${offset} to : ${endoffset} left : ${largebuffer_length}`)
+            offset = endoffset
+            /*
+            await new Promise(resolve => {
+                setTimeout(
+                    ()=>{
+                        return resolve()
+                    },1000
+                )
+            })
+            */
+        }
+        //return arrayofcuttedbuffer
+
+    }
+
+    static async udpInput (buffer) {
+        let newbuffer = Buffer.from(buffer)
+        let headerlength = buffer.slice(0,2).toString()
+        let header = buffer.slice(2,2+headerlength).toString()
+        console.log("Receive headerlength : " + headerlength)
+        console.log("Receive header : " + header)
+    }
+
+    static largeUDPEncode (largebuffer) {
+        let currentTime = new Date().getTime()
+        console.log(currentTime)
+
+    }
+    static largeUDPDecode () {
+
     }
 
 

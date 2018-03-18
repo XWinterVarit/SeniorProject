@@ -277,23 +277,83 @@ router.post('/MONITOR_QUICKOBJECTINFO', (req, res, next) => {
 router.post('/')
 
 
-router.post('/testimage', (req, res, next) => {
-    //let imagebuffer = fs.readFileSync(path.join(globalConfigs.mpath1.remotetest, 'cat.jpg'))
-    let imagebuffer = new Buffer("Well")
+router.post('/testimage', async (req, res, next) => {
+    let imagebuffer = new Buffer.from(fs.readFileSync(path.join(globalConfigs.mpath1.remotetest, 'cat2.jpg')))
+    let currentTime = new Date().getTime()
+
+    //let imagebuffer = new Buffer("Well")
     console.log(imagebuffer.length)
+    let prearrayinit = [
+        "REMF", //route
+        "a",//ObjectID
+        "b",//ownerID
+        "c",//ownerName
+        "1",//framenumber
+        imagebuffer
+    ]
+    /*
     let prearray = [
         "REMF", //route
-        "123", //objectID
-        "456", //ownerID
-        "789", //ownerName
+        "123", //PieceNumberOfPiece 2/10
+        "", //timestamp
         "1", //framenumber
-        "125489498", //timestamp
         imagebuffer //framebuffer
     ]
-    let combinedbuffer = toolController.BufferUtility.createBuffer(prearray)
-    messagesController.messagesGlobalMethods.udpOutputQueue("127.0.0.1", "44444", combinedbuffer)
+    */
+    let combinedbuffer = toolController.BufferUtility.createBuffer(prearrayinit)
+    await messagesController.messagesGlobalMethods.udpOutputV2(["127.0.0.1","50001", combinedbuffer])
+
+
+    //messagesController.messagesGlobalMethods.udpOutputQueue("127.0.0.1", "44444", imagebuffer)
+    //let imagesCutted = toolController.BufferUtility.bufferCutter(imagebuffer,1400) //arrays
+/*
+    let count = 0
+
+    prearrayinit[2] = String(currentTime)
+    prearray[2] = String(currentTime)
+    let counta = 0
+    */
+    /*
+    for (let i of imagesCutted) {
+        counta++
+        console.log("show present buffer size : " + i.length)
+    }
+    */
+  /*
+    let combinebuffer = null
+    for (let i of imagesCutted) {
+        combinebuffer = null
+        //console.log("show **** buffer size : " + combinebuffer.length)
+        //console.log("isBuffer " + Buffer.isBuffer(i))
+
+        if (count === 0) {
+            prearrayinit[1] = "1/"+imagesCutted.length
+            prearrayinit[7] = i
+            combinebuffer = toolController.BufferUtility.createBuffer(prearrayinit)
+            console.log("show present buffer size : " + combinebuffer.length)
+            //await messagesController.messagesGlobalMethods.udpOutput(["127.0.0.1","44444",combinebuffer])
+        } else {
+            prearray[1] = count+"/"+imagesCutted.length
+            prearrayinit[4] = i
+            combinebuffer = toolController.BufferUtility.createBuffer(prearray)
+            console.log("show present buffer size : " + combinebuffer.length)
+            //await messagesController.messagesGlobalMethods.udpOutput(["127.0.0.1","44444",combinebuffer])
+        }
+        await new Promise(resolve => {
+            setTimeout(
+                ()=>{
+                    return resolve()
+                },1000
+            )
+        })
+        count++
+
+    }
+*/
     res.end()
 })
+router.post('/testtime', (req, res, next) => {
 
+})
 
 module.exports = router;

@@ -134,9 +134,12 @@ class BufferUtility {
 
             newArray.push(new Buffer(slengthoflength, 'utf-8'))
             newArray.push(new Buffer(slength, 'utf-8'))
-            if (Buffer.isBuffer(i) === false) {
+            if (i.length < 100) {
                 newArray.push(new Buffer(i, 'utf-8'))
+                console.log("notBuffer")
             } else {
+                //newArray.push(new Buffer(i))
+                console.log("isBuffer")
                 newArray.push(i)
             }
         }
@@ -180,6 +183,37 @@ class BufferUtility {
             }
         })
     }
+
+    static bufferCutter (largebuffer, cutlength) {
+        let largebuffer_length = largebuffer.length
+        console.log("Buffer length : " + largebuffer_length)
+        let arrayofcuttedbuffer = []
+        let maximumcutloop = 10000000
+        let offset = 0
+        let endoffset = 0
+        for (let i = 0; i < maximumcutloop; i++) {
+            if (largebuffer_length <= 0) {
+                break
+            }
+            if (largebuffer_length < cutlength) {
+                endoffset = offset + largebuffer_length
+                largebuffer_length = 0
+            } else {
+                endoffset = offset + Number(cutlength)
+                largebuffer_length -= cutlength
+            }
+            let slicedbuffer = largebuffer.slice(offset, endoffset)
+            arrayofcuttedbuffer.push(slicedbuffer)
+            //console.log(slicedbuffer.toString())
+
+            console.log("isBuffer " + Buffer.isBuffer(slicedbuffer))
+            //console.log(`Cutting at offset : ${offset} to : ${endoffset} left : ${largebuffer_length}`)
+            offset = endoffset
+        }
+        return arrayofcuttedbuffer
+    }
+
+
 }
 
 

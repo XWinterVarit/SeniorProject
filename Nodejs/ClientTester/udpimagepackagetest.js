@@ -76,9 +76,47 @@ let printArrayofBuffer = (arrays) => {
     })
 }
 //printArrayofBuffer(array_prepared([first, second, end]))
+
+/*
 let pp = array_prepared([first, frame_message, second, end])
 printArrayofBuffer(pp)
 
 let a = combinebuffer(pp)
 let b = extractbuffer(a)
 printArrayofBuffer(b)
+*/
+
+let buffer = new Buffer('abcdefg')
+
+let bufferCutter = (largebuffer, cutlength) => {
+    let largebuffer_length = largebuffer.length
+    console.log("Buffer length : " + largebuffer_length)
+    let arrayofcuttedbuffer = []
+    let maximumcutloop = 20
+    let offset = 0
+    let endoffset = 0
+    for (let i = 0; i < maximumcutloop; i++) {
+        if (largebuffer_length <= 0) {
+            break
+        }
+        if (largebuffer_length < cutlength) {
+            endoffset = offset + largebuffer_length
+            largebuffer_length = 0
+        } else {
+            endoffset = offset + Number(cutlength)
+            largebuffer_length -= cutlength
+        }
+        let slicedbuffer = largebuffer.slice(offset, endoffset)
+        arrayofcuttedbuffer.push(slicedbuffer)
+        console.log(slicedbuffer.toString())
+
+
+        console.log(`Cutting at offset : ${offset} to : ${endoffset} left : ${largebuffer_length}`)
+        offset = endoffset
+    }
+}
+
+
+
+
+bufferCutter(buffer, 6)

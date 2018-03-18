@@ -199,6 +199,41 @@ class messagesTemplates {
     }
 }
 
+class udpGroupComposer {
+    constructor() {
+        this.timeID = new Map()
+        this.uncompletedCombine = 0
+        this.oneudpComposer = class {
+            constructor (allpiecelength, groupComposerRef, HigherRef) {
+                this.piecesArray = []
+                this.piecesArray.length = allpiecelength
+                this.setedpiece = 0
+                this.allpiecelength = allpiecelength
+                //uncompletedCombine++
+            }
+            SET_piece (pieceID, buffer) {
+                if (this.piecesArray[pieceID] != null) {
+                    this.piecesArray[pieceID] = buffer
+                    this.setedpiece++
+
+                } else {
+                    console.log("duplicate package found")
+                }
+            }
+            UPPER_setedpiece () {
+                this.setedpiece++
+                if (this.setedpiece >= this.allpiecelength) {
+                    console.log("completed collect, start combine")
+                }
+            }
+
+        }
+    }
+}
+
+
+
+
 class messagesGlobalMethods {
     static httpInputQueue (req) {
         requestQueue.ADD_queue(req)
@@ -335,7 +370,24 @@ class messagesGlobalMethods {
         console.log("end remove")
     }
 
+    static async udpInput (buffer) {
+        buffer = Buffer.from(buffer)
+        let headerlength = buffer.slice(0,2).toString()
+        let header = buffer.slice(2,2+Number(headerlength))
+        console.log("Receive headerlength : " + headerlength)
+        let messages = ""
+        //let data = buffer.slice(2+Number(headerlength), buffer.length)
 
+        /*
+        for (let i = 0; i < header.length; i++) {
+            messages += header[i]
+        }
+        console.log("Receive header : " + messages)
+        */
+        console.log("Receive header : " + header)
+
+    }
+  /*
     static udpInput (allbuffer) {
         let arraydatas = toolsController.BufferUtility.extractbuffer(allbuffer)
         if (!arraydatas) {
@@ -355,7 +407,7 @@ class messagesGlobalMethods {
                 break
         }
     }
-
+*/
     //////Remote Section
     static updateTask () {
 

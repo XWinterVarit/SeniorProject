@@ -59,11 +59,18 @@ if (fsport) {
 }
 
 const dgram = require('dgram')
+const globalConfigs = require('./config/GlobalConfigs')
+const messagesController = require(globalConfigs.mpath1.messagesController)
 
 const server = dgram.createSocket('udp4')
 console.log("start listen udp on port " + PORT)
+let count = 0
 server.on ('message', (message, remote) => {
-    console.log(remote.address + ':' + remote.port +' - ');
+    count++
+    if (count <= 2) {
+        console.log(remote.address + ':' + remote.port +' - ');
+        messagesController.messagesGlobalMethods.udpInput(message)
+    }
 })
 server.bind(PORT, HOST)
 
