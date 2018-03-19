@@ -11,7 +11,7 @@ const MPath1_controller_stream = MPath1_controller + 'stream'
 const MPath1_controller_messages = MPath1_controller + 'messages'
 const MPath1_controller_tools = MPath1_controller + 'tools'
 const serverIP = "127.0.0.1"
-const serverPort = "80"
+const serverPort = "3000"
 
 let clientIP = "docker.for.mac.localhost"
 let clientPORT = "50000"

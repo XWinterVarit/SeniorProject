@@ -27,7 +27,7 @@ let monitor = () => {
                 }
             }
             console.log("starting...")
-                client.post("http://localhost:80/MONITOR_WORLD", args,(data, response) => {
+                client.post("http://localhost:3000/MONITOR_WORLD", args,(data, response) => {
                     term.clear()
                     term.green(data.toString())
                 })

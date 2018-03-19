@@ -85,23 +85,29 @@ class messagesTemplates {
             PORT: PORT
         }
     }
-    static CRAFT_one_object (subtype, persistedID, owner_name, posX, posY) {
+    static CRAFT_one_object (subtype, persistedID, owner_name, posX, posY, owner_ID) {
         return {
             type: "object",
             subtype: subtype,
             persistedID: persistedID,
             owner_name: owner_name,
+            owner_ID: owner_ID,
             positionX: posX,
             positionY: posY
         }
     }
 
     static CRAFT_one_REMOTE_P2P_TASK (destname, destIP, destPORT) {
+        return [
+            destname, destIP, destPORT
+        ]
+        /*
         return {
             destclientname : destname,
             destclientIP : destIP,
             destclientPORT : destPORT,
         }
+        */
     }
     static UNICAST_REMOTE_P2P_TASK (tasked_clientname, tasked_clientedID, objectID, objectownername, objectownerID, destclient) {
         return {

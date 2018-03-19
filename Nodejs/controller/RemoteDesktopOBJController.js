@@ -15,6 +15,7 @@ const globalConfigs = require('../config/GlobalConfigs')
 ///////////////////////From Other Controllers////////////////////////
 
 const toolController = require(globalConfigs.mpath1.toolsController)
+const messagesController = require(globalConfigs.mpath1.messagesController)
 /////////////////////////////From Mongo//////////////////////////////
 
 const mongotools = require(globalConfigs.mpath1.mongodb).tools
@@ -151,9 +152,10 @@ class One_Scheduler_RemoteDesktopP2P {
                 this.calculateSchedule = setInterval(
                     () => {
 
-                        this.print_Deliver()
+                        //this.print_Deliver()
                         if (this.changed === true) {
                             this.ReCalculate()
+                            this.SendMessagesToClient()
                             this.changed = false
                         } else {
                             console.log("this object has not been changed")
@@ -198,7 +200,7 @@ class One_Scheduler_RemoteDesktopP2P {
             }
             if (this.setofDeliver.length !== 0) {
                 this.Distribute_to_Receiver()
-                this.print_Deliver()
+                //this.print_Deliver()
             } else {
                 console.log("owner object is not active")
             }
@@ -286,9 +288,56 @@ class One_Scheduler_RemoteDesktopP2P {
         console.log("printing set of Receiver")
         console.log(all)
     }
-    SendMessagesToClient () {
 
+
+
+    SendMessagesToClient () {
+        for (let i of this.setofDeliver) {
+            //console.log(chalk.yellow(CircularJSON.stringify(i, null, 4)))
+            //console.log(i.name + " weight : " + i.weight + " sent to :  ")
+            console.log(chalk.bold(`${i.name} : persisted-id : ${i.userpointer.data.persisted_id}  weight : ${i.weight}  send to :  `))
+            let P2PTask = []
+            for (let j of i.sentto) {
+                console.log(chalk.yellow(`name : ${j.name}   IP : ${j.userpointer.data.ipaddr}   PORT : ${j.userpointer.data.port}`))
+                P2PTask.push(messagesController.messagesTemplates.CRAFT_one_REMOTE_P2P_TASK(j.name, j.userpointer.data.ipaddr,j.userpointer.data.port))
+                //console.log(chalk.yellow(CircularJSON.stringify(j, null, 4)))
+            }
+            let message = messagesController.messagesTemplates.UNICAST_REMOTE_P2P_TASK(i.name,i.userpointer.data.persisted_id,this.persisted_id, this.objectowner_name, this.objectowner, P2PTask)
+            messagesController.messagesGlobalMethods.httpOutput_POST(i.userpointer.data.ipaddr, i.userpointer.data.port, messagesController.ClientPathTemplated.clientRemoteGateway, message)
+
+        }
+        for (let i of this.setofFulledDeliver) {
+            //console.log(chalk.yellow(CircularJSON.stringify(i, null, 4)))
+            //console.log(i.name + " weight : " + i.weight + " sent to :  ")
+            console.log(chalk.bold(`${i.name} : persisted-id : ${i.userpointer.data.persisted_id}  weight : ${i.weight}  send to :  `))
+            let P2PTask = []
+            for (let j of i.sentto) {
+                console.log(chalk.yellow(`name : ${j.name}   IP : ${j.userpointer.data.ipaddr}   PORT : ${j.userpointer.data.port}`))
+                P2PTask.push(messagesController.messagesTemplates.CRAFT_one_REMOTE_P2P_TASK(j.name, j.userpointer.data.ipaddr,j.userpointer.data.port))
+                //console.log(chalk.yellow(CircularJSON.stringify(j, null, 4)))
+            }
+            let message = messagesController.messagesTemplates.UNICAST_REMOTE_P2P_TASK(i.name,i.userpointer.data.persisted_id,this.persisted_id, this.objectowner_name, this.objectowner, P2PTask)
+            messagesController.messagesGlobalMethods.httpOutput_POST(i.userpointer.data.ipaddr, i.userpointer.data.port, messagesController.ClientPathTemplated.clientRemoteGateway, message)
+        }
+        for (let i of this.tmpDeliver) {
+            //console.log(chalk.yellow(CircularJSON.stringify(i, null, 4)))
+            //console.log(i.name + " weight : " + i.weight + " sent to :  ")
+
+            console.log(chalk.bold(`${i.name} : persisted-id : ${i.userpointer.data.persisted_id}  weight : ${i.weight}  send to :  `))
+            let P2PTask = []
+            for (let j of i.sentto) {
+                console.log(chalk.yellow(`name : ${j.name}   IP : ${j.userpointer.data.ipaddr}   PORT : ${j.userpointer.data.port}`))
+                P2PTask.push(messagesController.messagesTemplates.CRAFT_one_REMOTE_P2P_TASK(j.name, j.userpointer.data.ipaddr,j.userpointer.data.port))
+                //console.log(chalk.yellow(CircularJSON.stringify(j, null, 4)))
+            }
+            let message = messagesController.messagesTemplates.UNICAST_REMOTE_P2P_TASK(i.name,i.userpointer.data.persisted_id,this.persisted_id, this.objectowner_name, this.objectowner, P2PTask)
+            messagesController.messagesGlobalMethods.httpOutput_POST(i.userpointer.data.ipaddr, i.userpointer.data.port, messagesController.ClientPathTemplated.clientRemoteGateway, message)
+
+
+        }
     }
+
+
     HeartBeatCheck () {
 
     }

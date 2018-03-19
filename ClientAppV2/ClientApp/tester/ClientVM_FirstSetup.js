@@ -52,7 +52,7 @@ let sent = async () => {
             userID: "5a5b4fe146f399051f99b4c1",
             password: "1234",
             worldID: "5a5b50a146f399051f99b4c4",
-            IP: "docker.for.mac.localhost",
+            IP: "127.0.0.1",
             PORT: "50001",
 
             objectID: "5aa543f6e6ca25042f106712",
@@ -81,7 +81,7 @@ let sent = async () => {
             userID: "5a5b4fe146f399051f99b4c2",
             password: "5678",
             worldID: "5a5b50a146f399051f99b4c4",
-            IP: "docker.for.mac.localhost",
+            IP: "127.0.0.1",
             PORT: "50002"
         },
         headers: {
@@ -103,7 +103,7 @@ let sent = async () => {
             userID: "5a5b4fe146f399051f99b4c3",
             password: "91011",
             worldID: "5a5b50a146f399051f99b4c4",
-            IP: "docker.for.mac.localhost",
+            IP: "127.0.0.1",
             PORT: "50003"
         },
         headers: {
@@ -125,7 +125,7 @@ let sent = async () => {
             userID: "5a4d13a4daac5f00d435a784",
             password: "1213",
             worldID: "5a5837f7e79e0d017e88cd8b",
-            IP: "docker.for.mac.localhost",
+            IP: "127.0.0.1",
             PORT: "50004"
         },
         headers: {
@@ -147,7 +147,7 @@ let sent = async () => {
             userID: "5a5b4fe146f399051f99b4c1",
             password: "1415",
             worldID: "5a5b50a146f399051f99b4c4",
-            IP: "docker.for.mac.localhost",
+            IP: "127.0.0.1",
             PORT: "50005"
         },
         headers: {

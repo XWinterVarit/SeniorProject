@@ -34,6 +34,7 @@ class OneObjectRemoteDesktop_Class {
     GET_RedirectTaskController () {
         return this.RemoteDesktopRedirectTask
     }
+
 }
 
 
@@ -109,9 +110,12 @@ class RemoteDesktopRedirectTask {
         let messages = ""
         messages += `Monitor Redirect Remote Frame : objectID ${this.object_persistedID}  ownerID ${this.ownerID}   ownerName ${this.ownerName}\n`
         messages += `peers list : \n`
+        messages += this.peers.toString()
+        /*
         for (let i of this.peers) {
             messages += i + '\n'
         }
+        */
         return messages
     }
 

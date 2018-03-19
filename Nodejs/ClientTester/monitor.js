@@ -22,7 +22,7 @@ let monitor = (cases) => {
         case 1:
             setInterval(
                 () => {
-                    client.get("http://localhost:80/monitor", (data, response) => {
+                    client.get("http://localhost:3000/monitor", (data, response) => {
                         term.clear()
                         term.green(data.toString())
                     })
@@ -43,7 +43,7 @@ let monitor = (cases) => {
                 console.log("calls")
                 setInterval(
                     () => {
-                        client.post("http://localhost:80/monremoteUser", args, (data, response) => {
+                        client.post("http://localhost:3000/monremoteUser", args, (data, response) => {
                             term.clear()
                             term.green(data.toString())
                         })
@@ -66,7 +66,7 @@ let monitor = (cases) => {
             console.log("calls")
             setInterval(
                 () => {
-                    client.post("http://localhost:80/monremoteUser", args, (data, response) => {
+                    client.post("http://localhost:3000/monremoteUser", args, (data, response) => {
                         term.clear()
                         term.green(data.toString())
                     })
@@ -87,7 +87,7 @@ let monitor = (cases) => {
             console.log("calls")
             setInterval(
                 () => {
-                    client.post("http://localhost:80/monremoteUser", args, (data, response) => {
+                    client.post("http://localhost:3000/monremoteUser", args, (data, response) => {
                         term.clear()
                         term.green(data.toString())
                     })
@@ -109,7 +109,7 @@ let monitor = (cases) => {
             console.log("calls")
             setInterval(
                 () => {
-                    client.post("http://localhost:80/monWorld", args, (data, response) => {
+                    client.post("http://localhost:3000/monWorld", args, (data, response) => {
                         term.clear()
                         term.green(data.toString())
                     })
@@ -131,7 +131,7 @@ let monitor = (cases) => {
             console.log("calls")
             setInterval(
                 () => {
-                    client.post("http://localhost:80/monWorld", args, (data, response) => {
+                    client.post("http://localhost:3000/monWorld", args, (data, response) => {
                         term.clear()
                         term.green(data.toString())
                     })

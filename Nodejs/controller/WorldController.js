@@ -369,6 +369,7 @@ class OneActiveWorldClass {
         if (currentUserInfo && currentUserMainInfo) {
             if (this.ACTION_changeObjectPosition(currentUserInfo, newX, newY)) {
                 let message = messagesController.messagesTemplates.BROADCAST_moveUserPosition(name, currentUserMainInfo.data.persistedID, currentUserMainInfo.data.standby, currentUserMainInfo.data.ipaddr, currentUserMainInfo.data.port, currentUserInfo.positionX, currentUserInfo.positionY)
+  /*
                 console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
                 console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
                 console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
@@ -378,7 +379,7 @@ class OneActiveWorldClass {
                 console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
                 console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
                 console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
-
+*/
                 messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(this.GETALL_NETWORK_ADDRESS(), messagesController.ClientPathTemplated.clientUserGateway, message)
             } else {
                 console.log("Your position can't changed due to some error")
@@ -538,7 +539,7 @@ class OneActiveWorldClass {
         for (let i of this.ObjectLinks) {
             let j = i[1]
             //console.log(chalk.yellow(JSON.stringify(i,null, 4)))
-            let newlist = messagesController.messagesTemplates.CRAFT_one_object(j.subtype, j.persistedID, j.owner_name, j.positionX, j.positionY)
+            let newlist = messagesController.messagesTemplates.CRAFT_one_object(j.subtype, j.persistedID, j.owner_name, j.positionX, j.positionY, j.owner_persistedID)
             previouslist.push(newlist)
         }
         //console.log(chalk.yellow(JSON.stringify(previouslist, null, 4)))

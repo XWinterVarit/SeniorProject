@@ -103,6 +103,10 @@ class OneActiveUserClass {
 
     }
 
+
+
+    ////////////////////////////Confusion Warning ///// Change back to use real object ID instead of objectlink ID
+    // but not change variable name yet due to low dev time
     async set_active_objectID (objectLinkID) {
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
 
@@ -122,7 +126,8 @@ class OneActiveUserClass {
             previousobjecttype = this.objecttype
 
 
-        let nextObjectLink = globalmemoryController.ObjectQuickInfo.GET_object(objectLinkID)
+        //let nextObjectLink = globalmemoryController.ObjectQuickInfo.GET_object(objectLinkID)
+        let nextObjectLink = objectLinkID
 
         console.log(chalk.red(JSON.stringify(nextObjectLink, null, 4)))
         if (nextObjectLink) {

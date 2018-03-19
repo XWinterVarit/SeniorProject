@@ -69,10 +69,11 @@ class aciveMember_Class {
     }
 }
 class objectLink_Class {
-    constructor (persistedID, owner_name, type, optionals) {
+    constructor (persistedID, owner_name, type, optionals, owner_ID) {
         this.maintype = "object"
         this.persistedID = persistedID
         this.owner_name = owner_name
+        this.owner_ID = owner_ID
         this.type = ""
         this.positionX = 0
         this.positionY = 0
@@ -128,6 +129,8 @@ class session_Class {
         //this.active_at_object_objectowner = ""
         //this.active_at_object_type = ""
         this.object_owner_name = ""
+        this.object_owner_ID = ""
+        this.object_type = ""
 
         this.currentUser_persistedID = globalConfigs.ClientInfo.currentUser_persistedID
         this.currentUser_name = globalConfigs.ClientInfo.currentUser_name
@@ -151,7 +154,7 @@ class session_Class {
         this.worldsizeY = 15
 
         this.ALLTASK = []
-        //this.HEARTBEAT_signal_start()
+        this.HEARTBEAT_signal_start()
 
         this.globalObjectMemory = new sessionObjectMemory_Class()
     }
@@ -186,12 +189,13 @@ class session_Class {
         this.active_at_world_persistedID = persistedID
         console.log(chalk.cyanBright("SET CURRENT WORLD TO ID : " +  persistedID))
     }
-    SET_CurrentObjectLink (persistedID) {
+    SET_CurrentObjectLink (persistedID, ownername, objecttype, ownerID) {
         this.active_at_object_persistedID = persistedID
+        this.object_owner_name = ownername
+        this.object_owner_ID = ownerID
+        this.object_type = objecttype
         console.log(chalk.cyanBright("SET CURRENT OBJECT TO ID : " +  persistedID))
-
-        //this.active_at_object_objectowner = ownername
-        //this.active_at_object_type = type
+        console.log(chalk.cyanBright(`SET CURRENT OBJECT TO ID : ${persistedID}  WITH OWNER NAME : ${ownername}  OWNER ID : ${objecttype} TYPE : ${ownerID} `))
     }
     SET_IP_PORT (ip, port) {
         this.currentUser_IP = ip
@@ -313,6 +317,33 @@ class session_Class {
         return currentObject.GET_frame()
     }
 
+    CHECK_RequestRemoteTask (name, ID, objectID, objectownername, objectownerID) {
+        let validation = true
+        if (this.currentUser_name !== name) {
+            console.log(chalk.red("request remote task client name not true, IGNORE"))
+            console.log(chalk.yellow("currentUser_name " + this.currentUser_name))
+            validation = false
+        }
+        if (this.currentUser_persistedID !== ID) {
+            console.log(chalk.red("request remote task client ID not true, IGNORE"))
+            console.log(chalk.yellow("currentUser_ID " + this.currentUser_persistedID))
+
+            validation = false
+        }
+        if (this.active_at_object_persistedID !== objectID) {
+            console.log(chalk.red("request remote task activeobjectID not true, IGNORE"))
+            console.log(chalk.yellow("object_ID " + this.active_at_object_persistedID))
+
+            validation = false
+        }
+        if (this.object_owner_name !== objectownername) {
+            console.log(chalk.red("request remote task object ownername not true, IGNORE"))
+            console.log(chalk.yellow("objectownername " + this.object_owner_name))
+
+            validation = false
+        }
+        return validation
+    }
     CALL_RemoteObject (object_persistedID, ownerID, ownerName) {
         let  getObject = this.globalObjectMemory.GET_ObjectMemoryReference(object_persistedID)
         if (getObject) {
@@ -488,14 +519,15 @@ class session_Class {
         }
         return currentMember
     }
-    callObjectLink (persistedID, owner_name, type, others) {
+
+    callObjectLink (persistedID, owner_name, type, others, owner_ID) {
         let currentObject = this.objectLink.get(persistedID)
         if (!others) {
             return null
         }
         if (!currentObject) {
             console.log("no object found in memory")
-            currentObject = new objectLink_Class(persistedID, owner_name, type, {positionX: others.positionX, positionY: others.positionY})
+            currentObject = new objectLink_Class(persistedID, owner_name, type, {positionX: others.positionX, positionY: others.positionY}, owner_ID)
             this.objectLink.set(persistedID, currentObject)
             this.setPosition_inMatrix(others.positionX, others.positionY, currentObject)
         } else {

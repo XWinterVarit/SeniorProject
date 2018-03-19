@@ -251,7 +251,7 @@ class messagesGlobalMethods {
             case "remove":
                 this.removeInSession(req.body.lists)
                 break
-            case "p2ptask":
+            case "P2PTask":
                 break
         }
     }
@@ -369,6 +369,17 @@ class messagesGlobalMethods {
         }
         console.log("end remove")
     }
+
+    static updateRemoteP2PTask (req) {
+        console.log(chalk.yellow(JSON.stringify(req.body, null, 4)))
+        if (!sessionController.globalSession.CHECK_RequestRemoteTask(req.body.taskedclientname, req.body.taskedclientID, req.body.objectID, req.body.objectownername,req.body.objectownerID)) {
+            console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
+            return false
+        }
+        let currentObject = sessionController.globalSession.CALL_RemoteObject(req.body.objectID, req.body.objectownerID, req.body.objectownername)
+        currentObject.RemoteDesktopRedirectTask.REFRESH_PEERS(req.body.destclient)
+    }
+
 
     static async udpInput (buffer) {
         buffer = Buffer.from(buffer)

@@ -111,9 +111,6 @@ router.post('/callSession', (req, res, next) => {
     res.end()
 })
 
-router.get('/sessionMonitor', (req, res, next) => {
-    res.send(sessionController.globalSession.MONITOR_Session())
-})
 
 router.post('/callUser', (req, res, next) => {
     let messages = {
@@ -208,11 +205,15 @@ router.post('/clientUserGateway', (req, res, next) => {
     messagesController.messagesGlobalMethods.httpInput(req)
     res.end()
 })
+router.post('/clientRemoteGateway', (req, res, next) => {
+    messagesController.messagesGlobalMethods.updateRemoteP2PTask(req)
+    res.end()
+})
 router.post('/setFirstStart', (req, res, next) => {
     console.log("req " + CircularJSON.stringify(req ,null, 4))
     sessionController.globalSession.SET_CurrentUSER(req.body.name, req.body.userID, req.body.password)
     if (req.body.objectID) {
-        sessionController.globalSession.SET_CurrentObjectLink(req.body.objectID, req.body.ownername, req.body.objecttype)
+        sessionController.globalSession.SET_CurrentObjectLink(req.body.objectID, req.body.ownername, req.body.objecttype, req.body.ownerID)
     }
     sessionController.globalSession.SET_CurrentWorld(req.body.worldID)
     sessionController.globalSession.SET_IP_PORT(req.body.IP, req.body.PORT)
@@ -220,4 +221,14 @@ router.post('/setFirstStart', (req, res, next) => {
     res.end()
 })
 //
+
+router.get('/sessionMonitor', (req, res, next) => {
+    res.send(sessionController.globalSession.MONITOR_Session())
+})
+
+router.get('/remoteMonitor', (req, res, next) => {
+    let currentObject = sessionController.globalSession.CALL_RemoteObject(sessionController.globalSession.active_at_object_persistedID, sessionController.globalSession.object_owner_name, sessionController.globalSession.object_owner_ID)
+    res.send(currentObject.RemoteDesktopRedirectTask.MONITOR())
+})
+
 module.exports = router;
