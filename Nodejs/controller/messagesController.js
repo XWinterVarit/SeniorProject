@@ -13,6 +13,8 @@ const pad = require('pad')
 const Client = require('node-rest-client').Client
 let client = new Client()
 const dgram = require('dgram');
+
+const FormData = require('form-data')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -29,7 +31,8 @@ const globalConfigs = require('../config/GlobalConfigs')
 
 const ClientPathTempleted = {
     clientUserGateway: "clientUserGateway",
-    clientRemoteGateway: "clientRemoteGateway"
+    clientRemoteGateway: "clientRemoteGateway",
+    clientHTTPFrameUpdate: "clientHTTPREMF"
 }
 
 class messagesTemplates {
@@ -325,6 +328,25 @@ class messagesGlobalMethods {
             return null
         })
     }
+
+
+
+    static formdata_httpOutput_SERVER (path) {
+
+    }
+    static formdata_httpOutput_ANY (IP, PORT, path, data) {
+        let form = new FormData()
+        form.append('name', new Buffer("cheevarit"))
+
+        form.submit("http://" + IP + ":" + PORT +"/" + path, (err, res) => {
+            if (err) {
+                console.log(chalk.red(err))
+            } else {
+                console.log("send done")
+            }
+        })
+    }
+
 
 
     static async udpOutput (onequeue) {

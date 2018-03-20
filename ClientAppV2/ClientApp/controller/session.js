@@ -154,7 +154,7 @@ class session_Class {
         this.worldsizeY = 15
 
         this.ALLTASK = []
-        this.HEARTBEAT_signal_start()
+        //this.HEARTBEAT_signal_start()
 
         this.globalObjectMemory = new sessionObjectMemory_Class()
     }
@@ -303,6 +303,16 @@ class session_Class {
             console.log("false receive remote desktop task")
             return false
         }
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
+
         let currentObject = this.CALL_RemoteObject(object_persistedID, ownerID, ownerName)
         currentObject = currentObject.GET_frameBufferController()
         currentObject.SET_frame(framenumber, framebufferRef, timestamp, ownerID, ownerName)
@@ -319,24 +329,24 @@ class session_Class {
 
     CHECK_RequestRemoteTask (name, ID, objectID, objectownername, objectownerID) {
         let validation = true
-        if (this.currentUser_name !== name) {
+        if (String(this.currentUser_name) !== name) {
             console.log(chalk.red("request remote task client name not true, IGNORE"))
             console.log(chalk.yellow("currentUser_name " + this.currentUser_name))
             validation = false
         }
-        if (this.currentUser_persistedID !== ID) {
+        if (String(this.currentUser_persistedID) !== ID) {
             console.log(chalk.red("request remote task client ID not true, IGNORE"))
             console.log(chalk.yellow("currentUser_ID " + this.currentUser_persistedID))
 
             validation = false
         }
-        if (this.active_at_object_persistedID !== objectID) {
+        if (String(this.active_at_object_persistedID) !== objectID) {
             console.log(chalk.red("request remote task activeobjectID not true, IGNORE"))
             console.log(chalk.yellow("object_ID " + this.active_at_object_persistedID))
 
             validation = false
         }
-        if (this.object_owner_name !== objectownername) {
+        if (String(this.object_owner_name) !== objectownername) {
             console.log(chalk.red("request remote task object ownername not true, IGNORE"))
             console.log(chalk.yellow("objectownername " + this.object_owner_name))
 

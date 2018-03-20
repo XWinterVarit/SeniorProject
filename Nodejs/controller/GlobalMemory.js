@@ -38,4 +38,6 @@ module.exports.GlobalRemoteDesktopOBJ = new remoteDesktopOBJController.Group_Rem
 
 module.exports.GlobalActiveWorld = new worldController.GlobalActiveWorldClass()
 
-module.exports.ObjectQuickInfo = new toolController.ObjectQuickInfo_Class()
+//module.exports.ObjectQuickInfo = new toolController.ObjectQuickInfo_Class()
+
+module.exports.ObjectQuickInfo_RealID = new toolController.ObjectQuickInfo_RealID_Class()

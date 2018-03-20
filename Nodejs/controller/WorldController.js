@@ -499,7 +499,9 @@ class OneActiveWorldClass {
         this.ObjectLinks.set(String(objectlink_persistedID), newObjectLink)
         this.setPosition_inMatrix(positionX,positionY, newObjectLink)
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
-        globalmemoryController.ObjectQuickInfo.ADD_object(objectlink_persistedID, {objectID: object_persistedID, ownerID:owner_persistedID, objecttype: optional.objecttype})
+        //globalmemoryController.ObjectQuickInfo.ADD_object(objectlink_persistedID, {objectID: object_persistedID, ownerID:owner_persistedID, objecttype: optional.objecttype})
+        globalmemoryController.ObjectQuickInfo_RealID.ADD_object(object_persistedID, {ownerID:owner_persistedID, objecttype: optional.objecttype})
+
         //globalmemoryController.ObjectQuickInfo.MONITOR()
     }
 

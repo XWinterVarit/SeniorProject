@@ -220,6 +220,14 @@ router.post('/setFirstStart', (req, res, next) => {
     sessionController.globalSession.PRINT_info()
     res.end()
 })
+router.post('/clientHTTPREMF', (req, res, next) => {
+    let framebuffer = req.body.frame
+    console.log(`receive image frame length : ${framebuffer.length}`)
+    res.end()
+})
+
+
+
 //
 
 router.get('/sessionMonitor', (req, res, next) => {

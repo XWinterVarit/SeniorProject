@@ -127,11 +127,11 @@ class OneActiveUserClass {
 
 
         //let nextObjectLink = globalmemoryController.ObjectQuickInfo.GET_object(objectLinkID)
-        let nextObjectLink = objectLinkID
+        let nextObjectLink = globalmemoryController.ObjectQuickInfo_RealID.GET_object(objectLinkID)
 
         console.log(chalk.red(JSON.stringify(nextObjectLink, null, 4)))
         if (nextObjectLink) {
-            nextobjectID = nextObjectLink.objectID
+            nextobjectID = objectLinkID
             nextownerID = nextObjectLink.ownerID
             nextobjecttype = nextObjectLink.objecttype
         } else {

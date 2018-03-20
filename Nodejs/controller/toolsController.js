@@ -76,10 +76,31 @@ class HashMatrix {
 
 }
 
+class ObjectQuickInfo_RealID_Class {
+//This class use to change from objectlink info to real object info
+    constructor () {
+        this.objects = new Map()
+    }
+    ADD_object (persistedID, object) {
+        persistedID = String(persistedID)
+        if (this.objects.has(persistedID)) {
+            console.log("Ignore, due to duplicate add object info")
+        } else {
+            this.objects.set(persistedID, object)
+        }
+    }
+    REMOVE_object (persistedID) {
+        this.objects.delete(persistedID)
+    }
+    GET_object (persistedID) {
+        return this.objects.get(persistedID)
+    }
+}
+
+
 class ObjectQuickInfo_Class {
     constructor () {
         this.objects = new Map()
-
     }
     ADD_object (linkpersistedID,object) {
         linkpersistedID = String(linkpersistedID)
@@ -219,5 +240,6 @@ class BufferUtility {
 
 
 module.exports.HashMatrix = HashMatrix
-module.exports.ObjectQuickInfo_Class = ObjectQuickInfo_Class
+//module.exports.ObjectQuickInfo_Class = ObjectQuickInfo_Class
+module.exports.ObjectQuickInfo_RealID_Class = ObjectQuickInfo_RealID_Class
 module.exports.BufferUtility = BufferUtility

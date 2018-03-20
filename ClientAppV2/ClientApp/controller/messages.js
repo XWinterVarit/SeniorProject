@@ -12,6 +12,9 @@ const AsyncLock = require('async-lock')
 const Client = require('node-rest-client').Client
 let client = new Client()
 const dgram = require('dgram');
+
+const FormData = require('form-data')
+const http = require('http')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -197,6 +200,9 @@ class messagesTemplates {
             port: PORT
         }
     }
+
+
+
 }
 
 class udpGroupComposer {
@@ -301,6 +307,22 @@ class messagesGlobalMethods {
             return null
         })
     }
+
+    static formdata_httpOutput_SERVER (path) {
+
+    }
+    static formdata_httpOutput_ANY (IP, PORT, path, data) {
+        let form = new FormData()
+        form.append('name', new Buffer("cheevarit"))
+        form.submit("http://" + IP + ":" + PORT +"/" + path, (err, res) => {
+            if (err) {
+                console.log(chalk.red(err))
+            } else {
+                console.log("send done")
+            }
+        })
+    }
+
     static udpOutputQueue (IP, PORT, data) {
         udpoutQueue.ADD_queue([IP,PORT,data])
     }
