@@ -564,21 +564,28 @@ class session_Class {
 }
 const globalSession = new session_Class()
 //////This code is for tester //////////////
-
+/*
 globalSession.SET_CurrentUSER("Nutmos", "5a5b4fe146f399051f99b4c1", "1234")
 globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
+*/
+globalSession.SET_CurrentUSER("Nutmos", "5a5b4fe146f399051f99b4c1", "1234")
+globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
+globalSession.SET_CurrentObjectLink("5a53549dd1e30700462426d8", "cheevarit", "remote", "5a4d13a4daac5f00d435a784")
+globalSession.SET_IP_PORT("175.35.21.5", "50000")
 
-/*
+
+globalSession.callActiveMember("Nutmos", "5a5b4fe146f399051f99b4c1",{positionX: 2, positionY:2, IP: "175.35.21.5", PORT: 50000})
+
 globalSession.callActiveMember("chee","aaaa",{positionX: 2, positionY:2, IP: "122.15.26.5", PORT: 50000})
 globalSession.callActiveMember("david","bbbb",{positionX: 3, positionY:3, IP: "122.15.26.6", PORT: 50000})
 globalSession.callActiveMember("christin","cccc",{positionX: 4, positionY:4, IP: "122.15.26.7", PORT: 50000})
 globalSession.callActiveMember("sarah","dddd",{positionX: 5, positionY:5, IP: "122.15.26.8", PORT: 50000})
 globalSession.callActiveMember("james","eeee",{positionX: 6, positionY:6, IP: "122.15.26.9", PORT: 50000})
 
-globalSession.callObjectLink("00000","chee","remote",{positionX: 10,positionY: 10})
-globalSession.callObjectLink("00001","chee","remote",{positionX: 12,positionY: 10})
-globalSession.callObjectLink("00002","david","remote",{positionX: 14,positionY: 10})
-*/
+globalSession.callObjectLink("00000","chee","remote",{positionX: 10,positionY: 10},"11111")
+globalSession.callObjectLink("00001","chee","remote",{positionX: 12,positionY: 10},"22222")
+globalSession.callObjectLink("00002","david","remote",{positionX: 14,positionY: 10},"33333")
+
 
 ////////////////////////////////////////////
 

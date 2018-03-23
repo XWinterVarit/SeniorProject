@@ -239,4 +239,20 @@ router.get('/remoteMonitor', (req, res, next) => {
     res.send(currentObject.RemoteDesktopRedirectTask.MONITOR())
 })
 
+
+
+router.get('/FORUI_getallactivemember', (req, res, next) => {
+    res.json(sessionController.globalSession.FORUI_getallactivemember())
+})
+router.get('/FORUI_getallobjectlinks', (req, res, next) => {
+    res.json(sessionController.globalSession.FORUI_getallobjectlinks())
+})
+router.post('/FORUI_getinfo_fromPosition', (req, res, next) => {
+    res.json(sessionController.globalSession.FORUI_getinfo_fromPosition(req.body.positionX, req.body.positionY))
+})
+router.post('/CONTROL_MoveToPosition', (req, res, next) => {
+    res.json(sessionController.globalSession.CONTROL_MoveToPosition(req.body.positionX, req.body.positionY))
+})
+
+
 module.exports = router;
