@@ -27,6 +27,7 @@
     "pad": "^2.0.3",
     "pug": "~2.0.0-beta11",
     "redis": "^2.8.0",
+    "request": "^2.85.0",
     "request-ip": "^2.0.2",
     "rtsp-stream": "^1.0.0",
     "screenshot-desktop": "^1.2.0",

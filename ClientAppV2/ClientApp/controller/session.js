@@ -288,35 +288,6 @@ class session_Class {
         this.worldmatrix = new toolsController.HashMatrix()
     }
 
-    ACTION_REMOTEDESKTOP_refreshtask (object_persistedID, ownerID, ownerName, peers) {
-        if (this.active_at_object_persistedID !== object_persistedID) {
-            console.log("false receive remote desktop task")
-            return false
-        }
-        let currentObject = this.CALL_RemoteObject(object_persistedID, ownerID, ownerName)
-        currentObject = currentObject.GET_RedirectTaskController()
-        currentObject.REFRESH_PEERS(peers)
-
-    }
-    ACTION_REMOTEDESKTOP_updateframe (object_persistedID, ownerID, ownerName, framenumber,framebufferRef, timestamp) {
-        if (this.active_at_object_persistedID !== object_persistedID) {
-            console.log("false receive remote desktop task")
-            return false
-        }
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-
-        let currentObject = this.CALL_RemoteObject(object_persistedID, ownerID, ownerName)
-        currentObject = currentObject.GET_frameBufferController()
-        currentObject.SET_frame(framenumber, framebufferRef, timestamp, ownerID, ownerName)
-    }
     GET_REMOTEDESKTOP_frame (object_persistedID) {
         if (this.active_at_object_persistedID !== object_persistedID) {
             console.log("false receive remote desktop task")
@@ -353,6 +324,10 @@ class session_Class {
             validation = false
         }
         return validation
+    }
+
+    CHECK_RequestRemoteUpdateFrame (name) {
+        return this.currentUser_name === String(name)
     }
     CALL_RemoteObject (object_persistedID, ownerID, ownerName) {
         let  getObject = this.globalObjectMemory.GET_ObjectMemoryReference(object_persistedID)
@@ -548,7 +523,6 @@ class session_Class {
                 console.log("position changed")
                 this.ACTION_changeObjectPosition(currentObject, others.positionX, others.positionY)
             }
-
 
         }
         return currentObject

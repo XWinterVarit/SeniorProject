@@ -276,12 +276,12 @@ router.post('/MONITOR_QUICKOBJECTINFO', (req, res, next) => {
 router.get('/TestSendBuffer', (req, res, next) => {
 
 
-    /*
-    let imagebuffer = fs.readFileSync(path.join(globalConfigs.mpath1.remotetest, 'cat2.jpg'))
-    messagesController.messagesGlobalMethods.httpOutput_POST("127.0.0.1","50001",messagesController.ClientPathTemplated.clientHTTPFrameUpdate,{frame: imagebuffer})
-    */
-    messagesController.messagesGlobalMethods.formdata_httpOutput_ANY("127.0.0.1","50001", messagesController.ClientPathTemplated.clientHTTPFrameUpdate, null)
 
+  /*  let imagebuffer = fs.readFileSync(path.join(globalConfigs.mpath1.remotetest, 'cat3.mov'))
+    //messagesController.messagesGlobalMethods.httpOutput_POST("127.0.0.1","50001",messagesController.ClientPathTemplated.clientHTTPFrameUpdate,{frame: imagebuffer})
+
+    messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_TEMP("127.0.0.1","50001", messagesController.ClientPathTemplated.clientHTTPFrameUpdate, imagebuffer)
+*/
     res.end()
 
 

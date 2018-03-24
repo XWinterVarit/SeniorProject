@@ -10,6 +10,10 @@ const MPath1_controller_session = MPath1_controller + 'session'
 const MPath1_controller_stream = MPath1_controller + 'stream'
 const MPath1_controller_messages = MPath1_controller + 'messages'
 const MPath1_controller_tools = MPath1_controller + 'tools'
+
+const TestPath1 = nodepath + 'tester/'
+const TestPath1_data = TestPath1 + 'data/'
+
 const serverIP = "127.0.0.1"
 const serverPort = "3000"
 
@@ -30,6 +34,11 @@ module.exports.mpath1 = {
     streamController: MPath1_controller_stream,
     messagesController: MPath1_controller_messages,
     toolsController: MPath1_controller_tools
+}
+
+module.exports.testpath1 = {
+    programfile: TestPath1,
+    data: TestPath1_data
 }
 
 module.exports.ServerInfo = {

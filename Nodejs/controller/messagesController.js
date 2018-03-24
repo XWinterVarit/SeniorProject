@@ -15,6 +15,8 @@ let client = new Client()
 const dgram = require('dgram');
 
 const FormData = require('form-data')
+const request = require('request')
+const fs = require('fs')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -334,19 +336,19 @@ class messagesGlobalMethods {
     static formdata_httpOutput_SERVER (path) {
 
     }
-    static formdata_httpOutput_ANY (IP, PORT, path, data) {
-        let form = new FormData()
-        form.append('name', new Buffer("cheevarit"))
 
-        form.submit("http://" + IP + ":" + PORT +"/" + path, (err, res) => {
+    static formdata_httpOutput_ANY_ONEBuffer (IP, PORT, path, headerdata, bufferdata) {
+        let formData = {
+            name: "cheevarit",
+            bufferdata: bufferdata
+        }
+        request.post({url:"http://" + IP + ":" + PORT +"/" + path, formData: formData}, (err, httpResponse, body)=>{
             if (err) {
-                console.log(chalk.red(err))
-            } else {
-                console.log("send done")
+                return console.log("upload fail", err)
             }
+            console.log('Upload successful!  Server responded with:', body);
         })
     }
-
 
 
     static async udpOutput (onequeue) {

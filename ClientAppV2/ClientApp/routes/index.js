@@ -10,6 +10,9 @@ const router = express.Router();
 const chalk = require('chalk')
 const Queue = require('queue')
 const CircularJSON = require('circular-json')
+const multer = require('multer')
+const uploadService = multer({storage: multer.memoryStorage()})
+const fs = require('fs')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -180,24 +183,6 @@ router.post('/removeMember', (req, res, next) => {
     res.end()
 })
 
-
-router.post('/moveUserPosition', (req, res, next) => {
-    sessionController.globalSession.CONTROL_MoveToPosition(req.body.positionX, req.body.positionY)
-    res.end()
-})
-
-router.post('/testGAT', (req, res, next) => {
-    console.log(JSON.stringify(sessionController.globalSession.FORUI_getallactivemember(), null, 4))
-})
-router.post('/testGAO', (req, res, next) => {
-    console.log(JSON.stringify(sessionController.globalSession.FORUI_getallobjectlinks(), null, 4))
-})
-router.post('/testGFromPos', (req, res, next) => {
-    console.log(sessionController.globalSession.FORUI_getinfo_fromPosition(req.body.positionX, req.body.positionY))
-    res.end()
-})
-
-
 // Official Path
 
 router.post('/clientUserGateway', (req, res, next) => {
@@ -220,11 +205,32 @@ router.post('/setFirstStart', (req, res, next) => {
     sessionController.globalSession.PRINT_info()
     res.end()
 })
-router.post('/clientHTTPREMF', (req, res, next) => {
+router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => {
+    /*
     let framebuffer = req.body.frame
     console.log(`receive image frame length : ${framebuffer.length}`)
+    */
+
+    messagesController.messagesGlobalMethods.updateRemoteFrame_HTTP(req)
     res.end()
+
+
+/*  EXAMPLE code for multer
+
+    console.log(req.body.name)
+    let downloadfile = req.file
+    //downloadfile = Buffer.from(downloadfile)
+    console.log(typeof downloadfile)
+    console.log(downloadfile)
+    fs.writeFileSync(globalConfigs.testpath1.data + "test.mov", downloadfile.buffer )
+    //console.log(downloadfile.length)
+
+    //console.log(CircularJSON.stringify(req, null, 4))
+    res.end()
+
+    */
 })
+
 
 
 

@@ -15,6 +15,11 @@ const dgram = require('dgram');
 
 const FormData = require('form-data')
 const http = require('http')
+const request = require('request')
+
+const fs = require('fs')
+const multer = require('multer')
+const uploadService = multer({storage: multer.memoryStorage()})
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -30,6 +35,13 @@ const toolsController = require(globalConfigs.mpath1.toolsController)
 //==================================================================================================
 //==================================================================================================
 //==================================================================================================
+
+const ClientPathTempleted = {
+    clientUserGateway: "clientUserGateway",
+    clientRemoteGateway: "clientRemoteGateway",
+    clientHTTPFrameUpdate: "clientHTTPREMF"
+}
+
 
 let incomingMessageTest = {
     body: {
@@ -201,10 +213,42 @@ class messagesTemplates {
         }
     }
 
-
+    static ONE_BUFFERDATA_FORFORMDATA (bufferdata, filename, contentType) {
+        return {
+                value: bufferdata,
+                options: {
+                    filename: filename,
+                    contentType: contentType
+                }
+        }
+    }
+    static UNICAST_UPDATEFRAME_HEADER_FORMDATA (destusername,objectID,framenumber,ownerID, ownername, timestamp) {
+        return {
+            destname: destusername,
+            objectID: objectID,
+            framenumber: framenumber,
+            ownerID: ownerID,
+            ownerName: ownername,
+            timestamp: timestamp
+        }
+    }
 
 }
-
+let messagesTemplates_ContentTypeTemplates = {
+    textplain: "text/plain",
+    texthtml: "text/html",
+    image_jpeg:"image/jpeg",
+    image_png:"image/png",
+    audio_mpeg:"audio/mpeg",
+    audio_ogg:"audio/ogg",
+    audio_any :"audio/*",
+    videomp4:"video/mp4",
+    application_any:"application/*",
+    application_json:"application/json",
+    application_javascript:"application/javascript",
+    application_ecmascript:"application/ecmascript",
+    application_octetstream:"application/octet-stream",
+}
 class udpGroupComposer {
     constructor() {
         this.timeID = new Map()
@@ -308,18 +352,16 @@ class messagesGlobalMethods {
         })
     }
 
-    static formdata_httpOutput_SERVER (path) {
-
-    }
-    static formdata_httpOutput_ANY (IP, PORT, path, data) {
-        let form = new FormData()
-        form.append('name', new Buffer("cheevarit"))
-        form.submit("http://" + IP + ":" + PORT +"/" + path, (err, res) => {
+    static formdata_httpOutput_ANY_ONEBuffer (IP, PORT, path, headerdata, onebufferwithoption) {
+        let formData = {
+            headerdata,
+            file: onebufferwithoption
+        }
+        request.post({url:"http://" + IP + ":" + PORT +"/" + path, formData: formData}, (err, httpResponse, body)=>{
             if (err) {
-                console.log(chalk.red(err))
-            } else {
-                console.log("send done")
+                return console.log("upload fail", err)
             }
+            console.log('Upload successful!  Server responded with:', body);
         })
     }
 
@@ -344,6 +386,10 @@ class messagesGlobalMethods {
         })
         client.close();
     }
+
+
+
+
 
 
     static updateSession (lists) {
@@ -392,6 +438,9 @@ class messagesGlobalMethods {
         console.log("end remove")
     }
 
+
+
+
     static updateRemoteP2PTask (req) {
         console.log(chalk.yellow(JSON.stringify(req.body, null, 4)))
         if (!sessionController.globalSession.CHECK_RequestRemoteTask(req.body.taskedclientname, req.body.taskedclientID, req.body.objectID, req.body.objectownername,req.body.objectownerID)) {
@@ -400,6 +449,23 @@ class messagesGlobalMethods {
         }
         let currentObject = sessionController.globalSession.CALL_RemoteObject(req.body.objectID, req.body.objectownerID, req.body.objectownername)
         currentObject.RemoteDesktopRedirectTask.REFRESH_PEERS(req.body.destclient)
+    }
+    static updateRemoteFrame_HTTP (req) {
+        if (!sessionController.globalSession.CHECK_RequestRemoteUpdateFrame(req.body.destname)){
+            console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
+            return false
+        }
+        let framebuffer = req.file
+        if (framebuffer == null) {
+            console.log(chalk.red("no frame buffer, IGNORE update"))
+            return false
+        }
+        let currentObject = sessionController.globalSession.CALL_RemoteObject(req.body.objectID, req.body.ownerID, req.body.ownername)
+        currentObject = currentObject.GET_frameBufferController()
+        currentObject.SET_frame(req.body.framenumber, framebuffer, req.body.timestamp, req.body.ownerID, req.body.ownername)
+    }
+    static updateRemoteFrame_UDP () {
+
     }
 
 
@@ -486,3 +552,5 @@ class messagesGlobalMethods {
 module.exports.messagesGlobalMethods = messagesGlobalMethods
 module.exports.requestQueue = requestQueue
 module.exports.messagesTemplates = messagesTemplates
+module.exports.messagesTemplates_ClientPathTempleted = messagesTemplates_ContentTypeTemplates
+module.exports.ClientPathTempleted = ClientPathTempleted
