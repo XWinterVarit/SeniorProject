@@ -22,6 +22,159 @@ const messagesController = require(globalConfigs.mpath1.messagesController)
 //==================================================================================================
 //==================================================================================================
 //==================================================================================================
+
+class GlobalStreamUtility {
+    static fpscap (fpscap) {
+
+        let times = 1000/fpscap
+        console.log("time per frame is : " + times)
+
+        //let buffertest = new BufferedWriter
+        let framebuffer = []
+        //let times = 40;
+        let realtimestamp = Date.now()
+        console.log(`Start time ${realtimestamp}`)
+        let previousframedrop = 0;
+        let framedrop = 0;
+        let framepass = 0;
+        let working = false
+        let screenrecords = setInterval(
+            () => {
+                framepass++;
+                if (working === true) {
+                    framedrop++;
+                } else {
+                    if (framepass > 1000) {
+                        console.log("stop screenshot")
+                        clearInterval(screenrecords)
+                        //toMp4()
+                    } else {
+                        working = true
+                        console.log("start take screenshot")
+  /*
+                        screenshot2().then((img)=>{
+                            let framefilename = 'well' + framepass + '.jpg'
+                            frames.push(framefilename)
+
+                            fs.writeFileSync(framefilename, img, (err) => {
+                                console.log("write file error" + err)
+                            })
+
+                            //framebuffer.push(img)
+                            console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
+                            realtimestamp = Date.now()
+                            working = false
+                        }).catch((err) => {
+                            console.log("error " + err);
+                        })
+*/
+                        /*
+                        setTimeout(
+                            () => {
+                                console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}`)
+                                working = false
+                                realtimestamp = Date.now()
+                            }
+                            ,80
+                        )
+                        */
+
+                    }
+                }
+            }, times
+        )
+
+    }
+    static test () {
+        console.log("testestest")
+    }
+}
+
+
+class DesktopRecorder_Class {
+    constructor () {
+        console.log("DesktopRecorder_Initialize")
+        this.intervalTaken = null
+        this.stopsignal = false
+        this.fpscap = 5
+    }
+    START_RECORD () {
+        if (this.intervalTaken != null) {
+            console.log("already start")
+            return false
+        }
+        this.intervalTaken = "starting.."
+        let times = 1000/this.fpscap
+        console.log("time per frame is : " + times)
+
+        //let buffertest = new BufferedWriter
+        let framebuffer = []
+        //let times = 40;
+        let realtimestamp = Date.now()
+        console.log(`Start time ${realtimestamp}`)
+        let previousframedrop = 0;
+        let framedrop = 0;
+        let framepass = 0;
+        let working = false
+        this.intervalTaken = setInterval(
+            () => {
+                if (this.stopsignal === true) {
+                    clearInterval(this.intervalTaken)
+                    this.intervalTaken = null
+                    console.log("stop interval completed")
+                    this.stopsignal = false
+                }
+                framepass++;
+                if (working === true) {
+                    framedrop++;
+                } else {
+                    if (framepass > 1000) {
+                        console.log("stop screenshot")
+                        clearInterval(this.intervalTaken)
+                        //toMp4()
+                    } else {
+                        working = true
+                        console.log("start take screenshot")
+                        /*
+                                              screenshot2().then((img)=>{
+                                                  let framefilename = 'well' + framepass + '.jpg'
+                                                  frames.push(framefilename)
+
+                                                  fs.writeFileSync(framefilename, img, (err) => {
+                                                      console.log("write file error" + err)
+                                                  })
+
+                                                  //framebuffer.push(img)
+                                                  console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
+                                                  realtimestamp = Date.now()
+                                                  working = false
+                                              }).catch((err) => {
+                                                  console.log("error " + err);
+                                              })
+                      */
+                        /*
+                        setTimeout(
+                            () => {
+                                console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}`)
+                                working = false
+                                realtimestamp = Date.now()
+                            }
+                            ,80
+                        )
+                        */
+
+                    }
+                }
+            }, times
+        )
+
+    }
+    STOP_RECORD () {
+        this.stopsignal = true
+    }
+}
+
+
 class OneObjectRemoteDesktop_Class {
     constructor(object_persistedID, ownerID, ownerName) {
         this.RemoteDesktopFrameBuffer = new RemoteDesktopFrameBuffer_Class(object_persistedID, ownerID, ownerName)
@@ -177,3 +330,5 @@ class FaceImagesStore_Class {
 module.exports.RemoteDesktopStreamMethods_Class = RemoteDesktopStreamMethods_Class
 module.exports.FaceImagesStore_Class = FaceImagesStore_Class
 module.exports.OneObjectRemoteDesktop_Class = OneObjectRemoteDesktop_Class
+module.exports.GlobalStreamUtility = GlobalStreamUtility
+module.exports.DesktopRecorder_Class = DesktopRecorder_Class

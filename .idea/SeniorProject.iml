@@ -5,5 +5,9 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="jquery" level="application" />
+    <orderEntry type="library" name="clientV2nodeLibrary" level="project" />
+    <orderEntry type="library" name="ServernodeLibrary" level="project" />
+    <orderEntry type="library" name="jquery-3.3.1" level="application" />
   </component>
 </module>

@@ -7,10 +7,13 @@
 
 const chalk = require('chalk')
 const ndarray = require('ndarray')
+const CircularJSON = require('circular-json')
 //const MatrixHash = require('matrix-hash') BUG
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
+const socketIO = require(globalConfigs.mpath1.socketIOconfig).socketIO
+
 ///////////////////////From Other Controllers////////////////////////
 
 const toolsController = require(globalConfigs.mpath1.toolsController)
@@ -157,6 +160,33 @@ class session_Class {
         //this.HEARTBEAT_signal_start()
 
         this.globalObjectMemory = new sessionObjectMemory_Class()
+
+        this.SocketIO_Listener_RemoteMonitor = null
+
+        setTimeout (
+            () => {
+                if (socketIO.io == null) {
+                    console.log(chalk.red("Please set more time to start listener"))
+                } else {
+                    let IO = socketIO.io
+                    this.SocketIO_Listener_RemoteMonitor = IO
+                        .of('/remoteMon')
+                        .on('connection', (socket) => {
+                            console.log("peer connect to chat")
+                            console.log(JSON.stringify(socket.handshake.headers, null, 4))
+                            socket.on('disconnect', () => {
+                                console.log("user disconnect")
+                            })
+                        })
+                    console.log(chalk.green("Started listener"))
+                }
+            },1000
+        )
+
+        //this.remotestreaming = streamController.GlobalStreamUtility
+        //this.remotestreaming.test()
+
+
     }
 
     HEARTBEAT_signal_start () {
@@ -373,6 +403,14 @@ class session_Class {
         messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.changeActiveObject(newObject_persistedID, this.currentUser_name))
     }
 
+    CONTROL_START_BroadcastScreen () {
+        this.remotestreaming.START_RECORD()
+    }
+    CONTROL_STOP_BroadcastScreen () {
+        this.remotestreaming.STOP_RECORD()
+    }
+
+
     FORUI_getallactivemember() {
         let lists = []
         for (let i of this.activeMember) {
@@ -476,6 +514,13 @@ class session_Class {
         return messages
     }
 
+    TEST_MONITOR_SOCKETIO (newbuffer) {
+        this.SocketIO_Listener_RemoteMonitor.volatile.emit('remoteinfo', {
+            message: "welcome",
+            buffer: newbuffer
+        })
+    }
+
     callActiveMember (name, persistedID, others) {
         let currentMember = this.activeMember.get(name)
         if (!others) {
@@ -536,32 +581,38 @@ class session_Class {
 
     }
 }
-const globalSession = new session_Class()
+
+
+        const globalSession = new session_Class()
 //////This code is for tester //////////////
-/*
-globalSession.SET_CurrentUSER("Nutmos", "5a5b4fe146f399051f99b4c1", "1234")
-globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
-*/
-globalSession.SET_CurrentUSER("Nutmos", "5a5b4fe146f399051f99b4c1", "1234")
-globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
-globalSession.SET_CurrentObjectLink("5a53549dd1e30700462426d8", "cheevarit", "remote", "5a4d13a4daac5f00d435a784")
-globalSession.SET_IP_PORT("175.35.21.5", "50000")
+        /*
+        globalSession.SET_CurrentUSER("Nutmos", "5a5b4fe146f399051f99b4c1", "1234")
+        globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
+        */
 
 
-globalSession.callActiveMember("Nutmos", "5a5b4fe146f399051f99b4c1",{positionX: 2, positionY:2, IP: "175.35.21.5", PORT: 50000})
-
-globalSession.callActiveMember("chee","aaaa",{positionX: 2, positionY:2, IP: "122.15.26.5", PORT: 50000})
-globalSession.callActiveMember("david","bbbb",{positionX: 3, positionY:3, IP: "122.15.26.6", PORT: 50000})
-globalSession.callActiveMember("christin","cccc",{positionX: 4, positionY:4, IP: "122.15.26.7", PORT: 50000})
-globalSession.callActiveMember("sarah","dddd",{positionX: 5, positionY:5, IP: "122.15.26.8", PORT: 50000})
-globalSession.callActiveMember("james","eeee",{positionX: 6, positionY:6, IP: "122.15.26.9", PORT: 50000})
-
-globalSession.callObjectLink("00000","chee","remote",{positionX: 10,positionY: 10},"11111")
-globalSession.callObjectLink("00001","chee","remote",{positionX: 12,positionY: 10},"22222")
-globalSession.callObjectLink("00002","david","remote",{positionX: 14,positionY: 10},"33333")
+        globalSession.SET_CurrentUSER("Nutmos", "5a5b4fe146f399051f99b4c1", "1234")
+        globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
+        globalSession.SET_CurrentObjectLink("5a53549dd1e30700462426d8", "cheevarit", "remote", "5a4d13a4daac5f00d435a784")
+        globalSession.SET_IP_PORT("175.35.21.5", "50000")
 
 
+        globalSession.callActiveMember("Nutmos", "5a5b4fe146f399051f99b4c1",{positionX: 2, positionY:2, IP: "175.35.21.5", PORT: 50000})
+
+        globalSession.callActiveMember("chee","aaaa",{positionX: 2, positionY:2, IP: "122.15.26.5", PORT: 50000})
+        globalSession.callActiveMember("david","bbbb",{positionX: 3, positionY:3, IP: "122.15.26.6", PORT: 50000})
+        globalSession.callActiveMember("christin","cccc",{positionX: 4, positionY:4, IP: "122.15.26.7", PORT: 50000})
+        globalSession.callActiveMember("sarah","dddd",{positionX: 5, positionY:5, IP: "122.15.26.8", PORT: 50000})
+        globalSession.callActiveMember("james","eeee",{positionX: 6, positionY:6, IP: "122.15.26.9", PORT: 50000})
+
+        globalSession.callObjectLink("00000","chee","remote",{positionX: 10,positionY: 10},"11111")
+        globalSession.callObjectLink("00001","chee","remote",{positionX: 12,positionY: 10},"22222")
+        globalSession.callObjectLink("00002","david","remote",{positionX: 14,positionY: 10},"33333")
+
+        module.exports.globalSession = globalSession
 ////////////////////////////////////////////
 
+
+
 module.exports.session_Class = session_Class
-module.exports.globalSession = globalSession
+

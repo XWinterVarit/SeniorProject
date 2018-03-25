@@ -230,8 +230,20 @@ router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => 
 
     */
 })
-
-
+let count = 0
+router.get('/testwebsocket', (req, res, next) => {
+    count++
+    if (count % 2 === 0) {
+        console.log("first pic")
+        let buffer = fs.readFileSync(globalConfigs.testpath1.data + "cat2.jpg")
+        sessionController.globalSession.TEST_MONITOR_SOCKETIO(buffer)
+    } else {
+        console.log("second pic")
+        let buffer = fs.readFileSync(globalConfigs.testpath1.data + "cat3.jpg")
+        sessionController.globalSession.TEST_MONITOR_SOCKETIO(buffer)
+    }
+    res.end()
+})
 
 
 //
@@ -242,6 +254,7 @@ router.get('/sessionMonitor', (req, res, next) => {
 
 router.get('/remoteMonitor', (req, res, next) => {
     let currentObject = sessionController.globalSession.CALL_RemoteObject(sessionController.globalSession.active_at_object_persistedID, sessionController.globalSession.object_owner_name, sessionController.globalSession.object_owner_ID)
+
     res.send(currentObject.RemoteDesktopRedirectTask.MONITOR())
 })
 
@@ -260,5 +273,12 @@ router.post('/CONTROL_MoveToPosition', (req, res, next) => {
     res.json(sessionController.globalSession.CONTROL_MoveToPosition(req.body.positionX, req.body.positionY))
 })
 
+
+router.post('/CONTROL_StartRecord', (req, res, next) => {
+    sessionController.globalSession.CONTROL_START_BroadcastScreen()
+})
+router.post('/CONTROL_StopRecord', (req, res, next) => {
+    sessionController.globalSession.CONTROL_STOP_BroadcastScreen()
+})
 
 module.exports = router;

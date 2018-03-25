@@ -5,6 +5,7 @@ const nodepath = path.join(__dirname, "../")
 console.log(nodepath)
 
 const MPath1_config = nodepath + 'config/'
+const MPath1_config_socketIO = MPath1_config + 'socketIOConfig'
 const MPath1_controller = nodepath + 'controller/'
 const MPath1_controller_session = MPath1_controller + 'session'
 const MPath1_controller_stream = MPath1_controller + 'stream'
@@ -33,7 +34,8 @@ module.exports.mpath1 = {
     sessionController: MPath1_controller_session,
     streamController: MPath1_controller_stream,
     messagesController: MPath1_controller_messages,
-    toolsController: MPath1_controller_tools
+    toolsController: MPath1_controller_tools,
+    socketIOconfig: MPath1_config_socketIO
 }
 
 module.exports.testpath1 = {

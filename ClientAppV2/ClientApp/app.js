@@ -5,10 +5,11 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+
 var index = require('./routes/index');
 var users = require('./routes/users');
-const fs = require('fs')
 var app = express();
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -46,6 +47,8 @@ app.use(function(err, req, res, next) {
 process.on('uncaughtException', function(err) {
     console.log('Caught exception: ' + err);
 });
+
+const fs = require('fs')
 let fsport = fs.readFileSync('./PORT_SET.txt')
 console.log("UDP PORT read from file : " + fsport)
 
@@ -73,6 +76,12 @@ server.on ('message', (message, remote) => {
     }
 })
 server.bind(PORT, HOST)
+
+
+
+const socketIO = require('./config/socketIOConfig')(String(Number(PORT)+10000))
+
+
 
 
 module.exports = app;
