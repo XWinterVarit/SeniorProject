@@ -2,8 +2,6 @@ const fs = require('fs')
 //const screenshot = require('desktop-screenshot')
 const screenshot2 = require('screenshot-desktop')
 const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
-let converter
-let input
 
 var PORT = 3001;
 var IP = '127.0.0.1';
@@ -67,7 +65,7 @@ let test = async () => {
 
 
 }
-test()
+//test()
 
 
 
@@ -128,17 +126,45 @@ let toMp4 = () => {
 
     conv.run()
 }
-let toMp4V2 = () => {
+
+const stream = require('stream')
+let toMp4V2 = async () => {
+    const streamToBuffer = require('stream-to-buffer')
+    const memoryFileSystem = require('memory-fs')
+    let fsM = new memoryFileSystem()
     converter = ffmpeg_stream()
-    input = converter.input({f: 'image2pipe', vcodec: 'mjpeg'});
-    fs.createReadStream('./well55.jpg').pipe(input)
-    converter.output({
-        f: 'image2', vcodec: 'mjpeg',
-        vf: 'scale=1280:720'
-    }).pipe(fs.createWriteStream('./cat_thumb.jpg'))
-    converter.run()
+
+    await new Promise((resolve, reject)=>{
+
+        input = converter.input({f: 'image2pipe', vcodec: 'mjpeg'});
+
+        let buffer = fs.readFileSync('./well15.jpg')
+        let bufferStream = new stream.PassThrough()
+        bufferStream.end(buffer)
+
+
+        //fs.createReadStream('./well15.jpg').pipe(input)
+        bufferStream.pipe(input)
+        converter.output({
+            f: 'image2', vcodec: 'mjpeg',
+            vf: 'scale=1920*1080', q: '32'
+        }).pipe(fsM.createWriteStream('/tempframe')
+            .on('finish',()=>{
+                console.log("finish")
+
+                return resolve()
+
+            }).on('error',()=>{
+                console.log("stream error")
+                return reject()
+            }))
+
+        converter.run()
+    })
+    let temp = fsM.readFileSync('/tempframe')
+    fs.writeFileSync("./balls.jpg", temp)
 }
-//toMp4V2()
+toMp4V2()
 let fpscap = async (fpscap) => {
     /*
     let times = 1000/fpscap

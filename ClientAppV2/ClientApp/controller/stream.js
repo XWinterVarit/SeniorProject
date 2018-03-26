@@ -6,6 +6,13 @@
 ////////////////////////miscellaneous////////////////////////////////
 
 const chalk = require('chalk')
+const screenshot2 = require('screenshot-desktop')
+const fs = require('fs')
+const memoryFileSystem = require('memory-fs')
+const stream = require('stream')
+const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
+let converter
+let input
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -88,15 +95,55 @@ class GlobalStreamUtility {
     static test () {
         console.log("testestest")
     }
+    static async JPEGCompress (preProcessJpeg, indexname) {
+        let fsM = new memoryFileSystem()
+        let converter
+        let input
+
+        converter = ffmpeg_stream()
+
+        await new Promise((resolve, reject)=>{
+
+            input = converter.input({f: 'image2pipe', vcodec: 'mjpeg'});
+
+            //let buffer = fs.readFileSync('./well15.jpg')
+            let bufferStream = new stream.PassThrough()
+            bufferStream.end(preProcessJpeg)
+
+
+            //fs.createReadStream('./well15.jpg').pipe(input)
+            bufferStream.pipe(input)
+            converter.output({
+                f: 'image2', vcodec: 'mjpeg',
+                vf: 'scale=1920*1080', q: '30'
+            }).pipe(fsM.createWriteStream('/tempframe')
+                .on('finish',()=>{
+                    console.log("finish")
+
+                    return resolve()
+
+                }).on('error',()=>{
+                    console.log("stream error")
+                    return reject()
+                }))
+
+            converter.run()
+        })
+        //let temp = fsM.readFileSync('/tempframe')
+        return fsM.readFileSync('/tempframe')
+
+        //fs.writeFileSync(globalConfigs.testpath1.data+"balls"+indexname+".jpg", temp)
+    }
 }
 
 
 class DesktopRecorder_Class {
-    constructor () {
+    constructor (sessionRef) {
         console.log("DesktopRecorder_Initialize")
         this.intervalTaken = null
         this.stopsignal = false
-        this.fpscap = 5
+        this.fpscap = 15
+        this.sessionRef = sessionRef
     }
     START_RECORD () {
         if (this.intervalTaken != null) {
@@ -124,10 +171,15 @@ class DesktopRecorder_Class {
                     console.log("stop interval completed")
                     this.stopsignal = false
                 }
-                framepass++;
+
+                framepass++
+                //console.log("pass interval : working " + working)
+
                 if (working === true) {
+                    console.log("framedropped")
                     framedrop++;
                 } else {
+
                     if (framepass > 1000) {
                         console.log("stop screenshot")
                         clearInterval(this.intervalTaken)
@@ -135,23 +187,24 @@ class DesktopRecorder_Class {
                     } else {
                         working = true
                         console.log("start take screenshot")
-                        /*
-                                              screenshot2().then((img)=>{
-                                                  let framefilename = 'well' + framepass + '.jpg'
-                                                  frames.push(framefilename)
 
-                                                  fs.writeFileSync(framefilename, img, (err) => {
-                                                      console.log("write file error" + err)
-                                                  })
+                                screenshot2().then(async (img)=>{
+                                    let framefilename = 'well' + framepass + '.jpg'
+                                    //frames.push(framefilename)
+/*
+                                    fs.writeFileSync(globalConfigs.testpath1.data + framefilename, img, (err) => {
+                                        console.log("write file error" + err)
+                                    })*/
+                                    //let buffer = await GlobalStreamUtility.JPEGCompress(img,framepass)
+                                    this.sessionRef.TEST_MONITOR_SOCKETIO(img)
+                                    //framebuffer.push(img)
+                                    console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
+                                    realtimestamp = Date.now()
+                                    working = false
+                                }).catch((err) => {
+                                    console.log("error " + err);
+                                })
 
-                                                  //framebuffer.push(img)
-                                                  console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
-                                                  realtimestamp = Date.now()
-                                                  working = false
-                                              }).catch((err) => {
-                                                  console.log("error " + err);
-                                              })
-                      */
                         /*
                         setTimeout(
                             () => {
@@ -162,7 +215,6 @@ class DesktopRecorder_Class {
                             ,80
                         )
                         */
-
                     }
                 }
             }, times

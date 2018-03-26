@@ -18,7 +18,14 @@ const socketIO = require(globalConfigs.mpath1.socketIOconfig).socketIO
 
 const toolsController = require(globalConfigs.mpath1.toolsController)
 const messagesController = require(globalConfigs.mpath1.messagesController)
-const streamController = require(globalConfigs.mpath1.streamController)
+let streamController = null
+setTimeout(
+    () => {
+        //console.log("require completed")
+        streamController = require(globalConfigs.mpath1.streamController)
+    },1000
+)
+
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
@@ -183,8 +190,12 @@ class session_Class {
             },1000
         )
 
-        //this.remotestreaming = streamController.GlobalStreamUtility
-        //this.remotestreaming.test()
+        this.remotestreaming = null
+        setTimeout(
+            () => {
+                this.remotestreaming = new streamController.DesktopRecorder_Class(this)
+            }, 1500
+        )
 
 
     }

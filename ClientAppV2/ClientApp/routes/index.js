@@ -276,9 +276,11 @@ router.post('/CONTROL_MoveToPosition', (req, res, next) => {
 
 router.post('/CONTROL_StartRecord', (req, res, next) => {
     sessionController.globalSession.CONTROL_START_BroadcastScreen()
+    res.end()
 })
 router.post('/CONTROL_StopRecord', (req, res, next) => {
     sessionController.globalSession.CONTROL_STOP_BroadcastScreen()
+    res.end()
 })
 
 module.exports = router;
