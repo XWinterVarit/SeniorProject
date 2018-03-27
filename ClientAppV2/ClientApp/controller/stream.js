@@ -19,7 +19,7 @@ const globalConfigs = require('../config/GlobalConfigs')
 ///////////////////////From Other Controllers////////////////////////
 
 const toolsController = require(globalConfigs.mpath1.toolsController)
-const messagesController = require(globalConfigs.mpath1.messagesController)
+//const messagesController = require(globalConfigs.mpath1.messagesController)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
@@ -144,10 +144,35 @@ class DesktopRecorder_Class {
         this.stopsignal = false
         this.fpscap = 15
         this.sessionRef = sessionRef
+
+
+        this.debugFrame = false
+        this.allowDisplayFrame = false
+
+        this.setCount = 0
+        this.passsetCount = 3
+        if (this.sessionRef == null) {
+            console.log(chalk.red("Desktop Recorder Internal Error"))
+        }
     }
-    START_RECORD () {
+    SET_UserInfo(ownerID, ownerName) {
+        this.ownerID = ownerID
+        this.ownerName = ownerName
+        this.setCount+=2
+    }
+    SET_remoteObjectID(objectID) {
+        this.objectID = objectID
+        this.setCount++
+    }
+
+
+    START_RECORD (RemoteObjectRef) {
         if (this.intervalTaken != null) {
             console.log("already start")
+            return false
+        }
+        if (this.setCount < this.passsetCount) {
+            console.log("user had not set remote desktop object, ABOARD")
             return false
         }
         this.intervalTaken = "starting.."
@@ -176,7 +201,7 @@ class DesktopRecorder_Class {
                 //console.log("pass interval : working " + working)
 
                 if (working === true) {
-                    console.log("framedropped")
+                    //console.log("framedropped")
                     framedrop++;
                 } else {
 
@@ -191,15 +216,23 @@ class DesktopRecorder_Class {
                                 screenshot2().then(async (img)=>{
                                     let framefilename = 'well' + framepass + '.jpg'
                                     //frames.push(framefilename)
-/*
+                                    /*
                                     fs.writeFileSync(globalConfigs.testpath1.data + framefilename, img, (err) => {
                                         console.log("write file error" + err)
                                     })*/
-                                    //let buffer = await GlobalStreamUtility.JPEGCompress(img,framepass)
-                                    this.sessionRef.TEST_MONITOR_SOCKETIO(img)
+                                    let buffer = await GlobalStreamUtility.JPEGCompress(img,framepass)
+                                    //let buffer = img
+                                    //this.sessionRef.TEST_MONITOR_SOCKETIO(buffer)
                                     //framebuffer.push(img)
-                                    console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
+                                    //console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
                                     realtimestamp = Date.now()
+                                    RemoteObjectRef.RemoteDesktopFrameBuffer.SET_frame(framepass, buffer,realtimestamp)
+                                    if (this.debugFrame === true) {
+                                        this.sessionRef.MONITOR_REMOTEFRAME_SOCKETIO(buffer, framepass, realtimestamp)
+                                    }
+                                    if (this.allowDisplayFrame === true) {
+                                        this.sessionRef.FORUI_DISPLAY_VIA_SOCKETIO(buffer)
+                                    }
                                     working = false
                                 }).catch((err) => {
                                     console.log("error " + err);
@@ -282,17 +315,17 @@ class RemoteDesktopFrameBuffer_Class {
         this.RedirectTaskControllerRef = Ref
     }
 
-    SET_frame (framenumber, framebuffer, timestamp, ownerID, ownername) {
+    SET_frame (framenumber, framebuffer, timestamp) {
         if (this.lock === false) {
             this.lock = true
-            if (this.ownerID !== ownerID || this.ownerName !== ownername || timestamp <= this.timestamp || framenumber <= this.framenumber || framebuffer == null) {
+            if ( timestamp <= this.timestamp || framenumber <= this.framenumber || framebuffer == null) {
                 console.log("received frame has problem. The system will ignore")
             }
             this.framebuffer = framebuffer
             this.framenumber = framenumber
             this.timestamp = timestamp
             this.lock = false
-            this.RedirectTaskControllerRef.SIGNAL_send()
+            this.RedirectTaskControllerRef.SIGNAL_passthrough_send()
         } else {
             console.log("can't set frame due to the other operation is operate on frame")
         }
@@ -347,7 +380,32 @@ class RemoteDesktopRedirectTask {
             console.log("buffer locking due to not completed sent")
         }
     }
+    SIGNAL_passthrough_send(framebuffer, frameNumber, timeStamp) {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+        //console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
 
+        if (this.RemoteDesktopFrameBuffer.lock === false) {
+            this.RemoteDesktopFrameBuffer.lock = true
+            for (let i of this.peers) {
+                let name = i[0]
+                let IP = i[1]
+                let PORT = i[2]
+
+                console.log(`senting to peers : name : ${name} IP : ${IP} PORT : ${PORT} `)
+                //console.log(messagesController.ClientPathTemplated)
+                console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
+/*
+                messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer(IP,PORT
+                    , "clientHTTPREMF"
+                    , messagesController.messagesTemplates.UNICAST_UPDATEFRAME_HEADER_FORMDATA(name, this.object_persistedID, frameNumber, this.ownerID, this.ownerName, timeStamp)
+                    , messagesController.messagesTemplates.ONE_BUFFERDATA_FORFORMDATA(framebuffer,"frame", messagesController.messagesTemplates_ClientPathTempleted.application_any))
+*/
+            }
+            this.RemoteDesktopFrameBuffer.lock = false
+        } else {
+            console.log("buffer locking due to not completed sent")
+        }
+    }
     MONITOR () {
         let messages = ""
         messages += `Monitor Redirect Remote Frame : objectID ${this.object_persistedID}  ownerID ${this.ownerID}   ownerName ${this.ownerName}\n`
@@ -377,6 +435,7 @@ class RemoteDesktopStreamMethods_Class {
 class FaceImagesStore_Class {
 
 }
+
 
 
 module.exports.RemoteDesktopStreamMethods_Class = RemoteDesktopStreamMethods_Class

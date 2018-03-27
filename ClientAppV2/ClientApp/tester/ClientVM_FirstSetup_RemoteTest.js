@@ -35,7 +35,9 @@ let alldata = [
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
-        objecttype:"remote"
+        objecttype:"remote",
+
+        remoteobjectID: "5aa543f6e6ca25042f106711"
     },
     {
         name: "A",

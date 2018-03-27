@@ -148,6 +148,8 @@ class session_Class {
         this.currentUser_IP = globalConfigs.ClientInfo.clientIP
         this.currentUser_PORT = globalConfigs.ClientInfo.clientPORT
 
+        this.remoteObjectID = ""
+
         //this.worldmatrix = new MatrixHash(2)
         this.worldmatrix = new toolsController.HashMatrix()
 
@@ -164,7 +166,7 @@ class session_Class {
         this.worldsizeY = 15
 
         this.ALLTASK = []
-        //this.HEARTBEAT_signal_start()
+        this.HEARTBEAT_signal_start()
 
         this.globalObjectMemory = new sessionObjectMemory_Class()
 
@@ -193,6 +195,7 @@ class session_Class {
         this.remotestreaming = null
         setTimeout(
             () => {
+                console.log("remote streaming module start")
                 this.remotestreaming = new streamController.DesktopRecorder_Class(this)
             }, 1500
         )
@@ -225,6 +228,9 @@ class session_Class {
         this.currentUser_name = name
         this.currentUser_persistedID = persistedID
         this.currentUser_password = password
+        this.remotestreaming.SET_UserInfo(persistedID, name)
+        console.log(chalk.cyanBright(`SET CURRENT USER TO ID : ${persistedID} name : ${name}`))
+
     }
     SET_CurrentWorld (persistedID) {
         this.active_at_world_persistedID = persistedID
@@ -242,7 +248,12 @@ class session_Class {
         this.currentUser_IP = ip
         this.currentUser_PORT = port
     }
+    SET_REMOTE_OBJECTID (persistedID) {
+        this.remoteObjectID = persistedID
+        this.remotestreaming.SET_remoteObjectID(persistedID)
+        console.log(chalk.cyanBright(`SET REMOTE OBJECT TO ID : ${persistedID}`))
 
+    }
     GET_activeObjectID () {
         return this.active_at_object_persistedID
     }
@@ -367,8 +378,24 @@ class session_Class {
         return validation
     }
 
-    CHECK_RequestRemoteUpdateFrame (name) {
-        return this.currentUser_name === String(name)
+    CHECK_RequestRemoteUpdateFrame (name, objectID, ownerID) {
+        let validation = true
+        if (String(this.currentUser_name) !== String(name)) {
+            console.log(chalk.red("send destination name not true, IGNORE"))
+            console.log(chalk.yellow(`current user name : ${this.currentUser_name} dest name : ${name}`))
+            validation = false
+        }
+        if (String(this.active_at_object_persistedID) !== objectID) {
+            console.log(chalk.red("this remote object not active, IGNORE"))
+            console.log(chalk.yellow("object_ID " + this.active_at_object_persistedID))
+            validation = false
+        }
+        if (String(this.object_owner_ID) !== ownerID) {
+            console.log(chalk.red("this remote object not active, IGNORE"))
+            console.log(chalk.yellow("objectownername " + this.object_owner_name))
+            validation = false
+        }
+        return validation
     }
     CALL_RemoteObject (object_persistedID, ownerID, ownerName) {
         let  getObject = this.globalObjectMemory.GET_ObjectMemoryReference(object_persistedID)
@@ -415,7 +442,8 @@ class session_Class {
     }
 
     CONTROL_START_BroadcastScreen () {
-        this.remotestreaming.START_RECORD()
+        let currentObject = globalSession.CALL_RemoteObject(this.remoteObjectID, this.currentUser_persistedID, this.currentUser_name)
+        this.remotestreaming.START_RECORD(currentObject)
     }
     CONTROL_STOP_BroadcastScreen () {
         this.remotestreaming.STOP_RECORD()
@@ -532,6 +560,19 @@ class session_Class {
         })
     }
 
+    MONITOR_REMOTEFRAME_SOCKETIO (newbuffer, frame, timestamp) {
+        this.SocketIO_Listener_RemoteMonitor.volatile.emit('remote_debug', {
+            message: "welcome",
+            frame: frame,
+            timestamp: timestamp,
+            buffer: newbuffer
+        })
+    }
+
+    FORUI_DISPLAY_VIA_SOCKETIO (newbuffer) {
+
+    }
+
     callActiveMember (name, persistedID, others) {
         let currentMember = this.activeMember.get(name)
         if (!others) {
@@ -601,7 +642,7 @@ class session_Class {
         globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
         */
 
-
+/*
         globalSession.SET_CurrentUSER("Nutmos", "5a5b4fe146f399051f99b4c1", "1234")
         globalSession.SET_CurrentWorld("5a5b50a146f399051f99b4c4")
         globalSession.SET_CurrentObjectLink("5a53549dd1e30700462426d8", "cheevarit", "remote", "5a4d13a4daac5f00d435a784")
@@ -619,7 +660,7 @@ class session_Class {
         globalSession.callObjectLink("00000","chee","remote",{positionX: 10,positionY: 10},"11111")
         globalSession.callObjectLink("00001","chee","remote",{positionX: 12,positionY: 10},"22222")
         globalSession.callObjectLink("00002","david","remote",{positionX: 14,positionY: 10},"33333")
-
+*/
         module.exports.globalSession = globalSession
 ////////////////////////////////////////////
 

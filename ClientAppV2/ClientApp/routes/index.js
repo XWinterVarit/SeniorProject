@@ -18,9 +18,10 @@ const fs = require('fs')
 const globalConfigs = require('../config/GlobalConfigs')
 ///////////////////////From Other Controllers////////////////////////
 
-const streamController = require(globalConfigs.mpath1.streamController)
 const sessionController = require(globalConfigs.mpath1.sessionController)
 const messagesController = require(globalConfigs.mpath1.messagesController)
+
+const streamController = require(globalConfigs.mpath1.streamController)
 const toolsController = require(globalConfigs.mpath1.toolsController)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
@@ -203,6 +204,9 @@ router.post('/setFirstStart', (req, res, next) => {
     sessionController.globalSession.SET_CurrentWorld(req.body.worldID)
     sessionController.globalSession.SET_IP_PORT(req.body.IP, req.body.PORT)
     sessionController.globalSession.PRINT_info()
+    if (req.body.remoteobjectID) {
+        sessionController.globalSession.SET_REMOTE_OBJECTID(req.body.remoteobjectID)
+    }
     res.end()
 })
 router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => {

@@ -452,7 +452,7 @@ class messagesGlobalMethods {
         currentObject.RemoteDesktopRedirectTask.REFRESH_PEERS(req.body.destclient)
     }
     static updateRemoteFrame_HTTP (req) {
-        if (!sessionController.globalSession.CHECK_RequestRemoteUpdateFrame(req.body.destname)){
+        if (!sessionController.globalSession.CHECK_RequestRemoteUpdateFrame(req.body.destname, req.body.objectID, req.body.ownerID)){
             console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
             return false
         }
@@ -461,9 +461,15 @@ class messagesGlobalMethods {
             console.log(chalk.red("no frame buffer, IGNORE update"))
             return false
         }
-        let currentObject = sessionController.globalSession.CALL_RemoteObject(req.body.objectID, req.body.ownerID, req.body.ownername)
+
+        console.log(chalk.yellow("********************************"))
+        console.log(chalk.yellow("********************************"))
+        console.log(chalk.yellow("********************************"))
+        console.log(chalk.yellow("********************************"))
+
+        let currentObject = sessionController.globalSession.CALL_RemoteObject(req.body.objectID, req.body.ownerID, req.body.ownerName)
         currentObject = currentObject.GET_frameBufferController()
-        currentObject.SET_frame(req.body.framenumber, framebuffer, req.body.timestamp, req.body.ownerID, req.body.ownername)
+        currentObject.SET_frame(req.body.framenumber, framebuffer, req.body.timestamp)
     }
     static updateRemoteFrame_UDP () {
 

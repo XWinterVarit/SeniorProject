@@ -7,11 +7,10 @@
 
 <h1>This is a Heading</h1>
 <p>This is a paragraph.</p>
+<input type="text" id="port">
+<button type="button" id="init">Init!</button>
 <img id="remoteimg">
-<canvas id="myCanvas" width=2000 height=2000
-        style="border:1px solid #d3d3d3;">
-    Your browser does not support the HTML5 canvas tag.
-</canvas>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <script
         src="https://code.jquery.com/jquery-3.3.1.js"
@@ -19,22 +18,30 @@
         crossorigin="anonymous"></script>
 <script>
 
-    var remoteMon = io.connect('http://localhost:60001/remoteMon')
 
-    let pic = document.getElementById("remoteimg")
-    remoteMon.on('remoteinfo', function (data) {
-        //console.log(data)
-        if (data.buffer) {
-            let img = data.buffer
-            /*
-            var c = document.getElementById("myCanvas");
-            var ctx = c.getContext("2d");
-            ctx.clearRect(0, 0, c.width, c.height);
-            ctx.beginPath();
-            */
-            onBinaryMessage(img)
-        }
+
+    $( "#init" ).click(function() {
+        let port = $("#port").val()
+        var remoteMon = io.connect('http://localhost:'+port+'/remoteMon')
+
+        let pic = document.getElementById("remoteimg")
+        remoteMon.on('remoteinfo', function (data) {
+            //console.log(data)
+            if (data.buffer) {
+                let img = data.buffer
+                /*
+                var c = document.getElementById("myCanvas");
+                var ctx = c.getContext("2d");
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.beginPath();
+                */
+                onBinaryMessage(img)
+            }
+        });
+
     });
+
+
     function onBinaryMessage(input) {
 
         var blob = new Blob([input], {type: 'image/png'});
