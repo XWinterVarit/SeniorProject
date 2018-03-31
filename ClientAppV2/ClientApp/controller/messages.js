@@ -353,17 +353,30 @@ class messagesGlobalMethods {
         })
     }
 
-    static formdata_httpOutput_ANY_ONEBuffer (IP, PORT, path, headerdata, onebufferwithoption) {
+    static async formdata_httpOutput_ANY_ONEBuffer (IP, PORT, path, headerdata, onebufferwithoption) {
+
+
+
         let formData = {
-            headerdata,
+            headerdata: JSON.stringify(headerdata),
             file: onebufferwithoption
         }
-        request.post({url:"http://" + IP + ":" + PORT +"/" + path, formData: formData}, (err, httpResponse, body)=>{
-            if (err) {
-                return console.log("upload fail", err)
-            }
-            console.log('Upload successful!  Server responded with:', body);
+/*
+        console.log(chalk.green("show sended data"))
+        console.log(chalk.green(headerdata))
+        //console.log(chalk.green(JSON.stringify(JSON.parse(headerdata)), null, 4))
+        console.log(formData.file)
+*/
+        await new Promise(resolve=>{
+            request.post({url:"http://" + IP + ":" + PORT +"/" + path, formData: formData}, (err, httpResponse, body)=>{
+                if (err) {
+                    console.log("upload fail", err)
+                }
+                console.log('Upload successful!  Server responded with:', body);
+                return resolve()
+            })
         })
+
     }
 
     static udpOutputQueue (IP, PORT, data) {
@@ -389,7 +402,15 @@ class messagesGlobalMethods {
     }
 
 
-
+    static requireTest () {
+        console.log(chalk.red("REQUIRE TEST HERE"))
+        console.log(chalk.red("REQUIRE TEST HERE"))
+        console.log(chalk.red("REQUIRE TEST HERE"))
+        console.log(chalk.red("REQUIRE TEST HERE"))
+        console.log(chalk.red("REQUIRE TEST HERE"))
+        console.log(chalk.red("REQUIRE TEST HERE"))
+        console.log(chalk.red("REQUIRE TEST HERE"))
+    }
 
 
 
@@ -452,11 +473,12 @@ class messagesGlobalMethods {
         currentObject.RemoteDesktopRedirectTask.REFRESH_PEERS(req.body.destclient)
     }
     static updateRemoteFrame_HTTP (req) {
-        if (!sessionController.globalSession.CHECK_RequestRemoteUpdateFrame(req.body.destname, req.body.objectID, req.body.ownerID)){
+        let headerdata = JSON.parse(req.body.headerdata)
+        if (!sessionController.globalSession.CHECK_RequestRemoteUpdateFrame(headerdata.destname, headerdata.objectID, headerdata.ownerID)){
             console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
             return false
         }
-        let framebuffer = req.file
+        let framebuffer = req.file.buffer
         if (framebuffer == null) {
             console.log(chalk.red("no frame buffer, IGNORE update"))
             return false
@@ -467,9 +489,9 @@ class messagesGlobalMethods {
         console.log(chalk.yellow("********************************"))
         console.log(chalk.yellow("********************************"))
 
-        let currentObject = sessionController.globalSession.CALL_RemoteObject(req.body.objectID, req.body.ownerID, req.body.ownerName)
+        let currentObject = sessionController.globalSession.CALL_RemoteObject(headerdata.objectID, headerdata.ownerID, headerdata.ownerName)
         currentObject = currentObject.GET_frameBufferController()
-        currentObject.SET_frame(req.body.framenumber, framebuffer, req.body.timestamp)
+        currentObject.SET_frame(headerdata.framenumber, framebuffer, headerdata.timestamp)
     }
     static updateRemoteFrame_UDP () {
 

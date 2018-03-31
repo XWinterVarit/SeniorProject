@@ -146,7 +146,7 @@ class DesktopRecorder_Class {
         this.sessionRef = sessionRef
 
 
-        this.debugFrame = false
+        this.debugFrame = true
         this.allowDisplayFrame = false
 
         this.setCount = 0
@@ -189,7 +189,7 @@ class DesktopRecorder_Class {
         let framepass = 0;
         let working = false
         this.intervalTaken = setInterval(
-            () => {
+            async () => {
                 if (this.stopsignal === true) {
                     clearInterval(this.intervalTaken)
                     this.intervalTaken = null
@@ -205,9 +205,11 @@ class DesktopRecorder_Class {
                     framedrop++;
                 } else {
 
-                    if (framepass > 1000) {
+                    if (framepass > 10000) {
                         console.log("stop screenshot")
                         clearInterval(this.intervalTaken)
+                        working = false
+                        this.intervalTaken = null
                         //toMp4()
                     } else {
                         working = true
@@ -226,7 +228,7 @@ class DesktopRecorder_Class {
                                     //framebuffer.push(img)
                                     //console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
                                     realtimestamp = Date.now()
-                                    RemoteObjectRef.RemoteDesktopFrameBuffer.SET_frame(framepass, buffer,realtimestamp)
+                                    await RemoteObjectRef.RemoteDesktopFrameBuffer.SET_frame(framepass, buffer,realtimestamp)
                                     if (this.debugFrame === true) {
                                         this.sessionRef.MONITOR_REMOTEFRAME_SOCKETIO(buffer, framepass, realtimestamp)
                                     }
@@ -315,17 +317,23 @@ class RemoteDesktopFrameBuffer_Class {
         this.RedirectTaskControllerRef = Ref
     }
 
-    SET_frame (framenumber, framebuffer, timestamp) {
+    async SET_frame (framenumber, framebuffer, timestamp) {
         if (this.lock === false) {
             this.lock = true
             if ( timestamp <= this.timestamp || framenumber <= this.framenumber || framebuffer == null) {
                 console.log("received frame has problem. The system will ignore")
+                this.lock = false
+                return false
             }
+            console.log(chalk.green("SET FRAME DEBUG 1"))
+
             this.framebuffer = framebuffer
             this.framenumber = framenumber
             this.timestamp = timestamp
             this.lock = false
-            this.RedirectTaskControllerRef.SIGNAL_passthrough_send()
+            await this.RedirectTaskControllerRef.SIGNAL_passthrough_send(framebuffer, framenumber, timestamp)
+            console.log(chalk.green("SET FRAME DEBUG 2"))
+
         } else {
             console.log("can't set frame due to the other operation is operate on frame")
         }
@@ -380,11 +388,17 @@ class RemoteDesktopRedirectTask {
             console.log("buffer locking due to not completed sent")
         }
     }
-    SIGNAL_passthrough_send(framebuffer, frameNumber, timeStamp) {
+    async SIGNAL_passthrough_send(framebuffer, frameNumber, timeStamp) {
+        console.log(chalk.green("SIGNAL_Passthrough_Send is called"))
         const messagesController = require(globalConfigs.mpath1.messagesController)
         //console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
-
+        if (!framebuffer) {
+            console.log(chalk.red("not receive frame buffer"))
+            return false
+        }
+        //let count = 0
         if (this.RemoteDesktopFrameBuffer.lock === false) {
+            console.log(chalk.green("LOCK FRAME"))
             this.RemoteDesktopFrameBuffer.lock = true
             for (let i of this.peers) {
                 let name = i[0]
@@ -394,13 +408,15 @@ class RemoteDesktopRedirectTask {
                 console.log(`senting to peers : name : ${name} IP : ${IP} PORT : ${PORT} `)
                 //console.log(messagesController.ClientPathTemplated)
                 console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
-/*
-                messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer(IP,PORT
-                    , "clientHTTPREMF"
+                //messagesController.messagesGlobalMethods.requireTest()
+
+                await messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer(IP,PORT
+                    , messagesController.ClientPathTempleted.clientHTTPFrameUpdate
                     , messagesController.messagesTemplates.UNICAST_UPDATEFRAME_HEADER_FORMDATA(name, this.object_persistedID, frameNumber, this.ownerID, this.ownerName, timeStamp)
                     , messagesController.messagesTemplates.ONE_BUFFERDATA_FORFORMDATA(framebuffer,"frame", messagesController.messagesTemplates_ClientPathTempleted.application_any))
-*/
+
             }
+            console.log(chalk.green("UNLOCK FRAME"))
             this.RemoteDesktopFrameBuffer.lock = false
         } else {
             console.log("buffer locking due to not completed sent")

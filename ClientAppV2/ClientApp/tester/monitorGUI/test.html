@@ -25,7 +25,7 @@
         var remoteMon = io.connect('http://localhost:'+port+'/remoteMon')
 
         let pic = document.getElementById("remoteimg")
-        remoteMon.on('remoteinfo', function (data) {
+        remoteMon.on('remote_debug', function (data) {
             //console.log(data)
             if (data.buffer) {
                 let img = data.buffer

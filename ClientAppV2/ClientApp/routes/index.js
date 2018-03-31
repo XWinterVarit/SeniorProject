@@ -21,7 +21,7 @@ const globalConfigs = require('../config/GlobalConfigs')
 const sessionController = require(globalConfigs.mpath1.sessionController)
 const messagesController = require(globalConfigs.mpath1.messagesController)
 
-const streamController = require(globalConfigs.mpath1.streamController)
+//const streamController = require(globalConfigs.mpath1.streamController)
 const toolsController = require(globalConfigs.mpath1.toolsController)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
@@ -219,20 +219,20 @@ router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => 
     res.end()
 
 
-/*  EXAMPLE code for multer
-
-    console.log(req.body.name)
+//  EXAMPLE code for multer
+/*
+    console.log(req.body.my_field)
     let downloadfile = req.file
     //downloadfile = Buffer.from(downloadfile)
     console.log(typeof downloadfile)
     console.log(downloadfile)
-    fs.writeFileSync(globalConfigs.testpath1.data + "test.mov", downloadfile.buffer )
+    //fs.writeFileSync(globalConfigs.testpath1.data + "test.mov", downloadfile.buffer )
     //console.log(downloadfile.length)
 
     //console.log(CircularJSON.stringify(req, null, 4))
     res.end()
+*/
 
-    */
 })
 let count = 0
 router.get('/testwebsocket', (req, res, next) => {
@@ -246,6 +246,16 @@ router.get('/testwebsocket', (req, res, next) => {
         let buffer = fs.readFileSync(globalConfigs.testpath1.data + "cat3.jpg")
         sessionController.globalSession.TEST_MONITOR_SOCKETIO(buffer)
     }
+    res.end()
+})
+
+
+router.post('/testSentFile', async (req, res, next) => {
+    let framebuffer = new Buffer("Welcome")
+    await messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer("127.0.0.1",40000
+        , "clientHTTPREMF"
+        , messagesController.messagesTemplates.UNICAST_UPDATEFRAME_HEADER_FORMDATA("555", 123, "123", "123", "123", "123")
+        , messagesController.messagesTemplates.ONE_BUFFERDATA_FORFORMDATA(framebuffer,"frame", messagesController.messagesTemplates_ClientPathTempleted.application_any))
     res.end()
 })
 

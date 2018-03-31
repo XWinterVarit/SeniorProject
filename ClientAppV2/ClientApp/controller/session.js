@@ -17,7 +17,7 @@ const socketIO = require(globalConfigs.mpath1.socketIOconfig).socketIO
 ///////////////////////From Other Controllers////////////////////////
 
 const toolsController = require(globalConfigs.mpath1.toolsController)
-const messagesController = require(globalConfigs.mpath1.messagesController)
+//const messagesController = require(globalConfigs.mpath1.messagesController)
 let streamController = null
 setTimeout(
     () => {
@@ -204,6 +204,7 @@ class session_Class {
     }
 
     HEARTBEAT_signal_start () {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
         if (this.heartbeatScheduler) {
             console.log("Heartbeat signal already started")
         } else {
@@ -421,6 +422,8 @@ class session_Class {
     }
 
     CONTROL_MoveToPosition (posX, posY) {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+
         let ownuser = this.getOwnMember()
         if (ownuser) {
             if (this.ACTION_changeObjectPosition(ownuser, posX, posY)) {
@@ -433,10 +436,14 @@ class session_Class {
         }
     }
     CONTROL_ChangeActiveWorld (newActiveWorld_persistedID) {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+
         this.active_at_world_persistedID = newActiveWorld_persistedID
         messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.changeActiveWorld(newActiveWorld_persistedID, this.currentUser_name))
     }
     CONTROL_ChangeActiveObject (newObject_persistedID) {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+
         this.active_at_object_persistedID = newObject_persistedID
         messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.changeActiveObject(newObject_persistedID, this.currentUser_name))
     }
