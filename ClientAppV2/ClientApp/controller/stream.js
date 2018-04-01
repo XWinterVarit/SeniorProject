@@ -224,6 +224,7 @@ class DesktopRecorder_Class {
                                     //framebuffer.push(img)
                                     //console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
                                     realtimestamp = Date.now()
+
                                     await RemoteObjectRef.RemoteDesktopFrameBuffer.SET_frame(framepass, buffer,realtimestamp)
                                     working = false
                                 }).catch((err) => {
