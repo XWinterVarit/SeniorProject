@@ -6,7 +6,7 @@ class SocketIOConfig_Class {
         console.log("SocketIO listening at PORT : " + PORT)
         this.io = require('socket.io')(PORT)
         //this.io.set('transports', ['websocket', 'xhr-polling', 'jsonp-polling', 'htmlfile', 'flashsocket']);
-        //this.io.set('origins', '*:*')
+        this.io.set('origins', '*:*')
         laterExports.io = this.io
     }
 }

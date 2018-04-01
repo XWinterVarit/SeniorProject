@@ -5,7 +5,7 @@
 </head>
 <body>
 
-<h1>This is a Heading</h1>
+<h1>This is a Welll</h1>
 <p>This is a paragraph.</p>
 <input type="text" id="port">
 <button type="button" id="init">Init!</button>
@@ -19,12 +19,13 @@
 <script>
 
 
-
+    console.log("start script")
     $( "#init" ).click(function() {
         let port = $("#port").val()
         var remoteMon = io.connect('http://localhost:'+port+'/remoteMon')
 
         let pic = document.getElementById("remoteimg")
+        //console.log("show before pic : " + pic)
         remoteMon.on('remote_debug', function (data) {
             //console.log(data)
             if (data.buffer) {
@@ -35,14 +36,15 @@
                 ctx.clearRect(0, 0, c.width, c.height);
                 ctx.beginPath();
                 */
-                onBinaryMessage(img)
+                onBinaryMessage(img, pic)
             }
         });
 
     });
 
 
-    function onBinaryMessage(input) {
+    function onBinaryMessage(input, pic) {
+        //console.log("show after pic : " + pic)
 
         var blob = new Blob([input], {type: 'image/png'});
         var url = URL.createObjectURL(blob);

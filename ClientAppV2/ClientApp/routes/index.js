@@ -297,4 +297,11 @@ router.post('/CONTROL_StopRecord', (req, res, next) => {
     res.end()
 })
 
+
+router.get('/FrameImageDebug', (req, res, next) => {
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.sendFile(globalConfigs.testpath1.monitorGUI + 'test.html')
+})
+
+
 module.exports = router;

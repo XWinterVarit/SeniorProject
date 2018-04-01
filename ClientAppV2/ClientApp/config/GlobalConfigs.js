@@ -14,6 +14,7 @@ const MPath1_controller_tools = MPath1_controller + 'tools'
 
 const TestPath1 = nodepath + 'tester/'
 const TestPath1_data = TestPath1 + 'data/'
+const TestPath1_monitorGUI = TestPath1 + 'monitorGUI/'
 
 const serverIP = "127.0.0.1"
 const serverPort = "3000"
@@ -40,7 +41,8 @@ module.exports.mpath1 = {
 
 module.exports.testpath1 = {
     programfile: TestPath1,
-    data: TestPath1_data
+    data: TestPath1_data,
+    monitorGUI: TestPath1_monitorGUI
 }
 
 module.exports.ServerInfo = {

@@ -145,10 +145,6 @@ class DesktopRecorder_Class {
         this.fpscap = 15
         this.sessionRef = sessionRef
 
-
-        this.debugFrame = true
-        this.allowDisplayFrame = false
-
         this.setCount = 0
         this.passsetCount = 3
         if (this.sessionRef == null) {
@@ -229,12 +225,6 @@ class DesktopRecorder_Class {
                                     //console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
                                     realtimestamp = Date.now()
                                     await RemoteObjectRef.RemoteDesktopFrameBuffer.SET_frame(framepass, buffer,realtimestamp)
-                                    if (this.debugFrame === true) {
-                                        this.sessionRef.MONITOR_REMOTEFRAME_SOCKETIO(buffer, framepass, realtimestamp)
-                                    }
-                                    if (this.allowDisplayFrame === true) {
-                                        this.sessionRef.FORUI_DISPLAY_VIA_SOCKETIO(buffer)
-                                    }
                                     working = false
                                 }).catch((err) => {
                                     console.log("error " + err);
@@ -263,8 +253,8 @@ class DesktopRecorder_Class {
 
 
 class OneObjectRemoteDesktop_Class {
-    constructor(object_persistedID, ownerID, ownerName) {
-        this.RemoteDesktopFrameBuffer = new RemoteDesktopFrameBuffer_Class(object_persistedID, ownerID, ownerName)
+    constructor(object_persistedID, ownerID, ownerName, sessionRef) {
+        this.RemoteDesktopFrameBuffer = new RemoteDesktopFrameBuffer_Class(object_persistedID, ownerID, ownerName, sessionRef)
         this.RemoteDesktopRedirectTask = new RemoteDesktopRedirectTask(object_persistedID, ownerID, ownerName)
         this.RemoteDesktopRedirectTask.SET_framebufferRef(this.RemoteDesktopFrameBuffer)
         this.RemoteDesktopFrameBuffer.SET_RedirectTaskRef(this.RemoteDesktopRedirectTask)
@@ -280,7 +270,7 @@ class OneObjectRemoteDesktop_Class {
 
 
 class RemoteDesktopFrameBuffer_Class {
-    constructor (object_persistedID, ownerID, ownerName) {
+    constructor (object_persistedID, ownerID, ownerName, sessionRef) {
         this.type = "framebuffer"
 
         this.object_persistedID = object_persistedID
@@ -291,7 +281,13 @@ class RemoteDesktopFrameBuffer_Class {
         this.timestamp = ""
         this.framebuffer = null
 
+        this.debugFrame = true
+        this.redirecttodisplay = false
+
+
         this.lock = false
+
+        this.sessionRef = sessionRef
 
         this.RedirectTaskControllerRef = null
 
@@ -320,7 +316,7 @@ class RemoteDesktopFrameBuffer_Class {
     async SET_frame (framenumber, framebuffer, timestamp) {
         if (this.lock === false) {
             this.lock = true
-            if ( timestamp <= this.timestamp || framenumber <= this.framenumber || framebuffer == null) {
+            if ( timestamp <= this.timestamp /*|| framenumber <= this.framenumber*/ || framebuffer == null) {
                 console.log("received frame has problem. The system will ignore")
                 this.lock = false
                 return false
@@ -330,7 +326,17 @@ class RemoteDesktopFrameBuffer_Class {
             this.framebuffer = framebuffer
             this.framenumber = framenumber
             this.timestamp = timestamp
+            if (this.debugFrame === true) {
+                console.log('emit to websocket')
+                this.sessionRef.MONITOR_REMOTEFRAME_SOCKETIO(framebuffer, framenumber, timestamp)
+            }
+            if (this.redirecttodisplay === true) {
+                this.sessionRef.FORUI_DISPLAY_VIA_SOCKETIO(framebuffer)
+            }
+
             this.lock = false
+
+
             await this.RedirectTaskControllerRef.SIGNAL_passthrough_send(framebuffer, framenumber, timestamp)
             console.log(chalk.green("SET FRAME DEBUG 2"))
 

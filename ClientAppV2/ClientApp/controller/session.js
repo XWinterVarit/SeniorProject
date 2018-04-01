@@ -405,7 +405,7 @@ class session_Class {
             return getObject
         } else {
             console.log("not found remote object, so create new remote object")
-            let newObject = new streamController.OneObjectRemoteDesktop_Class(object_persistedID, ownerID, ownerName)
+            let newObject = new streamController.OneObjectRemoteDesktop_Class(object_persistedID, ownerID, ownerName, this)
             this.globalObjectMemory.ADD_newObjectMemory(object_persistedID, newObject)
             return newObject
         }
