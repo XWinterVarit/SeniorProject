@@ -39,7 +39,8 @@ const toolsController = require(globalConfigs.mpath1.toolsController)
 const ClientPathTempleted = {
     clientUserGateway: "clientUserGateway",
     clientRemoteGateway: "clientRemoteGateway",
-    clientHTTPFrameUpdate: "clientHTTPREMF"
+    clientHTTPFrameUpdate: "clientHTTPREMF",
+    clientHTTPFaceFrameUpdate: "clientHTTPFaceF"
 }
 
 
@@ -382,6 +383,7 @@ class messagesGlobalMethods {
     static udpOutputQueue (IP, PORT, data) {
         udpoutQueue.ADD_queue([IP,PORT,data])
     }
+
     static async udpOutput (onequeue) {
         let client = dgram.createSocket('udp4');
 
@@ -496,6 +498,25 @@ class messagesGlobalMethods {
     static updateRemoteFrame_UDP () {
 
     }
+
+
+    static updateFaceFrame (req) {
+        let headerdata = JSON.parse(req.body.headerdata)
+        if (!sessionController.globalSession.CHECK_RequestFaceFrameUpdate(headerdata.worldID)) {
+            console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
+            return false
+        }
+        let framebuffer = req.file.buffer
+        if (framebuffer == null) {
+            console.log(chalk.red("no frame buffer, IGNORE update"))
+            return false
+        }
+
+        let currentObject = sessionController.globalSession.CALL_FaceObject(headerdata.username)
+        currentObject.SET_frame(framebuffer)
+    }
+
+
 
 
     static async udpInput (buffer) {

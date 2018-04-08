@@ -209,31 +209,6 @@ router.post('/setFirstStart', (req, res, next) => {
     }
     res.end()
 })
-router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => {
-    /*
-    let framebuffer = req.body.frame
-    console.log(`receive image frame length : ${framebuffer.length}`)
-    */
-
-    messagesController.messagesGlobalMethods.updateRemoteFrame_HTTP(req)
-    res.end()
-
-
-//  EXAMPLE code for multer
-/*
-    console.log(req.body.my_field)
-    let downloadfile = req.file
-    //downloadfile = Buffer.from(downloadfile)
-    console.log(typeof downloadfile)
-    console.log(downloadfile)
-    //fs.writeFileSync(globalConfigs.testpath1.data + "test.mov", downloadfile.buffer )
-    //console.log(downloadfile.length)
-
-    //console.log(CircularJSON.stringify(req, null, 4))
-    res.end()
-*/
-
-})
 let count = 0
 router.get('/testwebsocket', (req, res, next) => {
     count++
@@ -298,10 +273,67 @@ router.post('/CONTROL_StopRecord', (req, res, next) => {
 })
 
 
+router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => {
+    /*
+    let framebuffer = req.body.frame
+    console.log(`receive image frame length : ${framebuffer.length}`)
+    */
+
+    messagesController.messagesGlobalMethods.updateRemoteFrame_HTTP(req)
+    res.end()
+
+
+//  EXAMPLE code for multer
+    /*
+        console.log(req.body.my_field)
+        let downloadfile = req.file
+        //downloadfile = Buffer.from(downloadfile)
+        console.log(typeof downloadfile)
+        console.log(downloadfile)
+        //fs.writeFileSync(globalConfigs.testpath1.data + "test.mov", downloadfile.buffer )
+        //console.log(downloadfile.length)
+
+        //console.log(CircularJSON.stringify(req, null, 4))
+        res.end()
+    */
+
+})
+
+router.post('/clientHTTPFaceF', uploadService.single('file'), (req, res, next) => {
+    messagesController.messagesGlobalMethods.updateFaceFrame(req)
+    res.end()
+})
+
+
+
+
+
+
+
 router.get('/FrameImageDebug', (req, res, next) => {
     res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
     res.sendFile(globalConfigs.testpath1.monitorGUI + 'test.html')
 })
+router.get('/testfaces', (req, res, next) => {
+    sessionController.globalSession.FORUI_START_GETFACE()
+    res.end()
+})
+router.get('/startface', (req, res, next) => {
+    sessionController.globalSession.FORUI_START_FACESTREAMING()
+    res.end()
+})
+router.get('/FaceImageDebug', (req, res, next) => {
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.sendFile(globalConfigs.testpath1.camtest + 'faceMon.html')
+})
 
+
+router.get('/NearbyCalStart', (req, res, next) => {
+    sessionController.globalSession.CONTROL_START_GETNEARBY_SCHEDULER()
+    res.end()
+})
+router.get('/NearbyCalStop', (req, res, next) => {
+    sessionController.globalSession.CONTROL_STOP_GETNEARBY_SCHEDULER()
+})
 
 module.exports = router;

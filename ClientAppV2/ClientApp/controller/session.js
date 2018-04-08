@@ -46,6 +46,8 @@ class aciveMember_Class {
         this.IP = ""
         this.PORT = ""
         this.standby = false
+
+        this.staticfacebuffer = null
         //console.log("show constructor optionals " + JSON.stringify(optionals, null, 4))
         if (optionals) {
             if (optionals.positionX) {
@@ -76,6 +78,10 @@ class aciveMember_Class {
         } else {
             console.log("TF Error")
         }
+    }
+
+    SET_staticFace (faceimagebuffer) {
+        this.staticfacebuffer = faceimagebuffer
     }
 }
 class objectLink_Class {
@@ -193,12 +199,29 @@ class session_Class {
         )
 
         this.remotestreaming = null
+        this.facestreaming = null
+
         setTimeout(
             () => {
                 console.log("remote streaming module start")
                 this.remotestreaming = new streamController.DesktopRecorder_Class(this)
+                console.log("face streaming module start")
+                this.facestreaming = new streamController.CameraRecorder_Class(this)
             }, 1500
         )
+
+
+
+
+        this.SCHEDULER_getFaces = null
+
+
+        this.SCHEDULER_getNearbyUser = null
+        this.INTERVALTIME_getNearbyUser = 2000 //msec
+        this.PREVALUE_getNearbyUser_BoundLengthX = 2
+        this.PREVALUE_getNearbyUser_BoundLengthY = 2
+
+        this.CurrentNearbyUserLists = []
 
 
     }
@@ -398,6 +421,17 @@ class session_Class {
         }
         return validation
     }
+
+    CHECK_RequestFaceFrameUpdate (worldID) {
+        let validation = true
+        if (String(this.active_at_world_persistedID) !== String(worldID)) {
+            console.log(chalk.red("world ID not true"))
+            validation = false
+        }
+        return validation
+    }
+
+
     CALL_RemoteObject (object_persistedID, ownerID, ownerName) {
         let  getObject = this.globalObjectMemory.GET_ObjectMemoryReference(object_persistedID)
         if (getObject) {
@@ -410,6 +444,21 @@ class session_Class {
             return newObject
         }
     }
+
+    CALL_FaceObject (username) {
+        let getObject = this.globalObjectMemory.GET_ObjectMemoryReference(username)
+        if (getObject) {
+            console.log("found face object")
+            return getObject
+        } else {
+            console.log("not found face object, so create new face object")
+            let newObject = new streamController.OneFaceImagesStore_Class(username, this)
+            this.globalObjectMemory.ADD_newObjectMemory(username, newObject)
+            return newObject
+        }
+    }
+
+
     GETREF_RemoteObject (object_persistedID) {
         let  getObject = this.globalObjectMemory.GET_ObjectMemoryReference(object_persistedID)
         if (getObject) {
@@ -454,6 +503,52 @@ class session_Class {
     }
     CONTROL_STOP_BroadcastScreen () {
         this.remotestreaming.STOP_RECORD()
+    }
+
+    CONTROL_START_GETNEARBY_SCHEDULER () {
+        if (this.SCHEDULER_getNearbyUser) {
+            console.log("getnearby user already started")
+        } else {
+            console.log('Starting getnearbyuser scheduler')
+            this.SCHEDULER_getNearbyUser = setInterval(
+                () => {
+                    let nearbyUsers = []
+                    let boundlengthX = this.PREVALUE_getNearbyUser_BoundLengthX
+                    let boundlengthY = this.PREVALUE_getNearbyUser_BoundLengthY
+                    let currentUser = this.activeMember.get(this.currentUser_name)
+                    let startboundX = Number(currentUser.positionX) - boundlengthX
+                    let endboundX = Number(currentUser.positionX) + boundlengthX
+                    let startboundY = Number(currentUser.positionY) - boundlengthY
+                    let endboundY = Number(currentUser.positionY) + boundlengthY
+                    console.log(`start x ${startboundX} end x ${endboundX} start y ${startboundY} end y ${endboundY}`)
+
+                    for (let x = startboundX; x < endboundX; x++) {
+                        for (let y = startboundY; y < endboundY; y++) {
+                            //console.log(`at position x ${x} y ${y}`)
+                            let data = this.getData_inMatrix(x,y)
+                            if (data) {
+                                if (data.maintype = "member") {
+                                    //console.log(JSON.stringify(data, null, 4))
+                                    nearbyUsers.push(data)
+                                }
+                            }
+                        }
+                    }
+                    //console.log(chalk.yellow("print array of users"))
+                    //console.log(nearbyUsers)
+                    this.CurrentNearbyUserLists = nearbyUsers
+                }, this.INTERVALTIME_getNearbyUser
+            )
+        }
+    }
+    CONTROL_STOP_GETNEARBY_SCHEDULER () {
+        if (this.SCHEDULER_getNearbyUser) {
+            clearInterval(this.SCHEDULER_getNearbyUser)
+            this.SCHEDULER_getNearbyUser = null
+            console.log('SCHEDULER_getNearbyUser stopped')
+        } else {
+            console.log('SCHEDULER_getNearbyUser already stopped')
+        }
     }
 
 
@@ -576,6 +671,70 @@ class session_Class {
         })
     }
 
+    MONITOR_FACESTREAMING_SOCKETIO (faceframebuffer) {
+        this.SocketIO_Listener_RemoteMonitor.volatile.emit('face_debug', {
+            type: "facedebug",
+            buffer: faceframebuffer
+        })
+    }
+
+    SENT_FACESFRAME_SOCKETIO (arrayofusersfacebuffer) {
+        this.SocketIO_Listener_RemoteMonitor.volatile.emit('faces', {
+            type: "faces",
+            users: arrayofusersfacebuffer
+        })
+    }
+
+    FORUI_START_GETFACE () {
+        if (this.SCHEDULER_getFaces) {
+            console.log("getFaces scheduler already start")
+        } else {
+            console.log("starting getFaces")
+            this.SCHEDULER_getFaces = setInterval(
+                () => {
+                    let arrayofusersface = []
+                    for (let i of this.CurrentNearbyUserLists) {
+                        let framebuffer = this.CALL_FaceObject(i.name).GET_frame()
+                        if (framebuffer) {
+                            arrayofusersface.push({
+                                name: i.name,
+                                persistedID: null,
+                                framebuffer: framebuffer
+                            })
+                        } else {
+                            console.log("face not update too long")
+                            arrayofusersface.push({
+                                name: i.name,
+                                persistedID: null,
+                                framebuffer: i.staticfacebuffer
+                            })
+                        }
+                    }
+                    console.log(chalk.green(arrayofusersface))
+                    //this.MONITOR_FACEFRAME_SOCKETIO(arrayofusersface)
+                },2000
+            )
+        }
+    }
+    FORUI_STOP_GETFACE () {
+        if (this.SCHEDULER_getFaces) {
+            console.log("stoping get face")
+            clearInterval(this.SCHEDULER_getFaces)
+            this.SCHEDULER_getFaces = null
+        } else {
+            console.log("get face already stop")
+        }
+    }
+
+    FORUI_START_FACESTREAMING () {
+        let currentObject = globalSession.CALL_FaceObject(this.currentUser_name)
+        this.facestreaming.START_RECORD(currentObject)
+    }
+    FORUI_STOP_FACESTREAMING () {
+        this.facestreaming.STOP_RECORD()
+    }
+
+
     FORUI_DISPLAY_VIA_SOCKETIO (newbuffer) {
 
     }
@@ -590,6 +749,7 @@ class session_Class {
             currentMember = new aciveMember_Class(name, persistedID, {positionX: others.positionX, positionY: others.positionY, IP:others.IP, PORT: others.PORT})
             this.activeMember.set(name, currentMember)
             this.setPosition_inMatrix(others.positionX, others.positionY, currentMember)
+            //this.CALL_FaceObject(persistedID)
         } else {
             console.log("member already in memory")
             if (currentMember.positionX === others.positionX && currentMember.positionY === others.positionY) {

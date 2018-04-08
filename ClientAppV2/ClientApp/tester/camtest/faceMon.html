@@ -21,11 +21,11 @@
 
     console.log("start script")
 
-    var remoteMon = io.connect('http://localhost:40000/faceMon')
+    var remoteMon = io.connect('http://localhost:60001/remoteMon')
 
     let pic = document.getElementById("remoteimg")
     //console.log("show before pic : " + pic)
-    remoteMon.on('face', function (data) {
+    remoteMon.on('face_debug', function (data) {
         //console.log(data)
         if (data.buffer) {
             let img = data.buffer

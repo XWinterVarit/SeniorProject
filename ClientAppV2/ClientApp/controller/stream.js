@@ -13,6 +13,8 @@ const stream = require('stream')
 const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
 let converter
 let input
+
+const imagesnap = require('imagesnap')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -134,6 +136,47 @@ class GlobalStreamUtility {
 
         //fs.writeFileSync(globalConfigs.testpath1.data+"balls"+indexname+".jpg", temp)
     }
+
+    static async JPEGCompress_FACE (preProcessJpeg) {
+        let fsM = new memoryFileSystem()
+        let converter
+        let input
+
+        converter = ffmpeg_stream()
+
+        await new Promise((resolve, reject)=>{
+
+            input = converter.input({f: 'image2pipe', vcodec: 'mjpeg'});
+
+            //let buffer = fs.readFileSync('./well15.jpg')
+            let bufferStream = new stream.PassThrough()
+            bufferStream.end(preProcessJpeg)
+
+
+            //fs.createReadStream('./well15.jpg').pipe(input)
+            bufferStream.pipe(input)
+            converter.output({
+                f: 'image2', vcodec: 'mjpeg',
+                vf: 'scale=320*240', q: '20'
+            }).pipe(fsM.createWriteStream('/tempframe')
+                .on('finish',()=>{
+                    console.log("finish")
+
+                    return resolve()
+
+                }).on('error',()=>{
+                    console.log("stream error")
+                    return reject()
+                }))
+
+            converter.run()
+        })
+        //let temp = fsM.readFileSync('/tempframe')
+        return fsM.readFileSync('/tempframe')
+
+        //fs.writeFileSync(globalConfigs.testpath1.data+"balls"+indexname+".jpg", temp)
+
+    }
 }
 
 
@@ -252,6 +295,114 @@ class DesktopRecorder_Class {
     }
 }
 
+class CameraRecorder_Class {
+    constructor (sessionRef) {
+        this.stopsignal = false
+        this.fpscap = 2
+        this.sessionRef = sessionRef
+
+        this.intervalTaken = null
+
+        if (this.sessionRef == null) {
+            console.log(chalk.red("Desktop Recorder Internal Error"))
+        }
+    }
+    START_RECORD (faceframeRef) {
+        this.START_RECORD_MAC(faceframeRef)
+    }
+    STOP_RECORD () {
+        if (this.intervalTaken) {
+            clearInterval(this.intervalTaken)
+            this.intervalTaken = null
+            console.log("stop completed")
+        } else {
+            console.log("already stoped")
+        }
+    }
+    START_RECORD_MAC (faceframeRef) {
+        if (this.intervalTaken != null) {
+            console.log("already start")
+            return false
+        }
+
+        this.intervalTaken = "starting.."
+
+        let times = 1000/this.fpscap
+        console.log("time per frame is : " + times)
+        let realtimestamp = Date.now()
+        console.log(`Start time ${realtimestamp}`)
+        let previousframedrop = 0;
+        let framedrop = 0;
+        let framepass = 0;
+        let working = false
+        this.intervalTaken = setInterval(
+            () => {
+
+                if (working === true) {
+                    framedrop++;
+                } else {
+                    if (framepass > 10000000) {
+                        console.log("DEBUG: stop screenshot")
+                        clearInterval(this.intervalTaken)
+                        //toMp4()
+                    } else {
+                        //working = true
+                        console.log("start take screenshot")
+                        let fsM = new memoryFileSystem()
+                        framepass++;
+                        console.log(`before framepass ${framepass}`)
+
+                        imagesnap().pipe(fsM.createWriteStream('/capture.jpg')
+                            .on('finish',async ()=>{
+                                console.log(`framepass ${framepass}`)
+                                //console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
+                                //realtimestamp = Date.now()
+                                //working = false
+                                let preprocess = fsM.readFileSync('/capture.jpg')
+                                let postprocess = await GlobalStreamUtility.JPEGCompress_FACE(preprocess)
+
+                                faceframeRef.SET_frame(postprocess)
+                                //this.sessionRef.MONITOR_FACESTREAMING_SOCKETIO(postprocess)
+
+
+
+                            }));
+
+                        /*
+                                            imagesnap().pipe(fsM.createWriteStream('/capture.jpg')
+                                                .on('finish',async ()=>{
+                                                    console.log(`framepass ${framepass}`)
+                                                    //console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
+                                                    //realtimestamp = Date.now()
+                                                    //working = false
+                                                    let preprocess = fsM.readFileSync('/capture.jpg')
+                                                    let postprocess = await JPEGCompress(preprocess)
+                                                    fs.writeFileSync('compress'+framepass+'.jpg', postprocess)
+
+                                                }));
+                        */
+
+                        /*
+                                            var imageStream = fs.createWriteStream('capture'+framepass+'.jpg');
+                                            imagesnap().pipe(imageStream
+                                                .on('finish',()=>{
+                                                    console.log(`after framepass ${framepass}`)
+                                                    //console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}  length: ${framebuffer.length}`)
+                                                    //realtimestamp = Date.now()
+                                                    //working = false
+                                                }));
+                                            */
+
+                    }
+                }
+            }, times
+        )
+
+    }
+    START_RECORD_WINDOWS () {
+
+    }
+}
 
 class OneObjectRemoteDesktop_Class {
     constructor(object_persistedID, ownerID, ownerName, sessionRef) {
@@ -353,6 +504,7 @@ class RemoteDesktopFrameBuffer_Class {
     }
 }
 
+
 class RemoteDesktopRedirectTask {
     constructor (object_persistedID, ownerID, ownerName) {
         this.object_persistedID = object_persistedID
@@ -443,6 +595,8 @@ class RemoteDesktopRedirectTask {
     }
 
 }
+
+
 class RemoteDesktopStreamMethods_Class {
     DECODE_FrameBuffer (IncomeUDP) {
         return toolsController.BufferUtility.extractbuffer(IncomeUDP)
@@ -455,14 +609,55 @@ class RemoteDesktopStreamMethods_Class {
     }
 }
 
-class FaceImagesStore_Class {
 
+class OneFaceImagesStore_Class {
+    constructor(user_name, sessionRef) {
+        this.type = "face_framebuffer"
+
+        this.user_name = user_name
+        this.framebuffer = null
+
+        this.debugFrame = true
+        this.lock = false
+
+        this.sessionRef = sessionRef
+
+        this.TIMESTAMP_setframe = 0
+        this.maximum_time_allow_get_frame = 3000 //milisec
+    }
+    async SET_frame (framebuffer) {
+
+        if (this.lock === false) {
+            //console.log(chalk.red('***************'))
+            this.lock = true
+
+            this.TIMESTAMP_setframe = Date.now()
+            this.framebuffer = framebuffer
+            if (this.debugFrame === true) {
+                console.log('emit to websocket')
+                this.sessionRef.MONITOR_FACESTREAMING_SOCKETIO(framebuffer)
+            }
+
+            this.lock = false
+        } else {
+            console.log("can't set frame due to the other operation is operate on frame")
+        }
+    }
+    GET_frame() {
+        let now_timestamp = Date.now()
+        if (now_timestamp - this.TIMESTAMP_setframe > this.maximum_time_allow_get_frame) {
+            return this.framebuffer
+        } else {
+            return null
+        }
+    }
 }
 
 
 
 module.exports.RemoteDesktopStreamMethods_Class = RemoteDesktopStreamMethods_Class
-module.exports.FaceImagesStore_Class = FaceImagesStore_Class
+module.exports.OneFaceImagesStore_Class = OneFaceImagesStore_Class
 module.exports.OneObjectRemoteDesktop_Class = OneObjectRemoteDesktop_Class
 module.exports.GlobalStreamUtility = GlobalStreamUtility
 module.exports.DesktopRecorder_Class = DesktopRecorder_Class
+module.exports.CameraRecorder_Class = CameraRecorder_Class
