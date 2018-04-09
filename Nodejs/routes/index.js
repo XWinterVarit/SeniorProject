@@ -13,6 +13,9 @@ const CircularJSON = require('circular-json')
 const requestIP = require('request-ip')
 const fs = require('fs')
 const path = require('path')
+
+const multer = require('multer')
+const uploadService = multer({storage: multer.memoryStorage()})
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -176,7 +179,22 @@ router.post('/moveObjectPosition', async (req, res, next) => {
     currentWorld.callObjectLink(req.body.persistedID, new currentWorld.OPTIONAL_TEMPLATE_callObjectLink(req.body.positionX, req.body.positionY, null))
     res.end()
 })
-// Real path
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+//////////////////////////////Real Path/////////////////////////////////
+//////////////////////////////Real Path/////////////////////////////////
+//////////////////////////////Real Path/////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
 
 router.post('/userGateway', async(req, res, next) => {
     let clientIP = requestIP.getClientIp(req)
@@ -194,6 +212,23 @@ router.post('/getWorldMembers', async(req, res, next) => {
     res.json(await worldController.WorldMethods.getAllMember(req.body.worldID))
 })
 
+router.post('/setAvatar', async(req, res, next) => {
+
+})
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 
 router.post('/testuserGateway', async(req, res, next) => {
     let vreq = {
@@ -364,8 +399,14 @@ router.post('/testimage', async (req, res, next) => {
 */
     res.end()
 })
-router.post('/testtime', (req, res, next) => {
-
+router.post('/testtime',uploadService.single('file'), async (req, res, next) => {
+    let headerdata = JSON.parse(req.body.headerdata)
+    let framebuffer = req.file.buffer
+    if (framebuffer == null) {
+        console.log(chalk.red("no frame buffer, IGNORE update"))
+        return res.end()
+    }
+    await userController.UserMethods.setUserStaticAvatar(req.body.username)
 })
 
 module.exports = router;

@@ -6,5 +6,102 @@
 </head>
 <body>
 
+<div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script
+        src="https://code.jquery.com/jquery-3.3.1.js"
+        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+        crossorigin="anonymous"></script>
+
+<p id="t-slot1">
+<img id="slot1">
+<p id="t-slot2">
+<img id="slot2">
+<p id="t-slot3">
+<img id="slot3">
+<p id="t-slot4">
+<img id="slot4">
+<p id="t-slot5">
+<img id="slot5">
+<p id="t-slot6">
+<img id="slot6">
+<p id="t-slot7">
+<img id="slot7">
+<p id="t-slot8">
+<img id="slot8">
+<p id="t-slot9">
+<img id="slot9">
+<p id="t-slot10">
+<img id="slot10">
+
+
+<script>
+
+    var remoteMon = io.connect('http://localhost:60001/remoteMon')
+
+    let info1 = document.getElementById('t-slot1')
+    let pic1 = document.getElementById("slot1")
+    let info2 = document.getElementById('t-slot2')
+    let pic2 = document.getElementById("slot2")
+    let info3 = document.getElementById('t-slot3')
+    let pic3 = document.getElementById("slot3")
+    let info4 = document.getElementById('t-slot4')
+    let pic4 = document.getElementById("slot4")
+    let info5 = document.getElementById('t-slot5')
+    let pic5 = document.getElementById("slot5")
+    let info6 = document.getElementById('t-slot6')
+    let pic6 = document.getElementById("slot6")
+    let info7 = document.getElementById('t-slot7')
+    let pic7 = document.getElementById("slot7")
+    let info8 = document.getElementById('t-slot8')
+    let pic8 = document.getElementById("slot8")
+    let info9 = document.getElementById('t-slot9')
+    let pic9 = document.getElementById("slot9")
+    let info10 = document.getElementById('t-slot10')
+    let pic10 = document.getElementById("slot10")
+    //console.log("show before pic : " + pic)
+    let slotrunnumber = 1
+
+    remoteMon.on('faces', function (data) {
+        //console.log(data)
+        for (let i of data.users) {
+            console.log(i)
+
+/*
+            if (data.buffer) {
+                let img = data.buffer
+
+                onBinaryMessage(img, pic)
+            }
+            */
+
+
+        }
+    });
+
+
+
+    function onBinaryMessage(input, pic) {
+        //console.log("show after pic : " + pic)
+
+        var blob = new Blob([input], {type: 'image/png'});
+        var url = URL.createObjectURL(blob);
+        //console.log("url is " + url)
+        pic.src = url
+        /*
+        var img = new Image;
+
+        img.onload = function() {
+            var ctx = document.getElementById("myCanvas").getContext('2d');
+            ctx.drawImage(this, 0, 0);
+            URL.revokeObjectURL(url);
+        }
+        img.src = url;
+        */
+    }
+</script>
 </body>
 </html>

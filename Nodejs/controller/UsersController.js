@@ -7,6 +7,7 @@
 
 const chalk = require('chalk')
 const HashArray = require('hasharray')
+const fs = require('fs')
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -593,6 +594,15 @@ class UserMethods {
             return null
         }
         return memberedWorlds
+    }
+
+    static async setUserStaticAvatar (username,imageBuffer) {
+        fs.writeFileSync(globalConfigs.mpath1.clouddrive_users_avatar+username+'.jpg', imageBuffer)
+    }
+
+    static async getUserStaticAvatar (username) {
+        let imagebuffer = fs.readFileSync(globalConfigs.mpath1.clouddrive_users_avatar+username+'.jpg')
+        return imagebuffer
     }
 
 }

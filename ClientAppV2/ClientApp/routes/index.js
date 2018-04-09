@@ -326,7 +326,10 @@ router.get('/FaceImageDebug', (req, res, next) => {
     res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
     res.sendFile(globalConfigs.testpath1.camtest + 'faceMon.html')
 })
-
+router.get('/FacesDebug', (req, res, next) => {
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.sendFile(globalConfigs.testpath1.camtest + 'testdynamic.html')
+})
 
 router.get('/NearbyCalStart', (req, res, next) => {
     sessionController.globalSession.CONTROL_START_GETNEARBY_SCHEDULER()

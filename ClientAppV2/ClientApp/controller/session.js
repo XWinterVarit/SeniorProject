@@ -699,19 +699,21 @@ class session_Class {
                             arrayofusersface.push({
                                 name: i.name,
                                 persistedID: null,
-                                framebuffer: framebuffer
+                                framebuffer: framebuffer,
+                                info: ""
                             })
                         } else {
                             console.log("face not update too long")
                             arrayofusersface.push({
                                 name: i.name,
                                 persistedID: null,
-                                framebuffer: i.staticfacebuffer
+                                framebuffer: i.staticfacebuffer,
+                                info: ""
                             })
                         }
                     }
-                    console.log(chalk.green(arrayofusersface))
-                    //this.MONITOR_FACEFRAME_SOCKETIO(arrayofusersface)
+                    //console.log(chalk.green(arrayofusersface))
+                    this.SENT_FACESFRAME_SOCKETIO(arrayofusersface)
                 },2000
             )
         }

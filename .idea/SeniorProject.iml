@@ -9,5 +9,6 @@
     <orderEntry type="library" name="clientV2nodeLibrary" level="project" />
     <orderEntry type="library" name="ServernodeLibrary" level="project" />
     <orderEntry type="library" name="jquery-3.3.1" level="application" />
+    <orderEntry type="library" name="vue" level="application" />
   </component>
 </module>

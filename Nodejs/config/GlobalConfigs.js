@@ -20,7 +20,7 @@ let MPath1_controller_RemoteDesktopOBJController = MPath1_controller + 'RemoteDe
 let MPath1_controller_messagesController = MPath1_controller + 'messagesController'
 
 let MPath1_clouddrive = nodepath + 'clouddrive/'
-
+let MPath1_clouddrive_users_avatar = MPath1_clouddrive + 'useravat/'
 module.exports.mpath1= {
                 nodepath: nodepath,
                 config: MPath1_config,
@@ -29,6 +29,7 @@ module.exports.mpath1= {
                 toolsController : MPath1_controller_toolscontroller,
                 redis: MPath1_config_redis,
                 clouddrive: MPath1_clouddrive,
+                clouddrive_users_avatar: MPath1_clouddrive_users_avatar,
                 userscontroller: MPath1_controller_UsersController,
                 cameraController: MPath1_controller_CameraController,
                 worldController: MPath1_controller_WorldController,

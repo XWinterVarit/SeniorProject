@@ -11,6 +11,8 @@ const fs = require('fs')
 const memoryFileSystem = require('memory-fs')
 const stream = require('stream')
 const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
+const shots = require('azulene-screenshots')
+
 let converter
 let input
 
@@ -298,17 +300,23 @@ class DesktopRecorder_Class {
 class CameraRecorder_Class {
     constructor (sessionRef) {
         this.stopsignal = false
-        this.fpscap = 2
+        this.fpscap = 15
         this.sessionRef = sessionRef
 
         this.intervalTaken = null
+
+        this.useDummyFaces = true
 
         if (this.sessionRef == null) {
             console.log(chalk.red("Desktop Recorder Internal Error"))
         }
     }
     START_RECORD (faceframeRef) {
-        this.START_RECORD_MAC(faceframeRef)
+        if (this.useDummyFaces) {
+            this.START_RECORD_DUMMY(faceframeRef)
+        } else {
+            this.START_RECORD_MAC(faceframeRef)
+        }
     }
     STOP_RECORD () {
         if (this.intervalTaken) {
@@ -400,6 +408,55 @@ class CameraRecorder_Class {
 
     }
     START_RECORD_WINDOWS () {
+
+    }
+
+    START_RECORD_DUMMY (faceframeRef) {
+        if (this.intervalTaken != null) {
+            console.log("already start")
+            return false
+        }
+
+        this.intervalTaken = "starting.."
+
+        let times = 1000/this.fpscap
+        console.log("time per frame is : " + times)
+        let realtimestamp = Date.now()
+        console.log(`Start time ${realtimestamp}`)
+        let previousframedrop = 0;
+        let framedrop = 0;
+        let framepass = 0;
+        let working = false
+        this.intervalTaken = setInterval(
+            async () => {
+
+                if (working === true) {
+                    framedrop++;
+                } else {
+                    if (framepass > 10000000) {
+                        console.log("DEBUG: stop screenshot")
+                        clearInterval(this.intervalTaken)
+                        //toMp4()
+                    } else {
+                        //working = true
+                        console.log("start take screenshot")
+                        framepass++;
+                        const vid = globalConfigs.testpath1.camtest + 'testcam.mp4'
+                        shots.screenshot(vid, Number((Number(framepass)/Number(this.fpscap)).toFixed(2))).then( async (buffer)=>{
+                            if (buffer.length > 100) {
+                                let postprocess = await GlobalStreamUtility.JPEGCompress_FACE(buffer)
+                                await faceframeRef.SET_frame(postprocess)
+                                working = false
+                            } else {
+                                console.log(chalk.red('out of dummy video bound'))
+                            }
+                            //fs.writeFileSync('./a.jpg', buffer)
+                        })
+
+                    }
+                }
+            }, times
+        )
 
     }
 }

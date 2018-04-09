@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page Title</title>
+</head>
+<body>
+
+<h1>This is a Welll</h1>
+<p>This is a paragraph.</p>
+<input type="text" id="port">
+<button type="button" id="init">Init!</button>
+<img id="remoteimg">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script
+        src="https://code.jquery.com/jquery-3.3.1.js"
+        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+        crossorigin="anonymous"></script>
+<script>
+
+
+    console.log("start script")
+
+    var remoteMon = io.connect('http://localhost:40000/chat')
+
+    //console.log("show before pic : " + pic)
+    remoteMon.on('rum_channal', function (data) {
+        console.log(data)
+    });
+
+
+
+</script>
+</body>
+</html>

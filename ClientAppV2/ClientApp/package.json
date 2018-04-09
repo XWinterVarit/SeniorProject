@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "async-lock": "^1.1.0",
+    "azulene-screenshots": "^1.0.3",
     "body-parser": "~1.17.1",
     "chalk": "^2.3.0",
     "circular-json": "^0.5.1",
@@ -15,6 +16,7 @@
     "debug": "~2.6.3",
     "express": "~4.15.2",
     "ffmpeg-stream": "^0.5.0",
+    "fluent-ffmpeg": "^2.1.2",
     "form-data": "^2.3.2",
     "imagesnap": "0.0.0",
     "matrix-hash": "^0.1.0",
