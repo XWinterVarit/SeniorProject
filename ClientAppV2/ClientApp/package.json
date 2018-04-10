@@ -7,6 +7,9 @@
   },
   "dependencies": {
     "async-lock": "^1.1.0",
+    "audio-buffer-from": "^1.1.1",
+    "audio-loader": "^1.0.3",
+    "audio-play": "^2.2.0",
     "azulene-screenshots": "^1.0.3",
     "body-parser": "~1.17.1",
     "chalk": "^2.3.0",
@@ -21,6 +24,7 @@
     "imagesnap": "0.0.0",
     "matrix-hash": "^0.1.0",
     "memory-fs": "^0.4.1",
+    "mic": "^2.1.2",
     "morgan": "~1.8.1",
     "multer": "^1.3.0",
     "ndarray": "^1.0.18",

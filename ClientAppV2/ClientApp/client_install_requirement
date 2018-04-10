@@ -1,0 +1,11 @@
+**audio**
+npm config set python python2.7
+
+npm install sox
+sudo chown -R $(whoami) /usr/local/lib/pkgconfig
+brew link sox
+
+**screenshot**
+
+
+**webcamera**
