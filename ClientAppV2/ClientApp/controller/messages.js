@@ -233,6 +233,12 @@ class messagesTemplates {
             timestamp: timestamp
         }
     }
+    static UNICAST_UPDATEFACE_HEADER_FORMDATA (worldID, destusername) {
+        return {
+            worldID: worldID,
+            username: destusername
+        }
+    }
 
 }
 let messagesTemplates_ContentTypeTemplates = {
@@ -373,7 +379,7 @@ class messagesGlobalMethods {
                 if (err) {
                     console.log("upload fail", err)
                 }
-                console.log('Upload successful!  Server responded with:', body);
+                //console.log('Upload successful!  Server responded with:', body);
                 return resolve()
             })
         })
@@ -502,17 +508,23 @@ class messagesGlobalMethods {
 
     static updateFaceFrame (req) {
         let headerdata = JSON.parse(req.body.headerdata)
-        if (!sessionController.globalSession.CHECK_RequestFaceFrameUpdate(headerdata.worldID)) {
+        if (!sessionController.globalSession.CHECK_RequestFaceFrameUpdate(headerdata.worldID, headerdata.username)) {
             console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
             return false
         }
+
         let framebuffer = req.file.buffer
         if (framebuffer == null) {
             console.log(chalk.red("no frame buffer, IGNORE update"))
             return false
         }
+        console.log(chalk.yellow("********************************"))
+        console.log(chalk.yellow("********************************"))
+        console.log(chalk.yellow("********************************"))
+        console.log(chalk.yellow("********************************"))
 
         let currentObject = sessionController.globalSession.CALL_FaceObject(headerdata.username)
+
         currentObject.SET_frame(framebuffer)
     }
 

@@ -337,6 +337,14 @@ router.get('/NearbyCalStart', (req, res, next) => {
 })
 router.get('/NearbyCalStop', (req, res, next) => {
     sessionController.globalSession.CONTROL_STOP_GETNEARBY_SCHEDULER()
+    res.end()
+})
+
+router.get('/GetNearby', (req, res, next) => {
+    let nearbylist = sessionController.globalSession.CurrentNearbyUserLists
+    for (let i of nearbylist) {
+        console.log(i)
+    }
 })
 
 module.exports = router;

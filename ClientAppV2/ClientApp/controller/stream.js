@@ -114,7 +114,6 @@ class GlobalStreamUtility {
             let bufferStream = new stream.PassThrough()
             bufferStream.end(preProcessJpeg)
 
-
             //fs.createReadStream('./well15.jpg').pipe(input)
             bufferStream.pipe(input)
             converter.output({
@@ -300,7 +299,7 @@ class DesktopRecorder_Class {
 class CameraRecorder_Class {
     constructor (sessionRef) {
         this.stopsignal = false
-        this.fpscap = 15
+        this.fpscap = 2
         this.sessionRef = sessionRef
 
         this.intervalTaken = null
@@ -369,7 +368,7 @@ class CameraRecorder_Class {
                                 let preprocess = fsM.readFileSync('/capture.jpg')
                                 let postprocess = await GlobalStreamUtility.JPEGCompress_FACE(preprocess)
 
-                                faceframeRef.SET_frame(postprocess)
+                                faceframeRef.SET_frame(postprocess, true)
                                 //this.sessionRef.MONITOR_FACESTREAMING_SOCKETIO(postprocess)
 
 
@@ -445,7 +444,7 @@ class CameraRecorder_Class {
                         shots.screenshot(vid, Number((Number(framepass)/Number(this.fpscap)).toFixed(2))).then( async (buffer)=>{
                             if (buffer.length > 100) {
                                 let postprocess = await GlobalStreamUtility.JPEGCompress_FACE(buffer)
-                                await faceframeRef.SET_frame(postprocess)
+                                await faceframeRef.SET_frame(postprocess, true)
                                 working = false
                             } else {
                                 console.log(chalk.red('out of dummy video bound'))
@@ -674,7 +673,7 @@ class OneFaceImagesStore_Class {
         this.user_name = user_name
         this.framebuffer = null
 
-        this.debugFrame = true
+        this.debugFrame = false
         this.lock = false
 
         this.sessionRef = sessionRef
@@ -682,10 +681,10 @@ class OneFaceImagesStore_Class {
         this.TIMESTAMP_setframe = 0
         this.maximum_time_allow_get_frame = 3000 //milisec
     }
-    async SET_frame (framebuffer) {
+    async SET_frame (framebuffer, isOwner) {
 
         if (this.lock === false) {
-            //console.log(chalk.red('***************'))
+            console.log(chalk.red('***************'))
             this.lock = true
 
             this.TIMESTAMP_setframe = Date.now()
@@ -694,7 +693,9 @@ class OneFaceImagesStore_Class {
                 console.log('emit to websocket')
                 this.sessionRef.MONITOR_FACESTREAMING_SOCKETIO(framebuffer)
             }
-
+            if (isOwner === true) {
+                this.Redirect_Sent(framebuffer)
+            }
             this.lock = false
         } else {
             console.log("can't set frame due to the other operation is operate on frame")
@@ -706,6 +707,30 @@ class OneFaceImagesStore_Class {
             return this.framebuffer
         } else {
             return null
+        }
+    }
+    Redirect_Sent (framebuffer) {
+        if (!framebuffer) {
+            console.log(chalk.red("not receive frame buffer"))
+            return false
+        }
+        console.log('senting..')
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+
+        for (let i of this.sessionRef.CurrentNearbyUserLists) {
+            if (i.name !== this.sessionRef.currentUser_name) {
+                let IP = i.IP
+                let PORT = i.PORT
+                messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer(
+                    IP,
+                    PORT,
+                    messagesController.ClientPathTempleted.clientHTTPFaceFrameUpdate,
+                    messagesController.messagesTemplates.UNICAST_UPDATEFACE_HEADER_FORMDATA(this.sessionRef.active_at_world_persistedID, i.name),
+                    messagesController.messagesTemplates.ONE_BUFFERDATA_FORFORMDATA(framebuffer, "frame", messagesController.messagesTemplates_ClientPathTempleted.application_any)
+                )
+            } else {
+                console.log(chalk.yellow('ignore ourself'))
+            }
         }
     }
 }

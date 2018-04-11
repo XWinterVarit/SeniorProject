@@ -422,10 +422,15 @@ class session_Class {
         return validation
     }
 
-    CHECK_RequestFaceFrameUpdate (worldID) {
+    CHECK_RequestFaceFrameUpdate (worldID, username) {
         let validation = true
+        console.log(`recieve world ID : ${worldID} client worldID : ${this.active_at_world_persistedID}`)
         if (String(this.active_at_world_persistedID) !== String(worldID)) {
             console.log(chalk.red("world ID not true"))
+            validation = false
+        }
+        if (String(this.currentUser_name) !== String(username)) {
+            console.log(chalk.red("client name not true"))
             validation = false
         }
         return validation
@@ -516,6 +521,10 @@ class session_Class {
                     let boundlengthX = this.PREVALUE_getNearbyUser_BoundLengthX
                     let boundlengthY = this.PREVALUE_getNearbyUser_BoundLengthY
                     let currentUser = this.activeMember.get(this.currentUser_name)
+                    if (!currentUser) {
+                        console.log("user not loaded yet")
+                        return false
+                    }
                     let startboundX = Number(currentUser.positionX) - boundlengthX
                     let endboundX = Number(currentUser.positionX) + boundlengthX
                     let startboundY = Number(currentUser.positionY) - boundlengthY
