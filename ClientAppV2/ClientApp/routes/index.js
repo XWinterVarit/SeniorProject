@@ -314,12 +314,16 @@ router.get('/FrameImageDebug', (req, res, next) => {
     res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
     res.sendFile(globalConfigs.testpath1.monitorGUI + 'test.html')
 })
-router.get('/testfaces', (req, res, next) => {
+router.get('/showfaces', (req, res, next) => {
     sessionController.globalSession.FORUI_START_GETFACE()
     res.end()
 })
 router.get('/startface', (req, res, next) => {
     sessionController.globalSession.FORUI_START_FACESTREAMING()
+    res.end()
+})
+router.get('/stopface', (req, res, next) => {
+    sessionController.globalSession.FORUI_STOP_FACESTREAMING()
     res.end()
 })
 router.get('/FaceImageDebug', (req, res, next) => {
@@ -345,6 +349,16 @@ router.get('/GetNearby', (req, res, next) => {
     for (let i of nearbylist) {
         console.log(i)
     }
+})
+
+router.post('/testAvatar', async (req, res, next) => {
+    let data = await messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC('getAvatar', {
+        username: req.body.username
+    })
+    console.log("pass2")
+
+    console.log(data.length)
+    res.end()
 })
 
 module.exports = router;

@@ -63,15 +63,18 @@ class aciveMember_Class {
                 this.PORT = optionals.PORT
             }
         }
+        this.SET_staticFaceFromServer()
     }
     changePosition (newX, newY) {
         this.positionX = newX
         this.positionY = newY
     }
+
     changeIPPORT (newIP, newPORT) {
         this.IP = newIP
         this.PORT = newPORT
     }
+
     changeStandbyMode (TF) {
         if (TF === true || TF === false) {
             this.standby = TF
@@ -82,6 +85,16 @@ class aciveMember_Class {
 
     SET_staticFace (faceimagebuffer) {
         this.staticfacebuffer = faceimagebuffer
+    }
+    async SET_staticFaceFromServer () {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+        let data = await messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC('getAvatar', {
+            username: this.name
+        })
+        if (!data) {
+            return false
+        }
+        this.SET_staticFace(data)
     }
 }
 class objectLink_Class {
@@ -210,11 +223,8 @@ class session_Class {
             }, 1500
         )
 
-
-
-
         this.SCHEDULER_getFaces = null
-
+        this.INTERVALTIME_getFaces = 3000 //ms
 
         this.SCHEDULER_getNearbyUser = null
         this.INTERVALTIME_getNearbyUser = 2000 //msec
@@ -222,7 +232,7 @@ class session_Class {
         this.PREVALUE_getNearbyUser_BoundLengthY = 2
 
         this.CurrentNearbyUserLists = []
-
+        this.CONTROL_START_GETNEARBY_SCHEDULER()
 
     }
 
@@ -241,6 +251,7 @@ class session_Class {
             )
         }
     }
+
     HEARTBEAT_signal_stop () {
         if (this.heartbeatScheduler) {
             clearInterval(this.heartbeatScheduler)
@@ -319,8 +330,6 @@ class session_Class {
         //console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
 
     }
-
-
 
     ACTION_changeObjectPosition (objectReference,newX, newY) {
         if (this.getData_inMatrix(newX, newY)) {
@@ -707,6 +716,8 @@ class session_Class {
                         if (framebuffer) {
                             arrayofusersface.push({
                                 name: i.name,
+                                positionX: i.positionX,
+                                positionY: i.positionY,
                                 persistedID: null,
                                 framebuffer: framebuffer,
                                 info: ""
@@ -715,6 +726,8 @@ class session_Class {
                             console.log("face not update too long")
                             arrayofusersface.push({
                                 name: i.name,
+                                positionX: i.positionX,
+                                positionY: i.positionY,
                                 persistedID: null,
                                 framebuffer: i.staticfacebuffer,
                                 info: ""
@@ -723,7 +736,7 @@ class session_Class {
                     }
                     //console.log(chalk.green(arrayofusersface))
                     this.SENT_FACESFRAME_SOCKETIO(arrayofusersface)
-                },2000
+                },this.INTERVALTIME_getFaces
             )
         }
     }
@@ -751,6 +764,7 @@ class session_Class {
     }
 
     callActiveMember (name, persistedID, others) {
+
         let currentMember = this.activeMember.get(name)
         if (!others) {
             return null

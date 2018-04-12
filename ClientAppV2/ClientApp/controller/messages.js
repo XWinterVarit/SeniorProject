@@ -233,10 +233,11 @@ class messagesTemplates {
             timestamp: timestamp
         }
     }
-    static UNICAST_UPDATEFACE_HEADER_FORMDATA (worldID, destusername) {
+    static UNICAST_UPDATEFACE_HEADER_FORMDATA (worldID, destusername, senterusername) {
         return {
             worldID: worldID,
-            username: destusername
+            destusername: destusername,
+            senterusername: senterusername
         }
     }
 
@@ -314,6 +315,10 @@ class messagesGlobalMethods {
         }
     }
 
+    /***
+     *
+     * Old Version
+     */
     static httpOutput_POST_SERVER (path, data) {
         let args = {
             data: data,
@@ -326,10 +331,38 @@ class messagesGlobalMethods {
         console.log(chalk.green(JSON.stringify(args, null, 4)))
 */
         client.post("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, args, (datareturn, response) => {
+            //console.log('data return : ' + datareturn)
             return datareturn
         }).on('error', (err) => {
             console.log("Error " + err)
             return null
+        })
+    }
+
+    /***
+     *
+     * Newest Version
+     */
+    static async httpOutput_POST_SERVER_V2withASYNC (path, data) {
+        let args = {
+            data: data,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+        /*
+              console.log(chalk.green("Show args"))
+              console.log(chalk.green(JSON.stringify(args, null, 4)))
+      */
+        return await new Promise(resolve=>{
+            client.post("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, args, (datareturn, response) => {
+                //console.log('data return : ' + datareturn)
+                console.log(datareturn.length)
+                return resolve(datareturn)
+            }).on('error', (err) => {
+                console.log("Error " + err)
+                return resolve()
+            })
         })
     }
 
@@ -491,12 +524,12 @@ class messagesGlobalMethods {
             console.log(chalk.red("no frame buffer, IGNORE update"))
             return false
         }
-
+/*
         console.log(chalk.yellow("********************************"))
         console.log(chalk.yellow("********************************"))
         console.log(chalk.yellow("********************************"))
         console.log(chalk.yellow("********************************"))
-
+*/
         let currentObject = sessionController.globalSession.CALL_RemoteObject(headerdata.objectID, headerdata.ownerID, headerdata.ownerName)
         currentObject = currentObject.GET_frameBufferController()
         currentObject.SET_frame(headerdata.framenumber, framebuffer, headerdata.timestamp)
@@ -508,7 +541,7 @@ class messagesGlobalMethods {
 
     static updateFaceFrame (req) {
         let headerdata = JSON.parse(req.body.headerdata)
-        if (!sessionController.globalSession.CHECK_RequestFaceFrameUpdate(headerdata.worldID, headerdata.username)) {
+        if (!sessionController.globalSession.CHECK_RequestFaceFrameUpdate(headerdata.worldID, headerdata.destusername)) {
             console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
             return false
         }
@@ -518,12 +551,13 @@ class messagesGlobalMethods {
             console.log(chalk.red("no frame buffer, IGNORE update"))
             return false
         }
+  /*
         console.log(chalk.yellow("********************************"))
         console.log(chalk.yellow("********************************"))
         console.log(chalk.yellow("********************************"))
         console.log(chalk.yellow("********************************"))
-
-        let currentObject = sessionController.globalSession.CALL_FaceObject(headerdata.username)
+*/
+        let currentObject = sessionController.globalSession.CALL_FaceObject(headerdata.senterusername)
 
         currentObject.SET_frame(framebuffer)
     }

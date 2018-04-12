@@ -299,7 +299,7 @@ class DesktopRecorder_Class {
 class CameraRecorder_Class {
     constructor (sessionRef) {
         this.stopsignal = false
-        this.fpscap = 2
+        this.fpscap = 1
         this.sessionRef = sessionRef
 
         this.intervalTaken = null
@@ -448,6 +448,7 @@ class CameraRecorder_Class {
                                 working = false
                             } else {
                                 console.log(chalk.red('out of dummy video bound'))
+                                framepass = 0
                             }
                             //fs.writeFileSync('./a.jpg', buffer)
                         })
@@ -684,7 +685,7 @@ class OneFaceImagesStore_Class {
     async SET_frame (framebuffer, isOwner) {
 
         if (this.lock === false) {
-            console.log(chalk.red('***************'))
+            //console.log(chalk.red('***************'))
             this.lock = true
 
             this.TIMESTAMP_setframe = Date.now()
@@ -703,7 +704,9 @@ class OneFaceImagesStore_Class {
     }
     GET_frame() {
         let now_timestamp = Date.now()
-        if (now_timestamp - this.TIMESTAMP_setframe > this.maximum_time_allow_get_frame) {
+        //console.log('getting frame')
+        if (now_timestamp - this.TIMESTAMP_setframe < this.maximum_time_allow_get_frame) {
+            //console.log(chalk.green('sent new frame'))
             return this.framebuffer
         } else {
             return null
@@ -714,7 +717,7 @@ class OneFaceImagesStore_Class {
             console.log(chalk.red("not receive frame buffer"))
             return false
         }
-        console.log('senting..')
+        //console.log('senting..')
         const messagesController = require(globalConfigs.mpath1.messagesController)
 
         for (let i of this.sessionRef.CurrentNearbyUserLists) {
@@ -725,7 +728,7 @@ class OneFaceImagesStore_Class {
                     IP,
                     PORT,
                     messagesController.ClientPathTempleted.clientHTTPFaceFrameUpdate,
-                    messagesController.messagesTemplates.UNICAST_UPDATEFACE_HEADER_FORMDATA(this.sessionRef.active_at_world_persistedID, i.name),
+                    messagesController.messagesTemplates.UNICAST_UPDATEFACE_HEADER_FORMDATA(this.sessionRef.active_at_world_persistedID, i.name, this.sessionRef.currentUser_name),
                     messagesController.messagesTemplates.ONE_BUFFERDATA_FORFORMDATA(framebuffer, "frame", messagesController.messagesTemplates_ClientPathTempleted.application_any)
                 )
             } else {

@@ -137,6 +137,16 @@ class messagesTemplates {
             name: persistedID
         }
     }
+
+    static ONE_BUFFERDATA_FORFORMDATA (bufferdata, filename, contentType) {
+        return {
+            value: bufferdata,
+            options: {
+                filename: filename,
+                contentType: contentType
+            }
+        }
+    }
 }
 
 class http_in_queue {

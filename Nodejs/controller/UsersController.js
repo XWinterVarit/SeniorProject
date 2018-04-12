@@ -459,6 +459,7 @@ class GlobalActiveUserClass {
 
     }
 
+
 }
 
 class UserMethods {
@@ -601,8 +602,14 @@ class UserMethods {
     }
 
     static async getUserStaticAvatar (username) {
+        console.log('path = ' + globalConfigs.mpath1.clouddrive_users_avatar+username+'.jpg')
         let imagebuffer = fs.readFileSync(globalConfigs.mpath1.clouddrive_users_avatar+username+'.jpg')
-        return imagebuffer
+        //console.log('buffer length : ' + imagebuffer.length)
+        if (imagebuffer) {
+            return imagebuffer
+        } else {
+            return null
+        }
     }
 
 }

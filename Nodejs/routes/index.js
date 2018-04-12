@@ -216,6 +216,12 @@ router.post('/setAvatar', async(req, res, next) => {
 
 })
 
+router.post('/getAvatar', async(req, res, next) => {
+    console.log('geting avatar of user : ' + req.body.username)
+    let imagebuffer = await userController.UserMethods.getUserStaticAvatar(req.body.username)
+
+    res.send(imagebuffer)
+})
 
 
 
