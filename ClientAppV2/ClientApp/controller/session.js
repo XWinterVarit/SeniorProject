@@ -8,6 +8,23 @@
 const chalk = require('chalk')
 const ndarray = require('ndarray')
 const CircularJSON = require('circular-json')
+
+/////////////////////////////////////////////////////////////////////
+const MonitorSocketChannal_45000 = require('socket.io-client')('http://localhost:45000/monitor')
+//port 45000 Monitor Socket
+MonitorSocketChannal_45000.on('connect', () => {
+    console.log("connect to monitor")
+});
+MonitorSocketChannal_45000.on('terminal',(msg)=>{
+    console.log(msg)
+});
+MonitorSocketChannal_45000.on('disconnect', function(){});
+MonitorSocketChannal_45000.on('connect_error', (err)=>{
+    console.log(chalk.red(err))
+})
+/////////////////////////////////////////////////////////////////////
+
+
 //const MatrixHash = require('matrix-hash') BUG
 ////////////////////////////From Configs/////////////////////////////
 
@@ -185,7 +202,32 @@ class session_Class {
         this.worldsizeY = 15
 
         this.ALLTASK = []
-        this.HEARTBEAT_signal_start()
+
+        this.first_refresh = false
+
+        setTimeout(
+            ()=>{
+                console.log(chalk.blue("starting login to Server"))
+                const messagesController = require(globalConfigs.mpath1.messagesController)
+                this.WAIT_FOR_FIRST_REFRESH = setInterval(
+                    ()=>{
+
+                        if (this.first_refresh === true) {
+                            clearInterval(this.WAIT_FOR_FIRST_REFRESH)
+                            this.WAIT_FOR_FIRST_REFRESH = null
+                            return this.HEARTBEAT_signal_start()
+                        }
+                        console.log(chalk.yellow('senting login heartbeat'))
+                        messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath,messagesController.messagesTemplates.signalFirstHeartBeat(this.currentUser_name, this.active_at_world_persistedID, this.active_at_object_persistedID, this.currentUser_IP, this.currentUser_PORT))
+
+                    },500
+                )
+            },1500
+        )
+
+
+        //this.HEARTBEAT_signal_start()
+
 
         this.globalObjectMemory = new sessionObjectMemory_Class()
 
@@ -210,6 +252,10 @@ class session_Class {
                 }
             },1000
         )
+
+
+
+
 
         this.remotestreaming = null
         this.facestreaming = null
@@ -242,6 +288,7 @@ class session_Class {
             console.log("Heartbeat signal already started")
         } else {
             console.log("Starting heartbeat")
+
             this.heartbeatScheduler = setInterval(
                 () => {
                     messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath,messagesController.messagesTemplates.signalHeartBeat(this.currentUser_name, this.active_at_world_persistedID, this.active_at_object_persistedID, this.currentUser_IP, this.currentUser_PORT))
@@ -368,6 +415,7 @@ class session_Class {
         }
     }
     ACTION_refresh () {
+        this.first_refresh = true
         this.activeMember = new Map()
         this.objectLink = new Map()
         this.worldmatrix = new toolsController.HashMatrix()

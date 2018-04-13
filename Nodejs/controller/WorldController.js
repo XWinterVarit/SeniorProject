@@ -10,6 +10,21 @@ const HashArray = require('hasharray')
 const Client = require('node-rest-client').Client
 const CircularJSON = require('circular-json')
 
+
+/////////////////////////////////////////////////////////////////////
+const MonitorSocketChannal_45000 = require('socket.io-client')('http://localhost:45000/monitor')
+//port 45000 Monitor Socket
+MonitorSocketChannal_45000.on('connect', () => {
+    console.log("connect to monitor")
+});
+MonitorSocketChannal_45000.on('terminal',(msg)=>{
+    console.log(msg)
+});
+MonitorSocketChannal_45000.on('disconnect', function(){});
+MonitorSocketChannal_45000.on('connect_error', (err)=>{
+    console.log(chalk.red(err))
+})
+/////////////////////////////////////////////////////////////////////
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -83,6 +98,8 @@ class OneActiveWorldClass {
         this.worldsizeX = 40
         this.worldsizeY = 15
 
+/*
+
         this.INTERVAL_TIME_BROADCAST_FRESH_EVENT = 10000 //ms
         this.INTERVAL_BROADCAST_FRESH_EVENT = setInterval(
             () => {
@@ -91,6 +108,8 @@ class OneActiveWorldClass {
             }
             , this.INTERVAL_TIME_BROADCAST_FRESH_EVENT
         )
+*/
+
         this.INTERVAL_TIME_SAVE_MEMBER_INFO = 20000
         this.INTERVAL_SAVE_MEMBER_INFO = setInterval(
             () => {
@@ -358,6 +377,38 @@ class OneActiveWorldClass {
     }
 
     ////////////////////////////////////////////////////////////////////////
+    //////////////////////////Feedback Process//////////////////////////////
+    //////////////////////////Feedback Process//////////////////////////////
+    //////////////////////////Feedback Process//////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+    REFRESH_ONE_afterLogin (IP, PORT) {
+        let lists = []
+        let ALLIPPORT = []
+        this.GETALL_ActiveMember_MessageTemplated(lists, ALLIPPORT)
+        this.GETALL_ObjectLinks_MessageTemplated(lists)
+        //messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(ALLIPPORT, messagesController.ClientPathTemplated.clientUserGateway,messagesController.messagesTemplates.BROADCAST_REFRESH_all(lists))
+  /*
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+        console.log(chalk.red('*******************************'))
+*/
+        messagesController.messagesGlobalMethods.httpOutput_POST(IP,PORT,"clientUserGateway", messagesController.messagesTemplates.BROADCAST_REFRESH_all(lists))
+    }
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////
     ////////////////////////////Client Action///////////////////////////////
     ////////////////////////////Client Action///////////////////////////////
     ////////////////////////////Client Action///////////////////////////////
@@ -527,6 +578,17 @@ class OneActiveWorldClass {
             console.log(chalk.red("Remove position"))
             this.removePosition_inMatrix(activeMemberpositionX, activeMemberpositionY)
             this.activeMembers.delete(username)
+            /*
+            MonitorSocketChannal_45000.emit('terminal',{
+                message: JSON.stringify(messagesController.ClientPathTempleted, null, 4),
+                color: "red"
+            })
+            */
+            messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(
+                this.GETALL_NETWORK_ADDRESS()
+                , "clientUserGateway"
+                , messagesController.messagesTemplates.BROADCAST_UserOut(username))
+
             this.changed = true
         } else {
             console.log("already not in this")
@@ -565,6 +627,9 @@ class OneActiveWorldClass {
         console.log(chalk.red("GETALL ADDRESS"))
         for (let i of this.activeMembers) {
             let maininfo = i[1].data
+            if (maininfo.ipaddr === "" || maininfo.port === "") {
+                continue
+            }
             lists.push([maininfo.ipaddr, maininfo.port])
         }
         //console.log(lists)
@@ -632,6 +697,9 @@ class OneActiveWorldClass {
             let loadinfo = await WorldMethods.loadMemberInfo(this.persistedID, username)
             console.log(chalk.red("DEBUG loadinfo : " + loadinfo))
             this.activeMembers.set(username, userpointer)
+
+            let posX = 0, posY = 0 // adder implement to get posX posY value out
+
             if (!loadinfo) {
                 console.log(chalk.red("DEBUG POINT 3"))
 
@@ -642,10 +710,16 @@ class OneActiveWorldClass {
                 this.activeMembers_additionInfo.set(username, newmemberinfo)
                 await WorldMethods.changeMemberInfo(username, this.persistedID, {positionX: randomPosition[0],positionY: randomPosition[1]})
                 this.setPosition_inMatrix(randomPosition[0],randomPosition[1], newmemberinfo)
+                posX = randomPosition[0]
+                posY = randomPosition[1]
             } else {
                 console.log(chalk.red("DEBUG POINT 4"))
 
                 let newmemberinfo = new this.memberinfo(loadinfo.positionX,loadinfo.positionY)
+
+                posX = loadinfo.positionX
+                posY = loadinfo.positionY
+
                 this.activeMembers_additionInfo.set(username, newmemberinfo)
                 if (!optional.bypassposition) {
                     console.log(chalk.red("DEBUG POINT 5"))
@@ -660,6 +734,15 @@ class OneActiveWorldClass {
 
             //this.setPosition_inMatrix(optional.positionX, optional.positionY, userpointer)
             //this.Debug_activeMembers.push(newuser)
+
+            MonitorSocketChannal_45000.emit('terminal', {
+                message: 'show user pointer ipaddr : ' + userpointer.ipaddr + ' port : ' + userpointer.port,
+                color: 'white'
+            })
+            //console.log('show user pointer ipaddr : ' + userpointer.ipaddr + ' port : ' + userpointer.port)
+            let oneuser = messagesController.messagesTemplates.BROADCAST_moveUserPosition(username, userpointer.data.persistedID, userpointer.data.standby, userpointer.data.ipaddr, userpointer.data.port, posX, posY)
+            messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(this.GETALL_NETWORK_ADDRESS(), messagesController.ClientPathTemplated.clientUserGateway, oneuser)
+
             this.changed = true
         } else {
   /*

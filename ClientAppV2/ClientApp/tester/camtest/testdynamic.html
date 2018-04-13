@@ -15,3 +15,195 @@
         src="https://code.jquery.com/jquery-3.3.1.js"
         integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
         crossorigin="anonymous"></script>
+
+<P> Welcome </P>
+
+<div id = "div1" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot1" > pic 1 </p>
+        <img id="slot1" style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+
+<div id = "div2" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot2" > pic 2 </p>
+        <img id="slot2"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+<div id = "div3" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot3" > pic 3 </p>
+        <img id="slot3"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+<div id = "div4" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot4" > pic 4 </p>
+        <img id="slot4"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+<div id = "div5" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot5" > pic 5 </p>
+        <img id="slot5"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+<div id = "div6" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot6" > pic 6 </p>
+        <img id="slot6"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+<div id = "div7" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot7" > pic 7 </p>
+        <img id="slot7"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+<div id = "div8" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot8" > pic 8 </p>
+        <img id="slot8"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+<div id = "div9" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot9" > pic 9 </p>
+        <img id="slot9"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+<div id = "div10" style="position: absolute; border-style: solid; max-width: 150px;">
+    <p id="t-slot10" > pic 10 </p>
+        <img id="slot10"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
+
+</div>
+
+
+
+<script>
+
+    var remoteMon = io.connect('http://localhost:60001/remoteMon')
+
+    let div1 = document.getElementById('div1')
+    let info1 = document.getElementById('t-slot1')
+    let pic1 = document.getElementById("slot1")
+
+    let div2 = document.getElementById('div2')
+    let info2 = document.getElementById('t-slot2')
+    let pic2 = document.getElementById("slot2")
+
+    let div3 = document.getElementById('div3')
+    let info3 = document.getElementById('t-slot3')
+    let pic3 = document.getElementById("slot3")
+
+    let div4 = document.getElementById('div4')
+    let info4 = document.getElementById('t-slot4')
+    let pic4 = document.getElementById("slot4")
+
+    let div5 = document.getElementById('div5')
+    let info5 = document.getElementById('t-slot5')
+    let pic5 = document.getElementById("slot5")
+
+    let div6 = document.getElementById('div6')
+    let info6 = document.getElementById('t-slot6')
+    let pic6 = document.getElementById("slot6")
+
+    let div7 = document.getElementById('div7')
+    let info7 = document.getElementById('t-slot7')
+    let pic7 = document.getElementById("slot7")
+
+    let div8 = document.getElementById('div8')
+    let info8 = document.getElementById('t-slot8')
+    let pic8 = document.getElementById("slot8")
+
+    let div9 = document.getElementById('div9')
+    let info9 = document.getElementById('t-slot9')
+    let pic9 = document.getElementById("slot9")
+
+    let div10 = document.getElementById('div10')
+    let info10 = document.getElementById('t-slot10')
+    let pic10 = document.getElementById("slot10")
+    //console.log("show before pic : " + pic)
+
+    remoteMon.on('faces', function (data) {
+
+        let slotrunnumber = 1
+
+        //console.log(data)
+        for (let i of data.users) {
+            //console.log(i)
+
+            if (i.framebuffer) {
+                let img = i.framebuffer
+                //console.log('setting picture')
+                onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
+                /*
+                switch (slotrunnumber) {
+                    case 1:
+                        onBinaryMessage(img, pic1)
+                        break
+                    case 2:
+                        onBinaryMessage(img, pic2)
+
+                        break
+                    case 3:
+                        onBinaryMessage(img, pic3)
+
+                        break
+                    case 4:
+                        onBinaryMessage(img, pic4)
+
+                        break
+                    case 5:
+                        onBinaryMessage(img, pic5)
+
+                        break
+                    case 6:
+                        onBinaryMessage(img, pic6)
+
+                        break
+                    case 7:
+                        onBinaryMessage(img, pic7)
+
+                        break
+                    case 8:
+                        onBinaryMessage(img, pic8)
+
+                        break
+                    case 9:
+                        onBinaryMessage(img, pic9)
+
+                        break
+                    case 10:
+                        onBinaryMessage(img, pic10)
+
+                        break
+                }
+                */
+            }
+            slotrunnumber++
+
+        }
+    });
+
+
+
+    function onBinaryMessage(input, pic,div,info, posX, posY) {
+        //console.log("show after pic : " + pic)
+
+        let blob = new Blob([input], {type: 'image/png'});
+        let url = URL.createObjectURL(blob);
+        //console.log("url is " + url)
+        pic.src = url
+        div.style.left = posX*150 + 'px'
+        div.style.top = posY*150 + 'px'
+
+        //console.log('render div at left :' + posX*100 + ' at top :' + posY*100)
+
+
+        /*
+        var img = new Image;
+
+        img.onload = function() {
+            var ctx = document.getElementById("myCanvas").getContext('2d');
+            ctx.drawImage(this, 0, 0);
+            URL.revokeObjectURL(url);
+        }
+        img.src = url;
+        */
+    }
+</script>
+</body>
+</html>

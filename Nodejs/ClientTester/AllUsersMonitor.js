@@ -18,7 +18,7 @@ console.log(options)
 let monitor = () => {
     setInterval(
         () => {
-            client.get("http://localhost:80/monitor", (data, response) => {
+            client.get("http://localhost:3000/monitor", (data, response) => {
                 term.clear()
                 term.green(data.toString())
             })

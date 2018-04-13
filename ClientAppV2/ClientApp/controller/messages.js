@@ -213,6 +213,17 @@ class messagesTemplates {
             port: PORT
         }
     }
+    static signalFirstHeartBeat (username, activeWorld_persistedID, activeObject_persistedID, IP, PORT) {
+        return {
+            name: username,
+            type: "toone",
+            activeworld: activeWorld_persistedID,
+            activeobject: activeObject_persistedID,
+            ipaddr: IP,
+            port: PORT,
+            login: true
+        }
+    }
 
     static ONE_BUFFERDATA_FORFORMDATA (bufferdata, filename, contentType) {
         return {
@@ -300,6 +311,8 @@ class messagesGlobalMethods {
         //requestQueue.PRINT_allqueue()
     }
     static httpInput (req) {
+        console.log(chalk.yellow('**************'))
+        console.log(req.body)
         switch (req.body.type) {
             case "update":
                 this.updateSession(req.body.lists)
@@ -471,7 +484,27 @@ class messagesGlobalMethods {
         console.log("end update")
     }
     static refreshSession (lists) {
+
         console.log("start refresh")
+        if (sessionController.globalSession.first_refresh === true) {
+            console.log(chalk.red("redundant first refresh, IGNORE!"))
+        } else {
+            sessionController.globalSession.ACTION_refresh()
+            for (let i of lists) {
+                switch (i.type) {
+                    case "member":
+                        sessionController.globalSession.callActiveMember(i.name, i.persistedID, {positionX: i.positionX, positionY: i.positionY, standby: i.standby, IP: i.IP, PORT: i.PORT})
+                        break
+                    case "object":
+                        //console.log("IGNORE object")
+                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY})
+                        break
+                }
+            }
+            console.log("end refresh")
+        }
+
+/*
         sessionController.globalSession.ACTION_refresh()
         for (let i of lists) {
             switch (i.type) {
@@ -485,13 +518,14 @@ class messagesGlobalMethods {
             }
         }
         console.log("end refresh")
+*/
     }
     static removeInSession (lists) {
         console.log("start remove")
         for (let i of lists) {
             switch (i.type) {
                 case "member":
-                    sessionController.globalSession.ACTION_removeActiveMember(i.name)
+                    sessionController.globalSession.ACTION_removeActiveMember(i.username)
                     break
                 case "object":
                     sessionController.globalSession.ACTION_removeObjectLink(i.persistedID)

@@ -54,6 +54,7 @@ class One_Scheduler_RemoteDesktopP2P {
         this.calculateSchedule = null
         this.active = true
         this.calculateIntervalTime = 5000 // millisec
+        //this.start_Calculation_Scheduling()
 
         this.lock_activeMembers = new AsyncLock({maxPending: 1000})
     }
@@ -406,7 +407,10 @@ class Group_RemoteDesktop  {
             console.log("object not found in database")
             return null
         }
-        currentObject.data.start_Calculation_Scheduling()
+        //console.log(chalk.whiteBright(CircularJSON.stringify(currentObject, null, 4)))
+        if (currentObject.data) {
+            currentObject.data.start_Calculation_Scheduling()
+        }
         //console.log(currentObject.data)
         console.log("passing remote")
         return currentObject.data

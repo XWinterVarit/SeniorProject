@@ -31,12 +31,12 @@ const globalConfigs = require('../config/GlobalConfigs')
 //==================================================================================================
 //==================================================================================================
 
-const ClientPathTempleted = {
+
+const ClientPathTemplated = {
     clientUserGateway: "clientUserGateway",
     clientRemoteGateway: "clientRemoteGateway",
     clientHTTPFrameUpdate: "clientHTTPREMF"
 }
-
 class messagesTemplates {
     static BROADCAST_moveUserPosition (name, persistedID, standby, IP, PORT, posX, posY) {
         return {
@@ -56,6 +56,7 @@ class messagesTemplates {
             ]
         }
     }
+
     static BROADCAST_moveObjectPosition (subtype, persistedID, owner_name, posX, posY) {
         return {
             type: "update",
@@ -125,16 +126,30 @@ class messagesTemplates {
             destclient : destclient
         }
     }
-    static BROADCAST_UserOut (name) {
+
+    static BROADCAST_UserOut (username) {
         return {
             type: "remove",
-            name: name,
+            lists: [
+                {
+                    type: "member",
+                    username: username
+                }
+            ]
         }
     }
+    /* //use moveuser instead
+    static BROADCAST_UserIn (lists) {
+        return {
+            type: "add",
+            lists: lists
+        }
+    }
+    */
     static BROADCAST_ObjectOut (persistedID) {
         return {
             type: "remove",
-            name: persistedID
+            objectID: persistedID
         }
     }
 
@@ -308,7 +323,17 @@ class messagesGlobalMethods {
                 "Content-Type": "application/json"
             }
         }
+        console.log(chalk.red('*************'))
+        console.log(chalk.red('*************'))
+        console.log(chalk.red('*************'))
+        console.log(chalk.red('*************'))
+        console.log(chalk.red('*************'))
+        console.log(chalk.red('*************'))
+        console.log(addressLists)
         for (let i of addressLists) {
+            if (i[0] === "" || i[1] === "") {
+                continue
+            }
             console.log(`sent to IP : ${i[0]} PORT : ${i[1]}`)
             client.post("http://" + i[0] + ":" + i[1] +"/" + path, args, (datareturn, response) => {
                 console.log(chalk.red(datareturn))
@@ -318,6 +343,10 @@ class messagesGlobalMethods {
         }
 
     }
+
+    /***
+     * Old version
+     */
     static httpOutput_POST (IP, PORT, path, data) {
         let args = {
             data: data,
@@ -332,6 +361,28 @@ class messagesGlobalMethods {
             return null
         })
     }
+
+    /***
+     * Current version
+     */
+    static async httpOutput_POST_V2withAsync (IP,PORT, path, data) {
+        let args = {
+            data: data,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+
+        return await new Promise(resolve=>{
+            client.post("http://" + IP + ":" + PORT +"/" + path, args, (datareturn, response) => {
+                return resolve(datareturn)
+            }).on('error', (err) => {
+                console.log("Error " + err)
+                return resolve(null)
+            })
+        })
+    }
+
     static httpOutput_GET_SERVER (IP, PORT, path) {
         client.get("http://" + IP + ":" + PORT +"/" + path, (datareturn, response) => {
             return datareturn
@@ -476,5 +527,5 @@ class messagesGlobalMethods {
 }
 
 module.exports.messagesTemplates = messagesTemplates
-module.exports.ClientPathTemplated = ClientPathTempleted
+module.exports.ClientPathTemplated = ClientPathTemplated
 module.exports.messagesGlobalMethods = messagesGlobalMethods

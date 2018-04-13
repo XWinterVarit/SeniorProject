@@ -201,8 +201,6 @@ class OneActiveUserClass {
             console.log("not change active object")
         } else {
             console.log("change activeobject")
-
-
         }
     }
 
@@ -280,6 +278,14 @@ class OneActiveUserClass {
             this.standby = req.body.standby
         }
 
+        if (req.body.ipaddr) {
+            await this.set_IP(req.body.ipaddr, req.body.name)
+        }
+        if (req.body.port) {
+            await this.set_port(req.body.port, req.body.name)
+        }
+
+
         if (req.body.activeworld) {
             await this.set_active_world(req.body.activeworld, req)
         }
@@ -288,11 +294,15 @@ class OneActiveUserClass {
             await this.set_active_objectID(req.body.activeobject)
         }
 
-        if (req.body.ipaddr) {
-            await this.set_IP(req.body.ipaddr, req.body.name)
-        }
-        if (req.body.port) {
-            await this.set_port(req.body.port, req.body.name)
+
+        if (req.body.login) {
+            const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
+
+            console.log('show this.active at world : ' + this.active_at_world)
+            let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.activeworld})
+            if (currentWorld){
+                currentWorld.REFRESH_ONE_afterLogin(this.ipaddr, this.port)
+            }
         }
 
 
@@ -410,7 +420,8 @@ class GlobalActiveUserClass {
         let messages = "users\n"
         for (let currentuser of this.Debug_ActiveUsers) {
             messages += "name: " + currentuser.name + " id : " + currentuser.persisted_id + " isActive : " + currentuser.active + " heartbeatscore : " + currentuser.heartbeatScore + "\n"
-            messages += "active at world " + currentuser.active_at_world + "  active at objectID " + currentuser.active_at_objectID + "  with owner  " + currentuser.objectowner + "\n\n"
+            messages += "active at world " + currentuser.active_at_world + "  active at objectID " + currentuser.active_at_objectID + "  with owner  " + currentuser.objectowner + "\n"
+            messages += "ipaddr : " + currentuser.ipaddr + "  port : " + currentuser.port + "\n\n"
         }
         res.send(messages)
 
