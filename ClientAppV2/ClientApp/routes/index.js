@@ -272,6 +272,19 @@ router.post('/CONTROL_StopRecord', (req, res, next) => {
     res.end()
 })
 
+router.post('/FORUI_LogIn', (req, res, next) => {
+    sessionController.AppUtility.LogIn(req.body.name, req.body.userID, req.body.password, null, req.body.IP, req.body.PORT)
+    res.end()
+})
+router.post('/FORUI_SETWORLD', (req, res, next) => {
+    sessionController.AppUtility.SETWORLD(req.body.worldID)
+    res.end()
+})
+router.post('/FORUI_SETOBJECT', (req, res, next) => {
+    sessionController.AppUtility.SETOBJECT(req.body.objectID, req.body.ownername, req.body.objecttype, req.body.ownerID)
+    res.end()
+})
+
 
 router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => {
     /*
@@ -304,10 +317,10 @@ router.post('/clientHTTPFaceF', uploadService.single('file'), (req, res, next) =
     res.end()
 })
 
-
-
-
-
+router.post('/createRemoteObject', (req, res, next) => {
+    sessionController.globalSession.CONTROL_CreateRemoteObject(req.body.positionX, req.body.positionY)
+    res.end()
+})
 
 
 router.get('/FrameImageDebug', (req, res, next) => {

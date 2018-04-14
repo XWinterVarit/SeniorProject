@@ -224,9 +224,30 @@ router.post('/getAvatar', async(req, res, next) => {
 })
 
 
+router.post('/CreateRemoteObject', async (req, res, next) => {
+    let currentworld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
 
+    if (currentworld) {
+        //await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop("Nutmos", "myremote", "/", "7","9"))
+        await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop("Wanwipa", "myremote", "/", "7","10"))
 
+    } else {
+        console.log("no world found")
+    }
 
+    res.end()
+})
+
+router.post('/RequestRemoteObjectID', async(req, res, next) => {
+    //console.log(chalk.yellow('********************'))
+
+    let outputobject = await worldController.WorldMethods.hasRemotedObject(req.body.username, req.body.worldID)
+    //console.log(chalk.yellow(JSON.stringify(outputobject, null, 4)))
+    if (!outputobject) {
+        return res.json({objectID: "123"})
+    }
+    res.json({objectID: outputobject.objectlinks[0].object_persisted_id})
+})
 
 
 
@@ -299,6 +320,7 @@ router.post('/testCreateObject', async (req, res, next) => {
 router.post('/MONITOR_WORLD', async (req, res, next) => {
     console.log(chalk.green(JSON.stringify(req.body)))
     let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.worldID})
+    //console.log(chalk.yellow(CircularJSON.stringify(currentWorld, null, 4)))
     res.send(currentWorld.MONITOR_World())
 })
 
@@ -415,4 +437,15 @@ router.post('/testtime',uploadService.single('file'), async (req, res, next) => 
     await userController.UserMethods.setUserStaticAvatar(req.body.username)
 })
 
+router.post('/hasRemotedObject', async (req, res, next) => {
+    let currentworld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    if (currentworld) {
+        let output = await worldController.WorldMethods.hasRemotedObject("Nutmos", currentworld.persistedID)
+        console.log(chalk.green(JSON.stringify(output, null, 4)))
+        console.log(chalk.green(output.objectlinks[0].object_persisted_id))
+    } else {
+        console.log("no world found")
+    }
+    res.end()
+})
 module.exports = router;

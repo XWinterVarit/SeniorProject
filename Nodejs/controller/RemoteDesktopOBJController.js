@@ -179,6 +179,7 @@ class One_Scheduler_RemoteDesktopP2P {
     ReCalculate () {
             console.log("Recalculating..")
             this.clearDeliRecei()
+        /*
         console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
         console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
         console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
@@ -188,7 +189,8 @@ class One_Scheduler_RemoteDesktopP2P {
         console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
         console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
         console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-            for (let i of this.activeMembers) {
+            */
+        for (let i of this.activeMembers) {
                 console.log(`show objectowner name : ${this.objectowner_name}`)
                 console.log("active mem : " + JSON.stringify(i[1].name))
                 i[1].sentto = []
@@ -461,6 +463,7 @@ class Group_RemoteDesktop  {
  * @param req.body.objectname
  * @param req.body.vpath - virtual path
  */
+
 class RemoteDesktopMethodClass {
     static async createRemoteDesktopObject (ownername, objectname, vpath) {
         const collection = mongotools.db.collection('users')

@@ -98,9 +98,9 @@ class OneActiveWorldClass {
         this.worldsizeX = 40
         this.worldsizeY = 15
 
-/*
 
-        this.INTERVAL_TIME_BROADCAST_FRESH_EVENT = 10000 //ms
+
+        this.INTERVAL_TIME_BROADCAST_FRESH_EVENT = 20000 //ms
         this.INTERVAL_BROADCAST_FRESH_EVENT = setInterval(
             () => {
                 console.log(chalk.blueBright("SENT REFRESH SIGNAL TO CLIENTS"))
@@ -108,7 +108,7 @@ class OneActiveWorldClass {
             }
             , this.INTERVAL_TIME_BROADCAST_FRESH_EVENT
         )
-*/
+
 
         this.INTERVAL_TIME_SAVE_MEMBER_INFO = 20000
         this.INTERVAL_SAVE_MEMBER_INFO = setInterval(
@@ -324,12 +324,6 @@ class OneActiveWorldClass {
 
 
     TEMPTEST_printactivemember () {
-        console.log("++++++++++++++++++++++++++++++++++++++")
-        console.log("++++++++++++++++++++++++++++++++++++++")
-        console.log("++++++++++++++++++++++++++++++++++++++")
-        console.log("++++++++++++++++++++++++++++++++++++++")
-        console.log("++++++++++++++++++++++++++++++++++++++")
-
         for (let i of this.activeMembers) {
             //console.log(chalk.red(CircularJSON.stringify(i,null, 4)))
             let j = i[1].data
@@ -382,7 +376,7 @@ class OneActiveWorldClass {
     //////////////////////////Feedback Process//////////////////////////////
     ////////////////////////////////////////////////////////////////////////
 
-    REFRESH_ONE_afterLogin (IP, PORT) {
+    async REFRESH_ONE_afterLogin (IP, PORT) {
         let lists = []
         let ALLIPPORT = []
         this.GETALL_ActiveMember_MessageTemplated(lists, ALLIPPORT)
@@ -391,18 +385,15 @@ class OneActiveWorldClass {
   /*
         console.log(chalk.red('*******************************'))
         console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
-        console.log(chalk.red('*******************************'))
+
 */
-        messagesController.messagesGlobalMethods.httpOutput_POST(IP,PORT,"clientUserGateway", messagesController.messagesTemplates.BROADCAST_REFRESH_all(lists))
+        let sentback = await messagesController.messagesGlobalMethods.httpOutput_POST_V2withAsync(IP,PORT,"clientUserGateway", messagesController.messagesTemplates.BROADCAST_REFRESH_all(lists))
+        /*
+        MonitorSocketChannal_45000.emit('terminal', {
+            message: JSON.stringify(sentback, null, 4),
+            color: "yellow"
+        })
+        */
     }
 
 
@@ -421,13 +412,6 @@ class OneActiveWorldClass {
             if (this.ACTION_changeObjectPosition(currentUserInfo, newX, newY)) {
                 let message = messagesController.messagesTemplates.BROADCAST_moveUserPosition(name, currentUserMainInfo.data.persistedID, currentUserMainInfo.data.standby, currentUserMainInfo.data.ipaddr, currentUserMainInfo.data.port, currentUserInfo.positionX, currentUserInfo.positionY)
   /*
-                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
-                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
-                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
-                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
-                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
-                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
-                console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
                 console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
                 console.log(chalk.red("+++++++++++++++++++++++++++++++++++++++++++++++++"))
 */
@@ -449,7 +433,21 @@ class OneActiveWorldClass {
                 }
                 const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
                 let userdata = await globalmemoryController.GlobalActiveUser.callUsersV2(argumentTemplate.ownername)
-                let objectID = await remoteController.RemoteDesktopMethodClass.createRemoteDesktopObject(argumentTemplate.ownername, argumentTemplate.objectname, argumentTemplate.vpath)
+
+
+                let remoteobject_alreadyhas = await WorldMethods.hasRemotedObject("nutmos", currentworld.persistedID)
+                let objectID = ""
+                if (remoteobject_alreadyhas == null) {
+                    objectID = await remoteController.RemoteDesktopMethodClass.createRemoteDesktopObject(argumentTemplate.ownername, argumentTemplate.objectname, argumentTemplate.vpath)
+                } else {
+                    objectID = remoteobject_alreadyhas.objectlinks[0].object_persisted_id
+                }
+
+                if (!objectID) {
+                    console.log(chalk.red("some strange error founded"))
+                    return false
+                }
+
                 console.log(chalk.red("Debug 1"))
                 let objectlinkedID = await WorldMethods.addObjectLink(objectID, this.persistedID, argumentTemplate.ownername, {name: argumentTemplate.objectname, positionX:argumentTemplate.positionX, positionY:argumentTemplate.positionY, objecttype: "remote"})
                 console.log(chalk.red("Debug 2"))
@@ -710,6 +708,10 @@ class OneActiveWorldClass {
                 this.activeMembers_additionInfo.set(username, newmemberinfo)
                 await WorldMethods.changeMemberInfo(username, this.persistedID, {positionX: randomPosition[0],positionY: randomPosition[1]})
                 this.setPosition_inMatrix(randomPosition[0],randomPosition[1], newmemberinfo)
+
+                // auto create remote object
+                //await this.ACTION_createObject("remote", new this.OPTIONAL_TEMPLATE_createobject_remotedesktop(username, "myremote", "/", "7","10"))
+
                 posX = randomPosition[0]
                 posY = randomPosition[1]
             } else {
@@ -734,11 +736,12 @@ class OneActiveWorldClass {
 
             //this.setPosition_inMatrix(optional.positionX, optional.positionY, userpointer)
             //this.Debug_activeMembers.push(newuser)
-
+            /*
             MonitorSocketChannal_45000.emit('terminal', {
                 message: 'show user pointer ipaddr : ' + userpointer.ipaddr + ' port : ' + userpointer.port,
                 color: 'white'
             })
+            */
             //console.log('show user pointer ipaddr : ' + userpointer.ipaddr + ' port : ' + userpointer.port)
             let oneuser = messagesController.messagesTemplates.BROADCAST_moveUserPosition(username, userpointer.data.persistedID, userpointer.data.standby, userpointer.data.ipaddr, userpointer.data.port, posX, posY)
             messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(this.GETALL_NETWORK_ADDRESS(), messagesController.ClientPathTemplated.clientUserGateway, oneuser)
@@ -1478,6 +1481,38 @@ class WorldMethods {
         res.end()
     }
 
+    static async hasRemotedObject (username, world_persistedID) {
+        const world_collection = mongotools.db.collection('worlds')
+        let validation = true
+        let returndocs = null
+        if (validation) {
+            await new Promise(resolve => {
+                world_collection.findOne(
+
+                    {_id: safeObjectId(world_persistedID), "objectlinks.owner_name": username},
+
+                    {"objectlinks.$": 1},
+
+                    (err, docs) => {
+                        if (err) {
+                            console.log("Error " + err)
+                            validation = false
+                        } else if (docs) {
+                            //console.log(chalk.green(docs))
+                            returndocs = docs
+                        } else {
+                            console.log("error response not found")
+                            validation = false
+                        }
+                        return resolve()
+                    }
+                )
+            })
+            return returndocs
+        }
+        return null
+
+    }
 }
 
 module.exports.WorldMethods = WorldMethods

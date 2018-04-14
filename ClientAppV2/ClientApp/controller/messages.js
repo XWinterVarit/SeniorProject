@@ -40,7 +40,9 @@ const ClientPathTempleted = {
     clientUserGateway: "clientUserGateway",
     clientRemoteGateway: "clientRemoteGateway",
     clientHTTPFrameUpdate: "clientHTTPREMF",
-    clientHTTPFaceFrameUpdate: "clientHTTPFaceF"
+    clientHTTPFaceFrameUpdate: "clientHTTPFaceF",
+    createRemoteObject: "CreateRemoteObject",
+    requestRemoteObjectID: "RequestRemoteObjectID"
 }
 
 
@@ -252,6 +254,16 @@ class messagesTemplates {
         }
     }
 
+    static REQUEST_CREATE_REMOTEOBJECT (username, posX, posY) {
+        return {
+            type: "create",
+            subtype: "remote",
+            username: username,
+            vpath: "/",
+            positionX: posX,
+            positionY: posY
+        }
+    }
 }
 let messagesTemplates_ContentTypeTemplates = {
     textplain: "text/plain",
@@ -470,25 +482,27 @@ class messagesGlobalMethods {
 
     static updateSession (lists) {
         console.log("start update")
-        for (let i of lists) {
-            switch (i.type) {
-                case "member":
-                    sessionController.globalSession.callActiveMember(i.name, i.persistedID, {positionX: i.positionX, positionY: i.positionY, standby: i.standby, IP: i.IP, PORT: i.PORT})
-                    break
-                case "object":
-                    //console.log("IGNORE object")
-                    sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY})
-                    break
+        //if (sessionController.globalSession.first_refresh === true) {
+            for (let i of lists) {
+                switch (i.type) {
+                    case "member":
+                        sessionController.globalSession.callActiveMember(i.name, i.persistedID, {positionX: i.positionX, positionY: i.positionY, standby: i.standby, IP: i.IP, PORT: i.PORT})
+                        break
+                    case "object":
+                        //console.log("IGNORE object")
+                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY})
+                        break
+                }
             }
-        }
-        console.log("end update")
+            console.log("end update")
+        //}
     }
     static refreshSession (lists) {
 
         console.log("start refresh")
-        if (sessionController.globalSession.first_refresh === true) {
-            console.log(chalk.red("redundant first refresh, IGNORE!"))
-        } else {
+        //if (sessionController.globalSession.first_refresh === true) {
+        //    console.log(chalk.red("redundant first refresh, IGNORE!"))
+        //} else {
             sessionController.globalSession.ACTION_refresh()
             for (let i of lists) {
                 switch (i.type) {
@@ -502,7 +516,7 @@ class messagesGlobalMethods {
                 }
             }
             console.log("end refresh")
-        }
+        //}
 
 /*
         sessionController.globalSession.ACTION_refresh()

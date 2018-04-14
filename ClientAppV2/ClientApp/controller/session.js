@@ -178,13 +178,17 @@ class session_Class {
         this.object_owner_ID = ""
         this.object_type = ""
 
-        this.currentUser_persistedID = globalConfigs.ClientInfo.currentUser_persistedID
-        this.currentUser_name = globalConfigs.ClientInfo.currentUser_name
-        this.currentUser_password = "abcd"
-        this.currentUser_IP = globalConfigs.ClientInfo.clientIP
-        this.currentUser_PORT = globalConfigs.ClientInfo.clientPORT
+        this.currentUser_persistedID = "" //globalConfigs.ClientInfo.currentUser_persistedID
+        this.currentUser_name = ""//globalConfigs.ClientInfo.currentUser_name
+        this.currentUser_password = ""//"abcd"
+        this.currentUser_IP = ""//globalConfigs.ClientInfo.clientIP
+        this.currentUser_PORT = ""//globalConfigs.ClientInfo.clientPORT
+
 
         this.remoteObjectID = ""
+
+        this.logined = false
+
 
         //this.worldmatrix = new MatrixHash(2)
         this.worldmatrix = new toolsController.HashMatrix()
@@ -203,27 +207,39 @@ class session_Class {
 
         this.ALLTASK = []
 
-        this.first_refresh = false
+        this.first_refresh = true
 
-        setTimeout(
-            ()=>{
-                console.log(chalk.blue("starting login to Server"))
-                const messagesController = require(globalConfigs.mpath1.messagesController)
-                this.WAIT_FOR_FIRST_REFRESH = setInterval(
-                    ()=>{
+        this.WAIT_FOR_FIRST_REFRESH = null
+/*
+        this.waitlogin1 = setInterval(
+            () => {
+                if (this.logined === true) {
+                    clearInterval(this.waitlogin1)
+                    this.waitlogin1 = null
 
-                        if (this.first_refresh === true) {
-                            clearInterval(this.WAIT_FOR_FIRST_REFRESH)
-                            this.WAIT_FOR_FIRST_REFRESH = null
-                            return this.HEARTBEAT_signal_start()
-                        }
-                        console.log(chalk.yellow('senting login heartbeat'))
-                        messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath,messagesController.messagesTemplates.signalFirstHeartBeat(this.currentUser_name, this.active_at_world_persistedID, this.active_at_object_persistedID, this.currentUser_IP, this.currentUser_PORT))
+                            console.log(chalk.blue("starting login to Server"))
+                            const messagesController = require(globalConfigs.mpath1.messagesController)
+                            this.WAIT_FOR_FIRST_REFRESH = setInterval(
+                                ()=>{
 
-                    },500
-                )
-            },1500
+                                    if (this.first_refresh === true) {
+                                        clearInterval(this.WAIT_FOR_FIRST_REFRESH)
+                                        this.WAIT_FOR_FIRST_REFRESH = null
+                                        return this.HEARTBEAT_signal_start()
+                                    }
+                                    console.log(chalk.yellow('senting login heartbeat'))
+                                    messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath,messagesController.messagesTemplates.signalFirstHeartBeat(this.currentUser_name, this.active_at_world_persistedID, this.active_at_object_persistedID, this.currentUser_IP, this.currentUser_PORT))
+
+                                },1500
+                            )
+
+                } else {
+                    console.log('1* WAITING FOR LOGIN')
+                }
+            },1000
         )
+*/
+
 
 
         //this.HEARTBEAT_signal_start()
@@ -233,29 +249,34 @@ class session_Class {
 
         this.SocketIO_Listener_RemoteMonitor = null
 
-        setTimeout (
+
+        this.waitlogin2 = setInterval(
             () => {
-                if (socketIO.io == null) {
-                    console.log(chalk.red("Please set more time to start listener"))
+                if (this.logined === true) {
+                    clearInterval(this.waitlogin2)
+                    this.waitlogin2 = null
+
+                            if (socketIO.io == null) {
+                                console.log(chalk.red("Please set more time to start listener"))
+                            } else {
+                                let IO = socketIO.io
+                                this.SocketIO_Listener_RemoteMonitor = IO
+                                    .of('/remoteMon')
+                                    .on('connection', (socket) => {
+                                        console.log("peer connect to chat")
+                                        console.log(JSON.stringify(socket.handshake.headers, null, 4))
+                                        socket.on('disconnect', () => {
+                                            console.log("user disconnect")
+                                        })
+                                    })
+                                console.log(chalk.green("Started listener"))
+                            }
+
                 } else {
-                    let IO = socketIO.io
-                    this.SocketIO_Listener_RemoteMonitor = IO
-                        .of('/remoteMon')
-                        .on('connection', (socket) => {
-                            console.log("peer connect to chat")
-                            console.log(JSON.stringify(socket.handshake.headers, null, 4))
-                            socket.on('disconnect', () => {
-                                console.log("user disconnect")
-                            })
-                        })
-                    console.log(chalk.green("Started listener"))
+                    console.log('2* WAITING FOR LOGIN')
                 }
             },1000
         )
-
-
-
-
 
         this.remotestreaming = null
         this.facestreaming = null
@@ -268,6 +289,26 @@ class session_Class {
                 this.facestreaming = new streamController.CameraRecorder_Class(this)
             }, 1500
         )
+
+
+/*
+        this.waitlogin3 = setInterval(
+            () => {
+                if (this.logined === true) {
+                    clearInterval(this.waitlogin3)
+                    this.waitlogin3 = null
+
+                            console.log("remote streaming module start")
+                            this.remotestreaming = new streamController.DesktopRecorder_Class(this)
+                            console.log("face streaming module start")
+                            this.facestreaming = new streamController.CameraRecorder_Class(this)
+
+                } else {
+                    console.log('3* WAITING FOR LOGIN')
+                }
+            },1000
+        )
+        */
 
         this.SCHEDULER_getFaces = null
         this.INTERVALTIME_getFaces = 3000 //ms
@@ -312,19 +353,59 @@ class session_Class {
         this.currentUser_password = password
         this.remotestreaming.SET_UserInfo(persistedID, name)
         console.log(chalk.cyanBright(`SET CURRENT USER TO ID : ${persistedID} name : ${name}`))
-
     }
     SET_CurrentWorld (persistedID) {
+        if (this.logined === false) {
+            console.log(chalk.red("can't set world, due to not login yet"))
+            return false
+        }
+        if (this.first_refresh === false) {
+            console.log(chalk.red("can't set world, due to refresh operation does not completed"))
+            return false
+        }
+
+
         this.active_at_world_persistedID = persistedID
+        this.active_at_object_persistedID = ""
+        this.first_refresh = false
+        this.AUTOSET_REMOTE_OBJECTID()
+
         console.log(chalk.cyanBright("SET CURRENT WORLD TO ID : " +  persistedID))
+
+
+        console.log(chalk.blue("starting login to Server"))
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+        this.WAIT_FOR_FIRST_REFRESH = setInterval(
+            ()=>{
+
+                if (this.first_refresh === true) {
+                    clearInterval(this.WAIT_FOR_FIRST_REFRESH)
+                    this.WAIT_FOR_FIRST_REFRESH = null
+                    return this.HEARTBEAT_signal_start()
+                }
+                console.log(chalk.yellow('senting login heartbeat'))
+                messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath,messagesController.messagesTemplates.signalFirstHeartBeat(this.currentUser_name, this.active_at_world_persistedID, this.active_at_object_persistedID, this.currentUser_IP, this.currentUser_PORT))
+
+            },1500
+        )
+
+
     }
     SET_CurrentObjectLink (persistedID, ownername, objecttype, ownerID) {
-        this.active_at_object_persistedID = persistedID
-        this.object_owner_name = ownername
-        this.object_owner_ID = ownerID
-        this.object_type = objecttype
-        console.log(chalk.cyanBright("SET CURRENT OBJECT TO ID : " +  persistedID))
-        console.log(chalk.cyanBright(`SET CURRENT OBJECT TO ID : ${persistedID}  WITH OWNER NAME : ${ownername}  OWNER ID : ${objecttype} TYPE : ${ownerID} `))
+        if (this.logined === false) {
+            console.log(chalk.red("can't set world, due to not login yet"))
+            return false
+        }
+        if (this.first_refresh === false || this.active_at_world_persistedID === "") {
+            console.log(chalk.red('this set object can do only after first refresh'))
+        } else {
+            this.active_at_object_persistedID = persistedID
+            this.object_owner_name = ownername
+            this.object_owner_ID = ownerID
+            this.object_type = objecttype
+            console.log(chalk.cyanBright("SET CURRENT OBJECT TO ID : " +  persistedID))
+            console.log(chalk.cyanBright(`SET CURRENT OBJECT TO ID : ${persistedID}  WITH OWNER NAME : ${ownername}  OWNER ID : ${objecttype} TYPE : ${ownerID} `))
+        }
     }
     SET_IP_PORT (ip, port) {
         this.currentUser_IP = ip
@@ -336,6 +417,18 @@ class session_Class {
         console.log(chalk.cyanBright(`SET REMOTE OBJECT TO ID : ${persistedID}`))
 
     }
+    async AUTOSET_REMOTE_OBJECTID () {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+        let ID = await messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC(messagesController.ClientPathTempleted.requestRemoteObjectID, {username: this.currentUser_name, worldID: this.active_at_world_persistedID})
+        if (!ID)
+            return false
+        if (!ID.objectID)
+            return false
+
+        this.remoteObjectID = ID.objectID
+        this.remotestreaming.SET_remoteObjectID(ID.objectID)
+    }
+
     GET_activeObjectID () {
         return this.active_at_object_persistedID
     }
@@ -376,6 +469,12 @@ class session_Class {
         this.worldmatrix.set(posX, posY, null)
         //console.log("after remove : " + JSON.stringify(this.getData_inMatrix(posX, posY), null, 4))
 
+    }
+
+
+
+    ACTIVE_SETLOGINED () {
+        this.logined = true
     }
 
     ACTION_changeObjectPosition (objectReference,newX, newY) {
@@ -446,13 +545,13 @@ class session_Class {
         }
         if (String(this.active_at_object_persistedID) !== objectID) {
             console.log(chalk.red("request remote task activeobjectID not true, IGNORE"))
-            console.log(chalk.yellow("object_ID " + this.active_at_object_persistedID))
+            console.log(chalk.yellow("our object_ID " + this.active_at_object_persistedID))
 
             validation = false
         }
         if (String(this.object_owner_name) !== objectownername) {
             console.log(chalk.red("request remote task object ownername not true, IGNORE"))
-            console.log(chalk.yellow("objectownername " + this.object_owner_name))
+            console.log(chalk.yellow("our objectownername " + this.object_owner_name))
 
             validation = false
         }
@@ -520,6 +619,13 @@ class session_Class {
         }
     }
 
+    CONTROL_CreateRemoteObject (posX, posY) {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+        messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC(
+            messagesController.ClientPathTempleted.createRemoteObject
+            ,messagesController.messagesTemplates.REQUEST_CREATE_REMOTEOBJECT(this.currentUser_name, posX, posY)
+        )
+    }
 
     GETREF_RemoteObject (object_persistedID) {
         let  getObject = this.globalObjectMemory.GET_ObjectMemoryReference(object_persistedID)
@@ -675,7 +781,7 @@ class session_Class {
 
     MONITOR_Session () {
         let messages = "**********************Session Monitoring************************\n"
-        messages += "Active at world ID : " + this.active_at_object_persistedID + "\n"
+        messages += "Active at world ID : " + this.active_at_world_persistedID + "\n"
         messages += "Active at object ID : " + this.active_at_object_persistedID + " owner name : " + this.object_owner_name + "\n"
         messages += "User information || ID : " + this.currentUser_persistedID + " name : " + this.currentUser_name + " password " + this.currentUser_password + "\n"
 
@@ -901,10 +1007,26 @@ class session_Class {
         globalSession.callObjectLink("00001","chee","remote",{positionX: 12,positionY: 10},"22222")
         globalSession.callObjectLink("00002","david","remote",{positionX: 14,positionY: 10},"33333")
 */
-        module.exports.globalSession = globalSession
 ////////////////////////////////////////////
-
-
-
+let logined = false
+class AppUtility {
+    static LogIn (name, userID, password, dummy1, IP, PORT) {
+        if (logined === false) {
+            globalSession.SET_CurrentUSER(name, userID, password)
+            globalSession.SET_IP_PORT(IP,PORT)
+            globalSession.ACTIVE_SETLOGINED()
+        } else {
+            console.log('Already login')
+        }
+    }
+    static SETWORLD (worldID) {
+        globalSession.SET_CurrentWorld(worldID)
+    }
+    static SETOBJECT (objectID, ownername, objecttype, ownerID) {
+        globalSession.SET_CurrentObjectLink(objectID, ownername, objecttype, ownerID)
+    }
+}
+module.exports.globalSession = globalSession
 module.exports.session_Class = session_Class
+module.exports.AppUtility = AppUtility
 

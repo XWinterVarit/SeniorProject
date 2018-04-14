@@ -323,13 +323,7 @@ class messagesGlobalMethods {
                 "Content-Type": "application/json"
             }
         }
-        console.log(chalk.red('*************'))
-        console.log(chalk.red('*************'))
-        console.log(chalk.red('*************'))
-        console.log(chalk.red('*************'))
-        console.log(chalk.red('*************'))
-        console.log(chalk.red('*************'))
-        console.log(addressLists)
+        //console.log(addressLists)
         for (let i of addressLists) {
             if (i[0] === "" || i[1] === "") {
                 continue

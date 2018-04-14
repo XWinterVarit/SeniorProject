@@ -143,13 +143,6 @@ class OneActiveUserClass {
 /*
         console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
         console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
-        console.log(chalk.red("REMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTEREMOTE"))
         */
         console.log(chalk.red("previous active object ID" + this.active_at_objectID))
         console.log(chalk.red("next active object ID" + nextobjectID))
@@ -301,7 +294,7 @@ class OneActiveUserClass {
             console.log('show this.active at world : ' + this.active_at_world)
             let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.activeworld})
             if (currentWorld){
-                currentWorld.REFRESH_ONE_afterLogin(this.ipaddr, this.port)
+                await currentWorld.REFRESH_ONE_afterLogin(this.ipaddr, this.port)
             }
         }
 
@@ -619,7 +612,8 @@ class UserMethods {
         if (imagebuffer) {
             return imagebuffer
         } else {
-            return null
+            let nofaceimagebuffer = fs.readFileSync(globalConfigs.mpath1.clouddrive_users_avatar+"##noface.jpg")
+            return nofaceimagebuffer
         }
     }
 
