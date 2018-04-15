@@ -381,8 +381,13 @@ class messagesGlobalMethods {
       */
         return await new Promise(resolve=>{
             client.post("http://" + globalConfigs.ServerInfo.serverIP + ":" + globalConfigs.ServerInfo.serverPort +"/" + path, args, (datareturn, response) => {
-                //console.log('data return : ' + datareturn)
-                console.log(datareturn.length)
+
+                /*
+                if (!Buffer.isBuffer(datareturn)) {
+                    console.log('data return : ' + JSON.stringify(datareturn, null, 4))
+                }
+                */
+                //console.log(datareturn.length)
                 return resolve(datareturn)
             }).on('error', (err) => {
                 console.log("Error " + err)

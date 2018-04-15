@@ -100,7 +100,7 @@ class OneActiveWorldClass {
 
 
 
-        this.INTERVAL_TIME_BROADCAST_FRESH_EVENT = 20000 //ms
+        this.INTERVAL_TIME_BROADCAST_FRESH_EVENT = 30000 //ms
         this.INTERVAL_BROADCAST_FRESH_EVENT = setInterval(
             () => {
                 console.log(chalk.blueBright("SENT REFRESH SIGNAL TO CLIENTS"))

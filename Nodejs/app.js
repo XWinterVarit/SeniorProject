@@ -10,6 +10,9 @@ const junior = require('./routes/junior');
 const cors = require('cors')
 const app = express();
 
+const requestIp = require('request-ip');
+
+app.use(requestIp.mw())
 
 const mongodb = require('./config/MongoDB')
 const redis = require('./config/Redis')

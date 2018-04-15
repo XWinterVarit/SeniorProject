@@ -199,6 +199,13 @@ class session_Class {
         this.heartbeatScheduler = null
         this.heartbeatIntervalTime = 5000 //ms
 
+        this.connection_to_server_Heartbeat = null
+        this.connection_to_server_heartbeat_interval_time = 10000 //ms
+        this.connection_to_server_heartbeat_score = 0
+        this.connection_to_server_heartbeat_max_score = 2
+
+        this.connection_to_server_active = false
+
         this.currentMessageTransactionGet = 0
         this.currentMessageTransactionSent = 0
 
@@ -210,6 +217,7 @@ class session_Class {
         this.first_refresh = true
 
         this.WAIT_FOR_FIRST_REFRESH = null
+
 /*
         this.waitlogin1 = setInterval(
             () => {
@@ -311,7 +319,7 @@ class session_Class {
         */
 
         this.SCHEDULER_getFaces = null
-        this.INTERVALTIME_getFaces = 3000 //ms
+        this.INTERVALTIME_getFaces = 100 //ms
 
         this.SCHEDULER_getNearbyUser = null
         this.INTERVALTIME_getNearbyUser = 2000 //msec
@@ -331,8 +339,14 @@ class session_Class {
             console.log("Starting heartbeat")
 
             this.heartbeatScheduler = setInterval(
-                () => {
-                    messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath,messagesController.messagesTemplates.signalHeartBeat(this.currentUser_name, this.active_at_world_persistedID, this.active_at_object_persistedID, this.currentUser_IP, this.currentUser_PORT))
+                async () => {
+                    let datareturn = await messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC(globalConfigs.specificServerPath.user_messages_serverpath,messagesController.messagesTemplates.signalHeartBeat(this.currentUser_name, this.active_at_world_persistedID, this.active_at_object_persistedID, this.currentUser_IP, this.currentUser_PORT))
+                    console.log(chalk.red("check data return : " + JSON.stringify(datareturn, null, 4)))
+                    if (datareturn) {
+                        if (datareturn.message === "connected") {
+                            this.INTERNALCONTROL_SIGNAL_connection_to_server_Heartbeat()
+                        }
+                    }
                     console.log("Sent heartbeat")
                 }
                 , this.heartbeatIntervalTime
@@ -363,7 +377,6 @@ class session_Class {
             console.log(chalk.red("can't set world, due to refresh operation does not completed"))
             return false
         }
-
 
         this.active_at_world_persistedID = persistedID
         this.active_at_object_persistedID = ""
@@ -420,6 +433,7 @@ class session_Class {
     async AUTOSET_REMOTE_OBJECTID () {
         const messagesController = require(globalConfigs.mpath1.messagesController)
         let ID = await messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC(messagesController.ClientPathTempleted.requestRemoteObjectID, {username: this.currentUser_name, worldID: this.active_at_world_persistedID})
+        await messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC("clientIPTest", {})
         if (!ID)
             return false
         if (!ID.objectID)
@@ -431,6 +445,30 @@ class session_Class {
 
     GET_activeObjectID () {
         return this.active_at_object_persistedID
+    }
+
+
+    INTERNALCONTROL_START_connection_to_server_Heartbeat () {
+        this.connection_to_server_active = true
+        this.connection_to_server_Heartbeat = setInterval(
+            () => {
+                this.connection_to_server_heartbeat_score--
+                if (this.connection_to_server_heartbeat_score <= 0) {
+                    clearInterval(this.connection_to_server_Heartbeat)
+                    this.connection_to_server_Heartbeat = null
+                    this.connection_to_server_active = false
+
+                    this.remotestreaming.STOP_RECORD()
+                    this.facestreaming.STOP_RECORD()
+                }
+            }, this.connection_to_server_heartbeat_interval_time
+        )
+    }
+    INTERNALCONTROL_SIGNAL_connection_to_server_Heartbeat () {
+        this.connection_to_server_heartbeat_score = this.connection_to_server_heartbeat_max_score
+        if (this.connection_to_server_active === false) {
+            this.INTERNALCONTROL_START_connection_to_server_Heartbeat()
+        }
     }
 
 
@@ -580,7 +618,7 @@ class session_Class {
 
     CHECK_RequestFaceFrameUpdate (worldID, username) {
         let validation = true
-        console.log(`recieve world ID : ${worldID} client worldID : ${this.active_at_world_persistedID}`)
+        //console.log(`recieve world ID : ${worldID} client worldID : ${this.active_at_world_persistedID}`)
         if (String(this.active_at_world_persistedID) !== String(worldID)) {
             console.log(chalk.red("world ID not true"))
             validation = false
@@ -609,7 +647,7 @@ class session_Class {
     CALL_FaceObject (username) {
         let getObject = this.globalObjectMemory.GET_ObjectMemoryReference(username)
         if (getObject) {
-            console.log("found face object")
+            //console.log("found face object")
             return getObject
         } else {
             console.log("not found face object, so create new face object")
@@ -781,7 +819,7 @@ class session_Class {
 
     MONITOR_Session () {
         let messages = "**********************Session Monitoring************************\n"
-        messages += "Active at world ID : " + this.active_at_world_persistedID + "\n"
+        messages += "Active at world ID : " + this.active_at_world_persistedID + "  connection status : " + this.connection_to_server_active + "  with score : " + this.connection_to_server_heartbeat_score + "\n"
         messages += "Active at object ID : " + this.active_at_object_persistedID + " owner name : " + this.object_owner_name + "\n"
         messages += "User information || ID : " + this.currentUser_persistedID + " name : " + this.currentUser_name + " password " + this.currentUser_password + "\n"
 
@@ -865,10 +903,13 @@ class session_Class {
             this.SCHEDULER_getFaces = setInterval(
                 () => {
                     let arrayofusersface = []
-                    for (let i of this.CurrentNearbyUserLists) {
+
+                    for (let i of this.activeMember) {
+                        i = i[1]
                         let framebuffer = this.CALL_FaceObject(i.name).GET_frame()
                         if (framebuffer) {
                             arrayofusersface.push({
+                                //type: "member",
                                 name: i.name,
                                 positionX: i.positionX,
                                 positionY: i.positionY,
@@ -877,8 +918,9 @@ class session_Class {
                                 info: ""
                             })
                         } else {
-                            console.log("face not update too long")
+                            //console.log("face not update too long")
                             arrayofusersface.push({
+                                //type: "member",
                                 name: i.name,
                                 positionX: i.positionX,
                                 positionY: i.positionY,
@@ -890,6 +932,7 @@ class session_Class {
                     }
                     //console.log(chalk.green(arrayofusersface))
                     this.SENT_FACESFRAME_SOCKETIO(arrayofusersface)
+
                 },this.INTERVALTIME_getFaces
             )
         }

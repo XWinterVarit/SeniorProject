@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div>
+</div>
+<canvas id="canvas">
+
+</canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script
+        src="https://code.jquery.com/jquery-3.3.1.js"
+        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+        crossorigin="anonymous"></script>
+
+
+
+
+<script>
+
+    var remoteMon = io.connect('http://localhost:60001/remoteMon')
+
+
+
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    var image = new Image(60, 45);   // using optional size for image
+    image.onload = drawImageActualSize; // draw when image has loaded
+
+    // load an image of intrinsic size 300x227 in CSS pixels
+    image.src = 'https://mdn.mozillademos.org/files/5397/rhino.jpg';
+
+    function drawImageActualSize() {
+        // use the intrinsic size of image in CSS pixels for the canvas element
+        canvas.width = this.naturalWidth;
+        canvas.height = this.naturalHeight;
+
+        // will draw the image as 300x227 ignoring the custom size of 60x45
+        // given in the constructor
+        ctx.drawImage(this, 0, 0);
+
+        // To use the custom size we'll have to specify the scale parameters
+        // using the element's width and height properties - lets draw one
+        // on top in the corner:
+        ctx.drawImage(this, 0, 0, this.width, this.height);
+    }
+</script>
+</body>
+</html>

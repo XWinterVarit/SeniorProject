@@ -10,72 +10,50 @@
 </div>
 
 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <script
         src="https://code.jquery.com/jquery-3.3.1.js"
         integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
         crossorigin="anonymous"></script>
 
-<P> Welcome </P>
-
-<div id = "div1" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot1" > pic 1 </p>
-        <img id="slot1" style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-
-<div id = "div2" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot2" > pic 2 </p>
-        <img id="slot2"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-<div id = "div3" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot3" > pic 3 </p>
-        <img id="slot3"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-<div id = "div4" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot4" > pic 4 </p>
-        <img id="slot4"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-<div id = "div5" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot5" > pic 5 </p>
-        <img id="slot5"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-<div id = "div6" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot6" > pic 6 </p>
-        <img id="slot6"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-<div id = "div7" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot7" > pic 7 </p>
-        <img id="slot7"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-<div id = "div8" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot8" > pic 8 </p>
-        <img id="slot8"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-<div id = "div9" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot9" > pic 9 </p>
-        <img id="slot9"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
-<div id = "div10" style="position: absolute; border-style: solid; max-width: 150px;">
-    <p id="t-slot10" > pic 10 </p>
-        <img id="slot10"style="max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px">
-
-</div>
 
 
 
 <script>
 
+
+
     var remoteMon = io.connect('http://localhost:60001/remoteMon')
 
+
+    function dynamicElements() {
+        for (let i = 1; i <= 10; i++) {
+            $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: solid; max-width: 150px;\">\n" +
+                "    <p id=\"t-slot"+i+"\" > pic "+i+" </p>\n" +
+                "        <img id=\"slot"+i+"\"style=\"max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px\">\n" +
+                "\n" +
+                "</div>")
+        }
+    }
+    dynamicElements()
+    let ElementManager = new Map()
+    function addElementVar () {
+        for (let i = 1; i <= 10; i++) {
+            console.log("adding element variable num " + i)
+            ElementManager.set("div"+i, document.getElementById('div'+i))
+            ElementManager.set("info"+i, document.getElementById('t-slot'+i))
+            ElementManager.set("pic"+i, document.getElementById('slot'+i))
+        }
+    }
+    addElementVar()
+    setTimeout(
+        ()=>{
+            let loc = window.location.href; // or a new URL
+            window.location.href = loc + '?n=' + new Date().getTime(); // random number
+        },10000
+    )
+/*
     let div1 = document.getElementById('div1')
     let info1 = document.getElementById('t-slot1')
     let pic1 = document.getElementById("slot1")
@@ -115,12 +93,23 @@
     let div10 = document.getElementById('div10')
     let info10 = document.getElementById('t-slot10')
     let pic10 = document.getElementById("slot10")
+    */
     //console.log("show before pic : " + pic)
 
+    let working = false
     remoteMon.on('faces', function (data) {
+        if (working === true) {
+            console.log("operation abort due to render is not completed")
+            return false
+        }
+        working = true
+        document.getElementsByTagName("body")[0].style.display = "none";
 
+        //console.log("get new data")
         let slotrunnumber = 1
-
+        for (let i = 1; i <= 10; i++) {
+            cleanelement(eval('div'+i))
+        }
         //console.log(data)
         for (let i of data.users) {
             //console.log(i)
@@ -128,54 +117,14 @@
             if (i.framebuffer) {
                 let img = i.framebuffer
                 //console.log('setting picture')
-                onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
-                /*
-                switch (slotrunnumber) {
-                    case 1:
-                        onBinaryMessage(img, pic1)
-                        break
-                    case 2:
-                        onBinaryMessage(img, pic2)
-
-                        break
-                    case 3:
-                        onBinaryMessage(img, pic3)
-
-                        break
-                    case 4:
-                        onBinaryMessage(img, pic4)
-
-                        break
-                    case 5:
-                        onBinaryMessage(img, pic5)
-
-                        break
-                    case 6:
-                        onBinaryMessage(img, pic6)
-
-                        break
-                    case 7:
-                        onBinaryMessage(img, pic7)
-
-                        break
-                    case 8:
-                        onBinaryMessage(img, pic8)
-
-                        break
-                    case 9:
-                        onBinaryMessage(img, pic9)
-
-                        break
-                    case 10:
-                        onBinaryMessage(img, pic10)
-
-                        break
-                }
-                */
+                //onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
+                onBinaryMessage(img, ElementManager.get('pic'+slotrunnumber), ElementManager.get('div'+slotrunnumber), ElementManager.get('info'+slotrunnumber), i.positionX, i.positionY)
             }
             slotrunnumber++
 
         }
+        document.getElementsByTagName("body")[0].style.display = "block";
+        working = false
     });
 
 
@@ -191,8 +140,9 @@
         div.style.top = posY*150 + 'px'
 
         //console.log('render div at left :' + posX*100 + ' at top :' + posY*100)
-
-
+        blob = null
+        url = null
+        //pic.src = ""
         /*
         var img = new Image;
 
@@ -203,6 +153,10 @@
         }
         img.src = url;
         */
+    }
+    function cleanelement (div) {
+        div.style.left = -400 + "px"
+        div.style.top = -400+ "px"
     }
 </script>
 </body>

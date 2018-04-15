@@ -201,7 +201,8 @@ router.post('/userGateway', async(req, res, next) => {
     //console.log(chalk.green("IP : " + clientIP))
     //console.log(chalk.green(CircularJSON.stringify(req, null, 4)))
     await globalmemoryController.GlobalActiveUser.get_messages(req)
-    res.end()
+    console.log("send back messages")
+    res.json({message: 'connected'})
 })
 
 router.post('/getMemberedWorlds', async(req, res, next) => {
@@ -249,7 +250,18 @@ router.post('/RequestRemoteObjectID', async(req, res, next) => {
     res.json({objectID: outputobject.objectlinks[0].object_persisted_id})
 })
 
-
+router.post('/clientIPTest', async(req, res, next) => {
+    console.log(chalk.yellow('********************'))
+    console.log(chalk.yellow('********************'))
+    console.log(chalk.yellow('********************'))
+    console.log(chalk.yellow('********************'))
+    console.log(chalk.yellow('********************'))
+    console.log(chalk.yellow('********************'))
+    console.log(chalk.yellow('********************'))
+    console.log(chalk.yellow('********************'))
+    console.log(req.clientIp)
+    res.end()
+})
 
 
 ////////////////////////////////////////////////////////////////////////

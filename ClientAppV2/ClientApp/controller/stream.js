@@ -121,10 +121,8 @@ class GlobalStreamUtility {
                 vf: 'scale=1920*1080', q: '30'
             }).pipe(fsM.createWriteStream('/tempframe')
                 .on('finish',()=>{
-                    console.log("finish")
-
+                    //console.log("finish")
                     return resolve()
-
                 }).on('error',()=>{
                     console.log("stream error")
                     return reject()
@@ -161,8 +159,7 @@ class GlobalStreamUtility {
                 vf: 'scale=320*240', q: '20'
             }).pipe(fsM.createWriteStream('/tempframe')
                 .on('finish',()=>{
-                    console.log("finish")
-
+                    //onsole.log("finish")
                     return resolve()
 
                 }).on('error',()=>{
@@ -186,27 +183,59 @@ class DesktopRecorder_Class {
         console.log("DesktopRecorder_Initialize")
         this.intervalTaken = null
         this.stopsignal = false
-        this.fpscap = 15
+        this.fpscap = 10
         this.sessionRef = sessionRef
+
+        this.useDummyScreen = true
+        this.dummyFileName = "screendummy.mp4" //nolonger use
+
+        this.preload_dummy_framebuffer = []
+        this.dummy_framebuffer_folder_path = globalConfigs.testpath1.camtest + "ScreenDummy/"
+        this.dummy_framebuffer_maximum_frame = 2000
 
         this.setCount = 0
         this.passsetCount = 3
         if (this.sessionRef == null) {
             console.log(chalk.red("Desktop Recorder Internal Error"))
         }
+
+        this.Preload_FrameBuffer() // Run automatically
     }
     SET_UserInfo(ownerID, ownerName) {
         this.ownerID = ownerID
         this.ownerName = ownerName
-        this.setCount+=2
+        this.setCount += 2
     }
     SET_remoteObjectID(objectID) {
         this.objectID = objectID
         this.setCount++
     }
 
+    Preload_FrameBuffer () {
+        this.preload_dummy_framebuffer = []
+        for (let i = 0; i <= this.dummy_framebuffer_maximum_frame; i++) {
+            try {
+                let framebuffer = fs.readFileSync(this.dummy_framebuffer_folder_path + i + ".jpg")
+                this.preload_dummy_framebuffer.push(framebuffer)
+                //console.log("preloading at frame : " + i)
+            } catch (err) {
+                console.log("stopped at frame : " + (i-1))
+                //console.log(err)
+                break
+            }
+        }
+        console.log(chalk.green("SCREEN RECORD : all frames are : " + this.preload_dummy_framebuffer.length))
+    }
 
     START_RECORD (RemoteObjectRef) {
+        if (this.useDummyScreen === true) {
+            this.START_RECORD_DUMMY_WITH_PRELOAD_FRAME(RemoteObjectRef)
+        } else {
+            this.START_RECORD_MAC(RemoteObjectRef)
+        }
+    }
+
+    START_RECORD_MAC (RemoteObjectRef) {
         if (this.intervalTaken != null) {
             console.log("already start")
             return false
@@ -291,7 +320,178 @@ class DesktopRecorder_Class {
         )
 
     }
+
+    START_RECORD_DUMMY (RemoteObjectRef) {
+        if (this.intervalTaken != null) {
+            console.log("already start")
+            return false
+        }
+        if (this.setCount < this.passsetCount) {
+            console.log("user had not set remote desktop object, ABOARD")
+            return false
+        }
+        this.intervalTaken = "starting.."
+        let times = 1000/this.fpscap
+        console.log("time per frame is : " + times)
+
+        //let buffertest = new BufferedWriter
+        let framebuffer = []
+        //let times = 40;
+        let realtimestamp = Date.now()
+        console.log(`Start time ${realtimestamp}`)
+        let previousframedrop = 0;
+        let framedrop = 0;
+        let framepass = 0;
+        let working = false
+        this.intervalTaken = setInterval(
+            async () => {
+                if (this.stopsignal === true) {
+                    clearInterval(this.intervalTaken)
+                    this.intervalTaken = null
+                    console.log("stop interval completed")
+                    this.stopsignal = false
+                }
+
+                framepass++
+                //console.log("pass interval : working " + working)
+
+                if (working === true) {
+                    //console.log("framedropped")
+                    framedrop++;
+                } else {
+
+                    if (framepass > 10000000) {
+                        console.log("stop screenshot")
+                        clearInterval(this.intervalTaken)
+                        working = false
+                        this.intervalTaken = null
+                        //toMp4()
+                    } else {
+                        working = true
+                        console.log("start take screenshot")
+
+                        const vid = globalConfigs.testpath1.camtest+this.dummyFileName
+                        shots.screenshot(vid, Number((Number(framepass)/Number(this.fpscap)).toFixed(2))).then( async (buffer) => {
+                            if (buffer.length > 100) {
+                                let postprocess = await GlobalStreamUtility.JPEGCompress(buffer, framepass)
+                                realtimestamp = Date.now()
+                                await RemoteObjectRef.RemoteDesktopFrameBuffer.SET_frame(framepass, postprocess, realtimestamp)
+                            } else {
+                                console.log(chalk.red('out of dummy video bound'))
+                                framepass = 0
+                            }
+                            working = false
+                            //fs.writeFileSync('./a.jpg', buffer)
+                        })
+
+                        /*
+                        setTimeout(
+                            () => {
+                                console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}`)
+                                working = false
+                                realtimestamp = Date.now()
+                            }
+                            ,80
+                        )
+                        */
+                    }
+                }
+            }, times
+        )
+
+
+    }
+
+    START_RECORD_DUMMY_WITH_PRELOAD_FRAME (RemoteObjectRef) {
+
+        if (this.intervalTaken != null) {
+            console.log("already start")
+            return false
+        }
+
+        if (this.preload_dummy_framebuffer == null) {
+            console.log(chalk.red("dummy framebuffers have not load yet"))
+            return false
+        }
+        if (this.preload_dummy_framebuffer.length === 0) {
+            console.log(chalk.red("dummy framebuffers have not load yet"))
+            return false
+        }
+
+
+        if (this.setCount < this.passsetCount) {
+            console.log("user had not set remote desktop object, ABOARD")
+            return false
+        }
+        this.intervalTaken = "starting.."
+        let times = 1000/this.fpscap
+        console.log("Starting screenshot taking...")
+        console.log("time per frame is : " + times)
+
+        //let buffertest = new BufferedWriter
+        let framebuffer = []
+        //let times = 40;
+        let realtimestamp = Date.now()
+        console.log(`Start time ${realtimestamp}`)
+        let previousframedrop = 0;
+        let framedrop = 0;
+        let framepass = 0;
+        let working = false
+        this.intervalTaken = setInterval(
+            async () => {
+                if (this.stopsignal === true) {
+                    clearInterval(this.intervalTaken)
+                    this.intervalTaken = null
+                    console.log("stop interval completed")
+                    this.stopsignal = false
+                }
+
+                framepass++
+                //console.log("pass interval : working " + working)
+
+                if (working === true) {
+                    //console.log("framedropped")
+                    framedrop++;
+                } else {
+
+                    if (framepass > 10000000) {
+                        console.log("stop screenshot")
+                        clearInterval(this.intervalTaken)
+                        working = false
+                        this.intervalTaken = null
+                        //toMp4()
+                    } else {
+                        working = true
+                        //console.log("start take screenshot")
+
+                        if (framepass >= this.preload_dummy_framebuffer.length) {
+                            framepass = 0
+                        }
+                        let framebuffer = this.preload_dummy_framebuffer[framepass]
+                        let postprocess = await GlobalStreamUtility.JPEGCompress(framebuffer, framepass)
+                        realtimestamp = Date.now()
+                        await RemoteObjectRef.RemoteDesktopFrameBuffer.SET_frame(framepass, postprocess, realtimestamp)
+                        working = false
+
+                        /*
+                        setTimeout(
+                            () => {
+                                console.log(`framepass : ${framepass} new-framedrop ${framedrop - previousframedrop} framedrop : ${framedrop} fps : ${1000/(Date.now() - realtimestamp)}`)
+                                working = false
+                                realtimestamp = Date.now()
+                            }
+                            ,80
+                        )
+                        */
+                    }
+                }
+            }, times
+        )
+
+    }
+
     STOP_RECORD () {
+        console.log(chalk.green("The screen recorder is now stopped"))
         this.stopsignal = true
     }
 }
@@ -299,20 +499,44 @@ class DesktopRecorder_Class {
 class CameraRecorder_Class {
     constructor (sessionRef) {
         this.stopsignal = false
-        this.fpscap = 1
+        this.fpscap = 10
         this.sessionRef = sessionRef
 
         this.intervalTaken = null
 
         this.useDummyFaces = true
 
+        this.preload_dummy_framebuffer = []
+        this.dummy_framebuffer_folder_path = globalConfigs.testpath1.camtest + "CamDummy/"
+        this.dummy_framebuffer_maximum_frame = 2000
+
         if (this.sessionRef == null) {
             console.log(chalk.red("Desktop Recorder Internal Error"))
         }
+
+        this.Preload_FrameBuffer()
     }
+
+    Preload_FrameBuffer () {
+        this.preload_dummy_framebuffer = []
+        for (let i = 0; i <= this.dummy_framebuffer_maximum_frame; i++) {
+            try {
+                let framebuffer = fs.readFileSync(this.dummy_framebuffer_folder_path + i + ".jpg")
+                this.preload_dummy_framebuffer.push(framebuffer)
+                //console.log("preloading at frame : " + i)
+            } catch (err) {
+                console.log("stopped at frame : " + (i-1))
+                //console.log(err)
+                break
+            }
+        }
+        console.log(chalk.green("FACE STREAM : all frames are : " + this.preload_dummy_framebuffer.length))
+
+    }
+
     START_RECORD (faceframeRef) {
         if (this.useDummyFaces) {
-            this.START_RECORD_DUMMY(faceframeRef)
+            this.START_RECORD_DUMMY_WITH_PRELOAD_FRAME(faceframeRef)
         } else {
             this.START_RECORD_MAC(faceframeRef)
         }
@@ -354,10 +578,10 @@ class CameraRecorder_Class {
                         //toMp4()
                     } else {
                         //working = true
-                        console.log("start take screenshot")
+                        //console.log("start take screenshot")
                         let fsM = new memoryFileSystem()
                         framepass++;
-                        console.log(`before framepass ${framepass}`)
+                        //console.log(`before framepass ${framepass}`)
 
                         imagesnap().pipe(fsM.createWriteStream('/capture.jpg')
                             .on('finish',async ()=>{
@@ -438,18 +662,18 @@ class CameraRecorder_Class {
                         //toMp4()
                     } else {
                         //working = true
-                        console.log("start take screenshot")
+                        //console.log("start take screenshot")
                         framepass++;
                         const vid = globalConfigs.testpath1.camtest + 'testcam.mp4'
                         shots.screenshot(vid, Number((Number(framepass)/Number(this.fpscap)).toFixed(2))).then( async (buffer)=>{
                             if (buffer.length > 100) {
                                 let postprocess = await GlobalStreamUtility.JPEGCompress_FACE(buffer)
                                 await faceframeRef.SET_frame(postprocess, true)
-                                working = false
                             } else {
                                 console.log(chalk.red('out of dummy video bound'))
                                 framepass = 0
                             }
+                            working = false
                             //fs.writeFileSync('./a.jpg', buffer)
                         })
 
@@ -457,6 +681,63 @@ class CameraRecorder_Class {
                 }
             }, times
         )
+
+    }
+
+    START_RECORD_DUMMY_WITH_PRELOAD_FRAME (faceframeRef) {
+
+        if (this.intervalTaken != null) {
+            console.log("already start")
+            return false
+        }
+
+        if (this.preload_dummy_framebuffer == null) {
+            console.log(chalk.red("dummy framebuffers have not load yet"))
+            return false
+        }
+        if (this.preload_dummy_framebuffer.length === 0) {
+            console.log(chalk.red("dummy framebuffers have not load yet"))
+            return false
+        }
+
+        this.intervalTaken = "starting.."
+
+        let times = 1000/this.fpscap
+        console.log("time per frame is : " + times)
+        let realtimestamp = Date.now()
+        console.log(`Start time ${realtimestamp}`)
+        let previousframedrop = 0;
+        let framedrop = 0;
+        let framepass = 0;
+        let working = false
+        this.intervalTaken = setInterval(
+            async () => {
+                framepass++;
+
+                if (working === true) {
+                    framedrop++;
+                } else {
+                    if (framepass > 10000000) {
+                        console.log("DEBUG: stop screenshot")
+                        clearInterval(this.intervalTaken)
+                        //toMp4()
+                    } else {
+                        working = true
+                        //console.log("start take screenshot")
+
+                        if (framepass >= this.preload_dummy_framebuffer.length) {
+                            framepass = 0
+                        }
+                        let framebuffer = this.preload_dummy_framebuffer[framepass]
+                        let postprocess = await GlobalStreamUtility.JPEGCompress(framebuffer, framepass)
+                        await faceframeRef.SET_frame(postprocess, true)
+                        working = false
+
+                    }
+                }
+            }, times
+        )
+
 
     }
 }
@@ -605,7 +886,7 @@ class RemoteDesktopRedirectTask {
         }
     }
     async SIGNAL_passthrough_send(framebuffer, frameNumber, timeStamp) {
-        console.log(chalk.green("SIGNAL_Passthrough_Send is called"))
+        //console.log(chalk.green("SIGNAL_Passthrough_Send is called"))
         const messagesController = require(globalConfigs.mpath1.messagesController)
         //console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
         if (!framebuffer) {
@@ -614,16 +895,16 @@ class RemoteDesktopRedirectTask {
         }
         //let count = 0
         if (this.RemoteDesktopFrameBuffer.lock === false) {
-            console.log(chalk.green("LOCK FRAME"))
+            //console.log(chalk.green("LOCK FRAME"))
             this.RemoteDesktopFrameBuffer.lock = true
             for (let i of this.peers) {
                 let name = i[0]
                 let IP = i[1]
                 let PORT = i[2]
 
-                console.log(`senting to peers : name : ${name} IP : ${IP} PORT : ${PORT} `)
+                //console.log(`senting to peers : name : ${name} IP : ${IP} PORT : ${PORT} `)
                 //console.log(messagesController.ClientPathTemplated)
-                console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
+                //console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
                 //messagesController.messagesGlobalMethods.requireTest()
 
                 await messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer(IP,PORT
@@ -632,7 +913,7 @@ class RemoteDesktopRedirectTask {
                     , messagesController.messagesTemplates.ONE_BUFFERDATA_FORFORMDATA(framebuffer,"frame", messagesController.messagesTemplates_ClientPathTempleted.application_any))
 
             }
-            console.log(chalk.green("UNLOCK FRAME"))
+            //console.log(chalk.green("UNLOCK FRAME"))
             this.RemoteDesktopFrameBuffer.lock = false
         } else {
             console.log("buffer locking due to not completed sent")
@@ -681,6 +962,7 @@ class OneFaceImagesStore_Class {
 
         this.TIMESTAMP_setframe = 0
         this.maximum_time_allow_get_frame = 3000 //milisec
+
     }
     async SET_frame (framebuffer, isOwner) {
 
@@ -691,7 +973,7 @@ class OneFaceImagesStore_Class {
             this.TIMESTAMP_setframe = Date.now()
             this.framebuffer = framebuffer
             if (this.debugFrame === true) {
-                console.log('emit to websocket')
+                //console.log('emit to websocket')
                 this.sessionRef.MONITOR_FACESTREAMING_SOCKETIO(framebuffer)
             }
             if (isOwner === true) {
@@ -732,7 +1014,7 @@ class OneFaceImagesStore_Class {
                     messagesController.messagesTemplates.ONE_BUFFERDATA_FORFORMDATA(framebuffer, "frame", messagesController.messagesTemplates_ClientPathTempleted.application_any)
                 )
             } else {
-                console.log(chalk.yellow('ignore ourself'))
+                //console.log(chalk.yellow('ignore sent to ourself'))
             }
         }
     }
