@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page Title</title>
+</head>
+<body>
+
+<h1>This is a Welll</h1>
+<p>This is a paragraph.</p>
+<input type="text" id="port">
+<button type="button" id="init">Init!</button>
+<img id="remoteimg">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script
+        src="https://code.jquery.com/jquery-3.3.1.js"
+        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+        crossorigin="anonymous"></script>
+<script>
+
+
+    console.log("start script")
+    $( "#init" ).click(function() {
+        let port = $("#port").val()
+        var remoteMon = io.connect('http://localhost:'+port+'/remoteMon')
+
+        let pic = document.getElementById("remoteimg")
+        //console.log("show before pic : " + pic)
+        remoteMon.on('remote_debug', function (data) {
+            //console.log(data)
+            if (data.buffer) {
+                let img = data.buffer
+                /*
+                var c = document.getElementById("myCanvas");
+                var ctx = c.getContext("2d");
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.beginPath();
+                */
+                onBinaryMessage(img, pic)
+            }
+        });
+
+    });
+
+
+    function onBinaryMessage(input, pic) {
+        //console.log("show after pic : " + pic)
+
+        var blob = new Blob([input], {type: 'image/png'});
+        var url = URL.createObjectURL(blob);
+        //console.log("url is " + url)
+        pic.src = url
+        /*
+        var img = new Image;
+
+        img.onload = function() {
+            var ctx = document.getElementById("myCanvas").getContext('2d');
+            ctx.drawImage(this, 0, 0);
+            URL.revokeObjectURL(url);
+        }
+        img.src = url;
+        */
+    }
+</script>
+</body>
+</html>

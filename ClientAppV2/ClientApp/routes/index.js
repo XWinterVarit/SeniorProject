@@ -346,6 +346,7 @@ router.get('/FrameImageDebug', (req, res, next) => {
     res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
     res.sendFile(globalConfigs.testpath1.monitorGUI + 'test.html')
 })
+
 router.get('/showfaces', (req, res, next) => {
     sessionController.globalSession.FORUI_START_GETFACE()
     res.end()

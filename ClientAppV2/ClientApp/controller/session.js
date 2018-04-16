@@ -202,7 +202,7 @@ class session_Class {
         this.heartbeatIntervalTime = 5000 //ms
 
         this.connection_to_server_Heartbeat = null
-        this.connection_to_server_heartbeat_interval_time = 10000 //ms
+        this.connection_to_server_heartbeat_Interval_time = 10000 //ms
         this.connection_to_server_heartbeat_score = 0
         this.connection_to_server_heartbeat_max_score = 2
         this.connection_to_server_active = false
@@ -210,10 +210,19 @@ class session_Class {
 
         this.WorldPage = ""
         this.WorldPage_connection_heartbeat_Scheduler = null
-        this.WorldPage_connection_heartbeat_interval_time = 5000 //ms
+        this.WorldPage_connection_heartbeat_Interval_time = 5000 //ms
         this.WorldPage_connection_heartbeat_score = 0
         this.WorldPage_connection_heartbeat_max_score = 2
         this.WorldPage_connection_Active = false
+
+
+        this.remoteobjectPage = ""
+        this.remoteobjectPage_connection_heartbeat_Scheduler = null
+        this.remoteobjectPage_connection_heartbeat_Interval_time = 5000 //ms
+        this.remoteobjectPage_connection_heartbeat_score = 0
+        this.remoteobjectPage_connection_heartbeat_max_score = 2
+        this.remoteobjectPage_connection_Active = false
+
 
 
         this.currentMessageTransactionGet = 0
@@ -494,7 +503,7 @@ class session_Class {
                     this.remotestreaming.STOP_RECORD()
                     this.facestreaming.STOP_RECORD()
                 }
-            }, this.connection_to_server_heartbeat_interval_time
+            }, this.connection_to_server_heartbeat_Interval_time
         )
     }
     INTERNALCONTROL_SIGNAL_connection_to_server_Heartbeat () {
@@ -1016,7 +1025,7 @@ class session_Class {
                         this.WorldPage_connection_Active = false
 
                     }
-                }, this.connection_to_server_heartbeat_interval_time
+                }, this.WorldPage_connection_heartbeat_Interval_time
             )
         }
     }
@@ -1216,9 +1225,45 @@ class session_Class {
     }
 
 
-    /////////////////////////////World Page////////////////////////////
-    /////////////////////////////World Page////////////////////////////
-    /////////////////////////////World Page////////////////////////////
+    ///////////////////////////RemoteOBJ Page///////////////////////////
+    ///////////////////////////RemoteOBJ Page///////////////////////////
+    ///////////////////////////RemoteOBJ Page///////////////////////////
+    ///////////////////////////RemoteOBJ Page///////////////////////////
+    ///////////////////////////RemoteOBJ Page///////////////////////////
+
+
+    SIGNAL_remoteobjectPageHeartbeat () {
+        this.remoteobjectPage_connection_heartbeat_score = this.remoteobjectPage_connection_heartbeat_max_score
+        if (this.remoteobjectPage_connection_Active === false) {
+            //this.FORUI_START_RENDER_WORLD()
+            this.remoteobjectPage_connection_heartbeat_Scheduler = setInterval(
+                () => {
+                    this.remoteobjectPage_connection_heartbeat_score--
+                    if (this.remoteobjectPage_connection_heartbeat_score <= 0) {
+                        clearInterval(this.remoteobjectPage_connection_heartbeat_Scheduler)
+                        this.remoteobjectPage_connection_heartbeat_Scheduler = null
+
+                        //do something
+                        this.remoteobjectPage_connection_Active = false
+                    }
+                }, this.remoteobjectPage_connection_heartbeat_Interval_time
+            )
+        }
+    }
+
+    FORUI_START_RENDER_SCREENFRAME () {
+
+    }
+
+    FORUI_STOP_RENDER_SCREENFRAME () {
+
+    }
+
+    ////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////
+
+
 
 
 
