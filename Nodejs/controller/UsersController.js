@@ -48,7 +48,7 @@ class OneActiveUserClass {
         this.heartbeatIntervalTime = 1000 //millisec
         this.heartbeatTimer = null
         this.heartbeatScore = 0
-        this.max_heartbeatScore = 6
+        this.max_heartbeatScore = 10
 
 
         this.requestQueue = []

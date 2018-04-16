@@ -8,7 +8,7 @@
 const chalk = require('chalk')
 const ndarray = require('ndarray')
 const CircularJSON = require('circular-json')
-
+const fs = require('fs')
 /////////////////////////////////////////////////////////////////////
 const MonitorSocketChannal_45000 = require('socket.io-client')('http://localhost:45000/monitor')
 //port 45000 Monitor Socket
@@ -172,6 +172,8 @@ class session_Class {
     constructor () {
         this.active_at_world_persistedID = ""
         this.active_at_object_persistedID = ""
+
+        this.active_at_world_name = "no-name"
         //this.active_at_object_objectowner = ""
         //this.active_at_object_type = ""
         this.object_owner_name = ""
@@ -203,8 +205,16 @@ class session_Class {
         this.connection_to_server_heartbeat_interval_time = 10000 //ms
         this.connection_to_server_heartbeat_score = 0
         this.connection_to_server_heartbeat_max_score = 2
-
         this.connection_to_server_active = false
+
+
+        this.WorldPage = ""
+        this.WorldPage_connection_heartbeat_Scheduler = null
+        this.WorldPage_connection_heartbeat_interval_time = 5000 //ms
+        this.WorldPage_connection_heartbeat_score = 0
+        this.WorldPage_connection_heartbeat_max_score = 2
+        this.WorldPage_connection_Active = false
+
 
         this.currentMessageTransactionGet = 0
         this.currentMessageTransactionSent = 0
@@ -272,9 +282,13 @@ class session_Class {
                                     .of('/remoteMon')
                                     .on('connection', (socket) => {
                                         console.log("peer connect to chat")
-                                        console.log(JSON.stringify(socket.handshake.headers, null, 4))
+                                        //console.log(JSON.stringify(socket.handshake.headers, null, 4))
                                         socket.on('disconnect', () => {
                                             console.log("user disconnect")
+                                        })
+                                        socket.on('pageheartbeat', (message) => {
+                                            //console.log(chalk.green("Signal.."))
+                                            this.PAGE_HEARTBEAT_MANAGER(message)
                                         })
                                     })
                                 console.log(chalk.green("Started listener"))
@@ -321,13 +335,32 @@ class session_Class {
         this.SCHEDULER_getFaces = null
         this.INTERVALTIME_getFaces = 100 //ms
 
+        this.SCHEDULER_getObject = null
+        this.INTERVALTIME_getObject = 2000 //ms
+
+        this.SCHEDULER_getFarUsers = null
+        this.INTERVALTIME_getFarUsers = 1000 //ms
+
+        this.SCHEDULER_WORLDUI_STATICDATA = null
+        this.INTERVALTIME_WORLDUI_STATICDATA = 5000 //ms
+
         this.SCHEDULER_getNearbyUser = null
         this.INTERVALTIME_getNearbyUser = 2000 //msec
         this.PREVALUE_getNearbyUser_BoundLengthX = 2
         this.PREVALUE_getNearbyUser_BoundLengthY = 2
 
         this.CurrentNearbyUserLists = []
+        this.CurrentNearbyUserLists_HASH = new Map()
+
         this.CONTROL_START_GETNEARBY_SCHEDULER()
+
+        this.usersMovement = false
+
+        //this is hot section, due to low time dev.
+
+        this.STATICRemoteObjectPic = fs.readFileSync(globalConfigs.testpath1.camtest+"RemoteObject.jpg")
+
+        //
 
     }
 
@@ -726,6 +759,14 @@ class session_Class {
                         console.log("user not loaded yet")
                         return false
                     }
+                    /*
+                    let users_not_near = new Map()
+                    for (let i of this.activeMember) {
+                        let j = i[1]
+                        users_not_near.set(j.name, j)
+                    }
+                    */
+                    this.CurrentNearbyUserLists_HASH = new Map()
                     let startboundX = Number(currentUser.positionX) - boundlengthX
                     let endboundX = Number(currentUser.positionX) + boundlengthX
                     let startboundY = Number(currentUser.positionY) - boundlengthY
@@ -740,6 +781,7 @@ class session_Class {
                                 if (data.maintype = "member") {
                                     //console.log(JSON.stringify(data, null, 4))
                                     nearbyUsers.push(data)
+                                    this.CurrentNearbyUserLists_HASH.set(data.name, data)
                                 }
                             }
                         }
@@ -894,6 +936,106 @@ class session_Class {
             users: arrayofusersfacebuffer
         })
     }
+    SENT_OBJECTSFRAME_SOCKETIO (arrayofobjectsbuffer) {
+        this.SocketIO_Listener_RemoteMonitor.volatile.emit('objects', {
+            type: "objects",
+            objects: arrayofobjectsbuffer
+        })
+    }
+    SENT_FARUSERSFRAME_SOCKETIO (arrayofusersbuffer) {
+        this.SocketIO_Listener_RemoteMonitor.volatile.emit('farusers', {
+            type: "farusers",
+            users: arrayofusersbuffer
+        })
+    }
+    SENT_STATICWORLDUI_SOCKETIO (data) {
+        this.SocketIO_Listener_RemoteMonitor.emit('staticdata', {
+            type: "staticdata",
+            data: data
+        })
+    }
+
+    /////////////////////////////Global Page////////////////////////////
+    /////////////////////////////Global Page////////////////////////////
+    /////////////////////////////Global Page////////////////////////////
+    /////////////////////////////Global Page////////////////////////////
+    /////////////////////////////Global Page////////////////////////////
+
+
+    PAGE_HEARTBEAT_MANAGER (message) {
+        if (!message) {
+            console.log(chalk.red("no message"))
+            return false
+        }
+        if (!(message.type)) {
+            console.log(chalk.red("message not support"))
+            return false
+        }
+        switch (message.type) {
+            case "signalH": {
+
+                switch (message.page) {
+                    case "world":
+                        this.SIGNAL_WorldPageHeartbeat()
+                        break
+                    default:
+                        console.log(chalk.yellow("page name not in category"))
+                        break
+                }
+                break
+            }
+
+            default:
+                console.log(chalk.yellow("type not in category"))
+                break
+        }
+
+    }
+
+
+
+
+    /////////////////////////////World Page////////////////////////////
+    /////////////////////////////World Page////////////////////////////
+    /////////////////////////////World Page////////////////////////////
+    /////////////////////////////World Page////////////////////////////
+    /////////////////////////////World Page////////////////////////////
+
+    SIGNAL_WorldPageHeartbeat () {
+        this.WorldPage_connection_heartbeat_score = this.WorldPage_connection_heartbeat_max_score
+        if (this.WorldPage_connection_Active === false) {
+            this.WorldPage_connection_Active = true
+            this.FORUI_START_RENDER_WORLD()
+            this.WorldPage_connection_heartbeat_Scheduler = setInterval(
+                () => {
+                    this.WorldPage_connection_heartbeat_score--
+                    if (this.WorldPage_connection_heartbeat_score <= 0) {
+                        clearInterval(this.WorldPage_connection_heartbeat_Scheduler)
+                        this.WorldPage_connection_heartbeat_Scheduler = null
+                        this.FORUI_STOP_RENDER_WORLD()
+                        this.WorldPage_connection_Active = false
+
+                    }
+                }, this.connection_to_server_heartbeat_interval_time
+            )
+        }
+    }
+
+    FORUI_START_RENDER_WORLD () {
+        console.log(chalk.green("START RENDER WORLD"))
+        this.FORUI_START_GETFACE()
+        this.FORUI_START_GETOBJECTS()
+        this.FORUI_START_GETFARUSERS()
+        this.FORUI_START_WORLDUI_STATICDATA()
+    }
+    FORUI_STOP_RENDER_WORLD () {
+        console.log(chalk.green("STOP RENDER WORLD"))
+        this.FORUI_STOP_GETFACE()
+        this.FORUI_STOP_GETOBJECTS()
+        this.FORUI_STOP_GETFARUSERS()
+        this.FORUI_STOP_WORLDUI_STATICDATA()
+    }
+
 
     FORUI_START_GETFACE () {
         if (this.SCHEDULER_getFaces) {
@@ -904,8 +1046,8 @@ class session_Class {
                 () => {
                     let arrayofusersface = []
 
-                    for (let i of this.activeMember) {
-                        i = i[1]
+                    for (let i of this.CurrentNearbyUserLists) {
+                        //i = i[1]
                         let framebuffer = this.CALL_FaceObject(i.name).GET_frame()
                         if (framebuffer) {
                             arrayofusersface.push({
@@ -937,6 +1079,7 @@ class session_Class {
             )
         }
     }
+
     FORUI_STOP_GETFACE () {
         if (this.SCHEDULER_getFaces) {
             console.log("stoping get face")
@@ -946,6 +1089,141 @@ class session_Class {
             console.log("get face already stop")
         }
     }
+
+    FORUI_START_GETOBJECTS () {
+        if (this.SCHEDULER_getObject) {
+            console.log("getObject scheduler already start")
+        } else {
+            console.log("starting getObject")
+            this.SCHEDULER_getObject = setInterval(
+                () => {
+                    let arrayofobjects = []
+
+                    for (let i of this.objectLink) {
+                        i = i[1]
+                        //let framebuffer = this.CALL_PicObject(i.name).GET_frame()
+                            arrayofobjects.push({
+                                //type: "member",
+                                objecttype: "screen",
+                                ownername: i.owner_name,
+                                ownerID: i.owner_ID,
+                                positionX: i.positionX,
+                                positionY: i.positionY,
+                                persistedID: i.persistedID,
+                                info: ""
+                            })
+                    }
+                    //console.log(chalk.green(arrayofobjects))
+                    this.SENT_OBJECTSFRAME_SOCKETIO(arrayofobjects)
+
+                },this.INTERVALTIME_getObject
+            )
+        }
+
+    }
+    FORUI_STOP_GETOBJECTS () {
+        if (this.SCHEDULER_getObject) {
+            console.log("stoping get object")
+            clearInterval(this.SCHEDULER_getObject)
+            this.SCHEDULER_getObject = null
+        } else {
+            console.log("get objects already stop")
+        }
+    }
+
+    FORUI_START_GETFARUSERS () {
+        if (this.SCHEDULER_getFarUsers) {
+            console.log("getFaces scheduler already start")
+        } else {
+            console.log("starting getFaces")
+            this.SCHEDULER_getFarUsers = setInterval(
+                () => {
+                    let arrayofusersface = []
+
+                    for (let i of this.activeMember) {
+                        i = i[1]
+                        //console.log(chalk.green("search with i.name : " + i.name))
+                        if (!this.CurrentNearbyUserLists_HASH.has(String(i.name))) {
+                            //console.log("not has.." + i.name)
+
+                                arrayofusersface.push({
+                                    //type: "member",
+                                    name: i.name,
+                                    positionX: i.positionX,
+                                    positionY: i.positionY,
+                                    persistedID: null,
+                                    framebuffer: i.staticfacebuffer,
+                                    info: ""
+                                })
+
+                        }
+                    }
+                    //console.log(chalk.green(arrayofusersface))
+                    /*
+                    for (let i of this.CurrentNearbyUserLists_HASH) {
+                        console.log(chalk.green(i))
+                    }
+                    console.log("----")
+                    */
+                    this.SENT_FARUSERSFRAME_SOCKETIO(arrayofusersface)
+
+                },this.INTERVALTIME_getFarUsers
+            )
+        }
+
+    }
+    FORUI_STOP_GETFARUSERS () {
+        if (this.SCHEDULER_getFarUsers) {
+            console.log("stoping get faruser")
+            clearInterval(this.SCHEDULER_getFarUsers)
+            this.SCHEDULER_getFarUsers = null
+        } else {
+            console.log("get faruser already stop")
+        }
+    }
+
+    FORUI_START_WORLDUI_STATICDATA () {
+        if (this.SCHEDULER_WORLDUI_STATICDATA) {
+            console.log("getObject scheduler already start")
+        } else {
+            console.log("starting scheduler")
+            this.SENT_STATICWORLDUI_SOCKETIO({
+                worldID: this.active_at_world_persistedID,
+                worldname: this.active_at_world_name,
+                static_pic_remote_object: this.STATICRemoteObjectPic
+            })
+
+            this.SCHEDULER_WORLDUI_STATICDATA = setInterval(
+                () => {
+                    this.SENT_STATICWORLDUI_SOCKETIO({
+                        worldID: this.active_at_world_persistedID,
+                        worldname: this.active_at_world_name,
+                        static_pic_remote_object: this.STATICRemoteObjectPic
+                    })
+
+                },this.INTERVALTIME_getObject
+            )
+        }
+    }
+    FORUI_STOP_WORLDUI_STATICDATA () {
+        if (this.SCHEDULER_WORLDUI_STATICDATA) {
+            console.log("stoping sent WORLDUI staticdata")
+            clearInterval(this.SCHEDULER_WORLDUI_STATICDATA)
+            this.SCHEDULER_WORLDUI_STATICDATA = null
+        } else {
+            console.log("WORLDUI staticdata stop already stop")
+        }
+    }
+
+
+    /////////////////////////////World Page////////////////////////////
+    /////////////////////////////World Page////////////////////////////
+    /////////////////////////////World Page////////////////////////////
+
+
+
+
+
 
     FORUI_START_FACESTREAMING () {
         let currentObject = globalSession.CALL_FaceObject(this.currentUser_name)

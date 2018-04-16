@@ -20,6 +20,8 @@ shots.screenshots(vid, 800).then( async (array_of_buffer) => {
     }
 })
 */
+
+
 let createPreFrame =  async (second, fps)=>{
     let allframe = second * fps
 

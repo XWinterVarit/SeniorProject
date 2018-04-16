@@ -12,6 +12,7 @@ const memoryFileSystem = require('memory-fs')
 const stream = require('stream')
 const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
 const shots = require('azulene-screenshots')
+const sharp = require('sharp')
 
 let converter
 let input
@@ -176,7 +177,6 @@ class GlobalStreamUtility {
 
     }
 }
-
 
 class DesktopRecorder_Class {
     constructor (sessionRef) {
@@ -729,7 +729,18 @@ class CameraRecorder_Class {
                             framepass = 0
                         }
                         let framebuffer = this.preload_dummy_framebuffer[framepass]
-                        let postprocess = await GlobalStreamUtility.JPEGCompress(framebuffer, framepass)
+                        let postprocess = await GlobalStreamUtility.JPEGCompress_FACE(framebuffer, framepass)
+
+                        await new Promise(resolve=>{
+                            sharp(postprocess)
+                                .extract({left: 70, top: 50, width:170, height:170})
+                                .toBuffer()
+                                .then((buffer)=>{
+                                    postprocess = buffer
+                                    return resolve()
+                                })
+                        })
+
                         await faceframeRef.SET_frame(postprocess, true)
                         working = false
 

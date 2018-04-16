@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<div>
+<div style="background-color: white; position: static; height: 2000px; width: 4000px" >
 </div>
 
 
@@ -22,94 +22,187 @@
 
 <script>
 
+    ////////////////////////////////////////////////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
 
     var remoteMon = io.connect('http://localhost:60001/remoteMon')
 
 
+    // SET REFRESH REDIRECT TO CLEAN CAHCE BROWSER MAKE
+    setTimeout(
+        ()=>{
+            //let loc = window.location.href; // or a new URL
+            window.location.href = 'http://localhost:50001/FacesDebug?n=' + new Date().getTime(); // random number
+        },20000
+    )
+
+    // EMIT HEARTBEAT SIGNAL TO CLIENT APP, TO CONFIRM STREAMING
+    setInterval(
+        () => {
+            remoteMon.emit('pageheartbeat',{
+                type: "signalH",
+                page: "world"
+            })
+        },2000
+    )
+
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+    document.body.addEventListener('click',(event)=>{
+        getMousePos(event)
+    }, true);
+
     function dynamicElements() {
-        for (let i = 1; i <= 10; i++) {
-            $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: solid; max-width: 150px;\">\n" +
-                "    <p id=\"t-slot"+i+"\" > pic "+i+" </p>\n" +
-                "        <img id=\"slot"+i+"\"style=\"max-height: 150px; max-width: 150px; min-height: 150px; min-width: 150px\">\n" +
+        for (let i = 1; i <= 20; i++) {
+            $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 150px;\">\n" +
+                "    <p id=\"t-slot"+i+"\" > pic n "+i+" </p>\n" +
+                "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px ;border-radius: 50%\">\n" +
                 "\n" +
                 "</div>")
         }
     }
+
+    function dynamicElements_object() {
+        for (let i = 101; i <= 120; i++) {
+            $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 100px;\">\n" +
+                "    <p id=\"t-slot"+i+"\" > object n "+i+" </p>\n" +
+                "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px \">\n" +
+                "\n" +
+                "</div>")
+        }
+    }
+
+    function dynamicElements_far_users() {
+        for (let i = 51; i <= 70; i++) {
+            $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 100px;\">\n" +
+                "    <p id=\"t-slot"+i+"\" > object n "+i+" </p>\n" +
+                "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px \">\n" +
+                "\n" +
+                "</div>")
+        }
+    }
+
     dynamicElements()
+    dynamicElements_object()
+    dynamicElements_far_users()
+
     let ElementManager = new Map()
-    function addElementVar () {
-        for (let i = 1; i <= 10; i++) {
+    function addElementVar (start, end) {
+        for (let i = start; i <= end; i++) {
             console.log("adding element variable num " + i)
             ElementManager.set("div"+i, document.getElementById('div'+i))
             ElementManager.set("info"+i, document.getElementById('t-slot'+i))
             ElementManager.set("pic"+i, document.getElementById('slot'+i))
         }
     }
-    addElementVar()
-    setTimeout(
-        ()=>{
-            let loc = window.location.href; // or a new URL
-            window.location.href = loc + '?n=' + new Date().getTime(); // random number
-        },10000
-    )
-/*
-    let div1 = document.getElementById('div1')
-    let info1 = document.getElementById('t-slot1')
-    let pic1 = document.getElementById("slot1")
 
-    let div2 = document.getElementById('div2')
-    let info2 = document.getElementById('t-slot2')
-    let pic2 = document.getElementById("slot2")
+    function addListener (start, end) {
+        for (let i = start; i <= end; i++) {
+            let pic = document.getElementById('slot'+i)
+            pic.addEventListener("click", ()=>{
+                if (!pic.dataset)
+                    return false
+                if (!pic.dataset.info)
+                    return false
+                let object = JSON.parse(pic.dataset.info)
+                console.log(object)
+            } )
+        }
+    }
 
-    let div3 = document.getElementById('div3')
-    let info3 = document.getElementById('t-slot3')
-    let pic3 = document.getElementById("slot3")
+    addElementVar(1,20)
+    addElementVar(101,120)
+    addElementVar(51,70)
 
-    let div4 = document.getElementById('div4')
-    let info4 = document.getElementById('t-slot4')
-    let pic4 = document.getElementById("slot4")
+    cleanelementRange(1,20)
+    cleanelementRange(101,120)
+    cleanelementRange(51,70)
 
-    let div5 = document.getElementById('div5')
-    let info5 = document.getElementById('t-slot5')
-    let pic5 = document.getElementById("slot5")
+    addListener(1,20)
+    addListener(101,120)
+    addListener(51,70)
 
-    let div6 = document.getElementById('div6')
-    let info6 = document.getElementById('t-slot6')
-    let pic6 = document.getElementById("slot6")
+    ////////////////////////////////////////////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
-    let div7 = document.getElementById('div7')
-    let info7 = document.getElementById('t-slot7')
-    let pic7 = document.getElementById("slot7")
+    let POST_CallSetObject = () => {
 
-    let div8 = document.getElementById('div8')
-    let info8 = document.getElementById('t-slot8')
-    let pic8 = document.getElementById("slot8")
+    }
 
-    let div9 = document.getElementById('div9')
-    let info9 = document.getElementById('t-slot9')
-    let pic9 = document.getElementById("slot9")
+    let POST_movePosition = (positionX, positionY) => {
+        let url = 'http://localhost:50001/CONTROL_MoveToPosition'
+        let data = {
+            positionX: positionX,
+            positionY: positionY
+        }
 
-    let div10 = document.getElementById('div10')
-    let info10 = document.getElementById('t-slot10')
-    let pic10 = document.getElementById("slot10")
-    */
-    //console.log("show before pic : " + pic)
+        fetch(url, {
+            method: 'POST', // or 'PUT'
+            body: JSON.stringify(data), // data can be `string` or {object}!
+            headers: new Headers({
+                'Content-Type': 'application/json'
+            })
+        }).then(res => res.json())
+            .catch(error => console.error('Error:', error))
+            .then(response => console.log('Success:', response));
+    }
 
-    let working = false
+
+    ////////////////////////////////////////////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////Static Data////////////////////////////////
+    /////////////////////////////Static Data////////////////////////////////
+
+    let worldname = ""
+    let worldID = ""
+
+    let staticRemoteObjectPicBuffer = null
+    let staticdataset = false
+
+    remoteMon.on('staticdata', (data) => {
+        //console.log(data)
+
+        if (!data) {
+            return console.log("static data not recieve yet")
+        }
+        if (!data.data.static_pic_remote_object) {
+            return console.log("static data not contain remoteobject pic buffer")
+        }
+        worldID = data.data.worldID
+        worldname = data.data.worldname
+        staticRemoteObjectPicBuffer = data.data.static_pic_remote_object
+        staticdataset = true
+    })
+
+    //////////////////////////////Near Face/////////////////////////////////
+    //////////////////////////////Near Face/////////////////////////////////
+
+    let face_working = false
     remoteMon.on('faces', function (data) {
-        if (working === true) {
+        if (face_working === true) {
             console.log("operation abort due to render is not completed")
             return false
         }
-        working = true
+        face_working = true
         document.getElementsByTagName("body")[0].style.display = "none";
 
         //console.log("get new data")
         let slotrunnumber = 1
-        for (let i = 1; i <= 10; i++) {
-            cleanelement(eval('div'+i))
-        }
+        cleanelementRange(1,20)
         //console.log(data)
         for (let i of data.users) {
             //console.log(i)
@@ -118,27 +211,117 @@
                 let img = i.framebuffer
                 //console.log('setting picture')
                 //onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
-                onBinaryMessage(img, ElementManager.get('pic'+slotrunnumber), ElementManager.get('div'+slotrunnumber), ElementManager.get('info'+slotrunnumber), i.positionX, i.positionY)
+                onBinaryMessage_User(img, ElementManager.get('pic'+slotrunnumber), ElementManager.get('div'+slotrunnumber), ElementManager.get('info'+slotrunnumber), i.positionX, i.positionY, {name: i.name})
             }
             slotrunnumber++
 
         }
         document.getElementsByTagName("body")[0].style.display = "block";
-        working = false
+        face_working = false
+    });
+
+    ///////////////////////////////Objects//////////////////////////////////
+    ///////////////////////////////Objects//////////////////////////////////
+
+    let object_working = false
+    remoteMon.on('objects', (data) => {
+        if (object_working === true) {
+            console.log("operation abort due to render is not completed")
+            return false
+        }
+        if (staticdataset === false) {
+            console.log("static data not set yet")
+            return false
+        }
+
+        object_working = true
+        document.getElementsByTagName("body")[0].style.display = "none";
+
+        //console.log("get new data")
+        let slotrunnumber = 101
+        cleanelementRange(101,120)
+
+        //console.log(data)
+        for (let i of data.objects) {
+            //console.log(i)
+
+                let img = staticRemoteObjectPicBuffer
+                //console.log('setting picture')
+                //onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
+                onBinaryMessage_Objects(img
+                    , ElementManager.get('pic'+slotrunnumber)
+                    , ElementManager.get('div'+slotrunnumber)
+                    , ElementManager.get('info'+slotrunnumber)
+                    , i.positionX
+                    , i.positionY
+                    , {
+                        objecttype: i.objecttype,
+                        ownername: i.ownername,
+                        ownerID: i.ownerID,
+                        persistedID: i.persistedID,
+                        info: ""
+                    })
+
+            slotrunnumber++
+
+        }
+        document.getElementsByTagName("body")[0].style.display = "block";
+        object_working = false
+
+    })
+
+
+    //////////////////////////////Far Users/////////////////////////////////
+    //////////////////////////////Far Users/////////////////////////////////
+
+    let farface_working = false
+    remoteMon.on('farusers', function (data) {
+        if (farface_working === true) {
+            console.log("operation abort due to render is not completed")
+            return false
+        }
+        farface_working = true
+        document.getElementsByTagName("body")[0].style.display = "none";
+
+        //console.log("get new data")
+        let slotrunnumber = 51
+        cleanelementRange(51,70)
+
+        //console.log(data)
+        for (let i of data.users) {
+            //console.log(i)
+
+            if (i.framebuffer) {
+                let img = i.framebuffer
+                //console.log('setting picture')
+                //onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
+                onBinaryMessage_User(img, ElementManager.get('pic'+slotrunnumber), ElementManager.get('div'+slotrunnumber), ElementManager.get('info'+slotrunnumber), i.positionX, i.positionY, {name: i.name})
+            }
+            slotrunnumber++
+
+        }
+        document.getElementsByTagName("body")[0].style.display = "block";
+        farface_working = false
     });
 
 
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
-    function onBinaryMessage(input, pic,div,info, posX, posY) {
+    function onBinaryMessage_User(input, pic,div,info, posX, posY, objectinfo) {
         //console.log("show after pic : " + pic)
 
         let blob = new Blob([input], {type: 'image/png'});
         let url = URL.createObjectURL(blob);
         //console.log("url is " + url)
         pic.src = url
-        div.style.left = posX*150 + 'px'
-        div.style.top = posY*150 + 'px'
 
+        div.style.left = posX*100 + 'px'
+        div.style.top = posY*100 + 'px'
+        info.innerHTML = objectinfo.name
         //console.log('render div at left :' + posX*100 + ' at top :' + posY*100)
         blob = null
         url = null
@@ -154,9 +337,62 @@
         img.src = url;
         */
     }
+
+    function onBinaryMessage_Objects(input, pic,div,info, posX, posY, objectinfo) {
+        let blob = new Blob([input], {type: 'image/png'});
+        let url = URL.createObjectURL(blob);
+        //console.log("url is " + url)
+        pic.src = url
+
+        pic.dataset.info = JSON.stringify(objectinfo)
+
+        div.style.left = posX*100 + 'px'
+        div.style.top = posY*100 + 'px'
+        info.innerHTML = objectinfo.objecttype + " : " + objectinfo.ownername
+
+        //console.log('render div at left :' + posX*100 + ' at top :' + posY*100)
+        blob = null
+        url = null
+    }
+
+
+
+
+
     function cleanelement (div) {
         div.style.left = -400 + "px"
         div.style.top = -400+ "px"
+    }
+    function cleanlistener (pic) {
+        pic.removeEventListener("click", ()=>{
+
+        }, true)
+        pic.removeEventListener("click", ()=>{
+
+        }, false)
+    }
+
+    function cleanelementRange (start, end) {
+        for (let i = start; i <= end; i++) {
+            cleanelement(eval('div'+i))
+        }
+    }
+
+    function cleanlistenerRange (start, end) {
+        for (let i = start; i <= end; i++) {
+            cleanlistener(eval('slot'+i))
+        }
+    }
+
+    function getMousePos(event) {
+        var x = event.clientX;     // Get the horizontal coordinate
+        var y = event.clientY;     // Get the vertical coordinate
+        var coor = "X coords: " + x + ", Y coords: " + y;
+        console.log(coor)
+        let coorposX = Math.floor(Number(x)/100)
+        let coorposY = Math.floor(Number(y)/100)
+        console.log("pos coord  x: " + coorposX + "  y : " + coorposY)
+        POST_movePosition(coorposX, coorposY)
     }
 </script>
 </body>
