@@ -13,6 +13,9 @@ const CircularJSON = require('circular-json')
 const multer = require('multer')
 const uploadService = multer({storage: multer.memoryStorage()})
 const fs = require('fs')
+var iconv = require('iconv-lite');
+
+
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -394,4 +397,28 @@ router.post('/testAvatar', async (req, res, next) => {
     res.end()
 })
 
+router.post('/pythontest', uploadService.single('file'), (req, res, next) => {
+    if (!req.file) {
+        console.log("file not found")
+        return false
+    }
+    if (!req.file.buffer) {
+        console.log("buffer not found")
+        return false
+    }
+    console.log("python buffer length : " + req.file.buffer.length)
+    // Convert from an encoded buffer to js string.
+  /*
+    let str = iconv.decode(req.file.buffer, 'ISO-8859');
+    str = Buffer.from(str)
+    console.log("after encode buffer length : " + str.length)
+*/
+  /*
+    fs.writeFile("./well.jpg", req.file.buffer, ()=>{
+        console.log("completed")
+    })
+*/
+    sessionController.globalSession.SIGNAL_OPENCV_FACE_RECORD(req.file.buffer)
+    res.end()
+})
 module.exports = router;

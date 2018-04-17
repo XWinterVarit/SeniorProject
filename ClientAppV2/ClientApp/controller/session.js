@@ -1267,7 +1267,10 @@ class session_Class {
 
 
 
-
+    SIGNAL_OPENCV_FACE_RECORD (framebuffer) {
+        let currentObject = globalSession.CALL_FaceObject(this.currentUser_name)
+        this.facestreaming.SIGNAL_RECORD_OPENCV(currentObject, framebuffer)
+    }
 
 
     FORUI_START_FACESTREAMING () {

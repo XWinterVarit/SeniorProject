@@ -21,6 +21,7 @@
     "ffmpeg-stream": "^0.5.0",
     "fluent-ffmpeg": "^2.1.2",
     "form-data": "^2.3.2",
+    "iconv-lite": "^0.4.21",
     "imagesnap": "0.0.0",
     "matrix-hash": "^0.1.0",
     "memory-fs": "^0.4.1",
@@ -40,6 +41,7 @@
     "socket.io-client": "^2.0.4",
     "svg.js": "^2.6.4",
     "terminal-kit": "^1.14.3",
+    "text-encoding": "^0.6.4",
     "webcam.js": "^1.0.1"
   }
 }

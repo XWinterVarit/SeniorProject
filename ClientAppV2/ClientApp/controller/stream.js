@@ -504,6 +504,8 @@ class CameraRecorder_Class {
 
         this.intervalTaken = null
 
+        this.OPENCV_USE = true
+
         this.useDummyFaces = true
 
         this.preload_dummy_framebuffer = []
@@ -515,6 +517,7 @@ class CameraRecorder_Class {
         }
 
         this.Preload_FrameBuffer()
+
     }
 
     Preload_FrameBuffer () {
@@ -535,26 +538,77 @@ class CameraRecorder_Class {
     }
 
     START_RECORD (faceframeRef) {
-        if (this.useDummyFaces) {
-            this.START_RECORD_DUMMY_WITH_PRELOAD_FRAME(faceframeRef)
+        if (this.OPENCV_USE === true) {
+            this.START_RECORD_OPENCV()
         } else {
-            this.START_RECORD_MAC(faceframeRef)
+            if (this.useDummyFaces) {
+                this.START_RECORD_DUMMY_WITH_PRELOAD_FRAME(faceframeRef)
+            } else {
+                this.START_RECORD_MAC(faceframeRef)
+            }
         }
+
     }
     STOP_RECORD () {
-        if (this.intervalTaken) {
-            clearInterval(this.intervalTaken)
+        if (this.OPENCV_USE === true) {
             this.intervalTaken = null
-            console.log("stop completed")
+            console.log(chalk.green("STOP OPENCV CAM RECORD"))
+
         } else {
-            console.log("already stoped")
+            if (this.intervalTaken) {
+                clearInterval(this.intervalTaken)
+                this.intervalTaken = null
+                console.log("stop completed")
+            } else {
+                console.log("already stoped")
+            }
         }
+
+
+
+
     }
+    START_RECORD_OPENCV (faceframeRef) {
+        if (this.intervalTaken != null) {
+            console.log("already start")
+            return false
+        }
+        console.log(chalk.green("START OPENCV CAM RECORD"))
+        this.intervalTaken = "Taken by OPENCV"
+
+    }
+    async SIGNAL_RECORD_OPENCV (faceframeRef, framebuffer) {
+        if (this.OPENCV_USE === false) {
+            console.log(chalk.red("OpenCV not set to use"))
+        }
+        if (this.intervalTaken == null) {
+            console.log(chalk.red("Record opencv not start"))
+            return false
+        }
+
+        let preframebuffer = framebuffer
+        let postprocess = await GlobalStreamUtility.JPEGCompress_FACE(preframebuffer)
+        /*
+        await new Promise(resolve=>{
+            sharp(postprocess)
+                .extract({left: 70, top: 50, width:170, height:170})
+                .toBuffer()
+                .then((buffer)=>{
+                    postprocess = buffer
+                    return resolve()
+                })
+        })
+        */
+
+        await faceframeRef.SET_frame(postprocess, true)
+    }
+
     START_RECORD_MAC (faceframeRef) {
         if (this.intervalTaken != null) {
             console.log("already start")
             return false
         }
+        console.log(chalk.green("START MAC CAM RECORD"))
 
         this.intervalTaken = "starting.."
 
@@ -685,6 +739,7 @@ class CameraRecorder_Class {
     }
 
     START_RECORD_DUMMY_WITH_PRELOAD_FRAME (faceframeRef) {
+        console.log(chalk.green("START DD PREREC CAM RECORD"))
 
         if (this.intervalTaken != null) {
             console.log("already start")
