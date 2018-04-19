@@ -91,7 +91,7 @@ class messagesTemplates {
             PORT: PORT
         }
     }
-    static CRAFT_one_object (subtype, persistedID, owner_name, posX, posY, owner_ID) {
+    static CRAFT_one_object (subtype, persistedID, owner_name, posX, posY, owner_ID, realobjectID) {
         return {
             type: "object",
             subtype: subtype,
@@ -99,7 +99,8 @@ class messagesTemplates {
             owner_name: owner_name,
             owner_ID: owner_ID,
             positionX: posX,
-            positionY: posY
+            positionY: posY,
+            realobjectID: realobjectID
         }
     }
 

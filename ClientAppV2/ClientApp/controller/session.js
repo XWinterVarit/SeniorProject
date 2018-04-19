@@ -120,9 +120,10 @@ class objectLink_Class {
         this.persistedID = persistedID
         this.owner_name = owner_name
         this.owner_ID = owner_ID
-        this.type = ""
+        this.type = type
         this.positionX = 0
         this.positionY = 0
+        this.realobjectID = optionals.realobjectID
         if (optionals) {
             if (optionals.positionX) {
                 this.positionX = optionals.positionX
@@ -197,6 +198,9 @@ class session_Class {
 
         this.activeMember = new Map()
         this.objectLink = new Map()
+        this.ObjectQuickInfo_RealID = new toolsController.ObjectQuickInfo_RealID_Class()
+
+
 
         this.heartbeatScheduler = null
         this.heartbeatIntervalTime = 5000 //ms
@@ -222,7 +226,8 @@ class session_Class {
         this.remoteobjectPage_connection_heartbeat_score = 0
         this.remoteobjectPage_connection_heartbeat_max_score = 2
         this.remoteobjectPage_connection_Active = false
-
+        this.SCHEDULER_remoteobjectPage_getframe = null
+        this.SCHEDULER_remoteobjectPage_getframe_Interval_time = 500 //ms
 
 
         this.currentMessageTransactionGet = 0
@@ -410,6 +415,7 @@ class session_Class {
         this.remotestreaming.SET_UserInfo(persistedID, name)
         console.log(chalk.cyanBright(`SET CURRENT USER TO ID : ${persistedID} name : ${name}`))
     }
+
     SET_CurrentWorld (persistedID) {
         if (this.logined === false) {
             console.log(chalk.red("can't set world, due to not login yet"))
@@ -746,11 +752,22 @@ class session_Class {
     }
 
     CONTROL_START_BroadcastScreen () {
-        let currentObject = globalSession.CALL_RemoteObject(this.remoteObjectID, this.currentUser_persistedID, this.currentUser_name)
-        this.remotestreaming.START_RECORD(currentObject)
+        try {
+            let currentObject = globalSession.CALL_RemoteObject(this.remoteObjectID, this.currentUser_persistedID, this.currentUser_name)
+            this.remotestreaming.START_RECORD(currentObject)
+        } catch (e) {
+            console.log("module not start yet")
+            console.log(chalk.red(e))
+        }
+
     }
     CONTROL_STOP_BroadcastScreen () {
-        this.remotestreaming.STOP_RECORD()
+        try {
+            this.remotestreaming.STOP_RECORD()
+        } catch (e) {
+            console.log("module not start yet")
+            console.log(chalk.red(e))
+        }
     }
 
     CONTROL_START_GETNEARBY_SCHEDULER () {
@@ -884,7 +901,7 @@ class session_Class {
 
         for (let i of this.objectLink) {
             let j = i[1]
-            messages += `{ persistedID :${j.persistedID} owner_name :${j.owner_name} posX :${j.positionX} posY:${j.positionY} } `
+            messages += `{ realpersistedID :${j.realobjectID} owner_name :${j.owner_name} posX :${j.positionX} posY:${j.positionY} } `
         }
         messages += "\n"
 
@@ -963,7 +980,15 @@ class session_Class {
             data: data
         })
     }
-
+    SENT_REMOTEOBJECT_FRAME (framebuffer, objectID, ownerID, ownername) {
+        this.SocketIO_Listener_RemoteMonitor.volatile.emit('remoteui_frame', {
+            type: "frame",
+            framebuffer: framebuffer,
+            objectID: objectID,
+            ownerID: ownerID,
+            ownername: ownername
+        })
+    }
     /////////////////////////////Global Page////////////////////////////
     /////////////////////////////Global Page////////////////////////////
     /////////////////////////////Global Page////////////////////////////
@@ -986,6 +1011,9 @@ class session_Class {
                 switch (message.page) {
                     case "world":
                         this.SIGNAL_WorldPageHeartbeat()
+                        break
+                    case "remote":
+                        this.SIGNAL_remoteobjectPageHeartbeat()
                         break
                     default:
                         console.log(chalk.yellow("page name not in category"))
@@ -1233,31 +1261,132 @@ class session_Class {
 
 
     SIGNAL_remoteobjectPageHeartbeat () {
+        console.log(chalk.green("signal remote page"))
         this.remoteobjectPage_connection_heartbeat_score = this.remoteobjectPage_connection_heartbeat_max_score
         if (this.remoteobjectPage_connection_Active === false) {
-            //this.FORUI_START_RENDER_WORLD()
+            //starting something
+            this.remoteobjectPage_connection_Active = true
+            console.log(chalk.green("starting remoteobjectPageService"))
+            this.FORUI_START_RENDER_SCREENFRAME()
+
             this.remoteobjectPage_connection_heartbeat_Scheduler = setInterval(
                 () => {
                     this.remoteobjectPage_connection_heartbeat_score--
                     if (this.remoteobjectPage_connection_heartbeat_score <= 0) {
+                        console.log(chalk.green("remoteobjectPage disconnected, Stoping services"))
                         clearInterval(this.remoteobjectPage_connection_heartbeat_Scheduler)
                         this.remoteobjectPage_connection_heartbeat_Scheduler = null
 
-                        //do something
+                        //ending something
+                        this.FORUI_STOP_RENDER_SCREENFRAME()
+
                         this.remoteobjectPage_connection_Active = false
                     }
                 }, this.remoteobjectPage_connection_heartbeat_Interval_time
             )
+        } else {
+            console.log("debug 1")
+        }
+    }
+    FORCE_STOP_remoteobjectHeartbeat () {
+        console.log("forcestopcall")
+        if (this.remoteobjectPage_connection_Active === false) {
+            console.log("already stopped")
+            console.log(this.remoteobjectPage_connection_Active)
+        } else {
+            console.log(chalk.bold("force Stoping remoteobjectPage services"))
+            this.remoteobjectPage_connection_Active = false
+            clearInterval(this.remoteobjectPage_connection_heartbeat_Scheduler)
+            this.remoteobjectPage_connection_heartbeat_Scheduler = null
+            this.FORUI_STOP_RENDER_SCREENFRAME()
         }
     }
 
     FORUI_START_RENDER_SCREENFRAME () {
-
+        this.FORUI_START_GET_REMOTEFRAME()
+        if (this.object_owner_name === this.currentUser_name) {
+            console.log(chalk.green("start stream by remote object page"))
+            this.CONTROL_START_BroadcastScreen()
+        }
     }
 
     FORUI_STOP_RENDER_SCREENFRAME () {
+        this.FORUI_STOP_GET_REMOTEFRAME()
+        if (this.object_owner_name === this.currentUser_name) {
+            let remoteObject = this.CALL_RemoteObject(this.active_at_object_persistedID, this.object_owner_ID, this.object_owner_name)
+            let peerslength = remoteObject.GET_RedirectTaskController().GET_PEERS_LENGTH()
+            if (peerslength === 0) {
+                console.log(chalk.green("stop stream by remote object page"))
+                this.CONTROL_STOP_BroadcastScreen()
+            }
+        }
+    }
+
+    FORUI_START_GET_REMOTEFRAME () {
+
+        if (this.SCHEDULER_remoteobjectPage_getframe) {
+            console.log(chalk.yellow("get remote frame already start"))
+        } else {
+            console.log(chalk.green("starting get remote frame objectID : " + this.active_at_object_persistedID))
+            let objectID = this.active_at_object_persistedID
+
+  /*
+            let objectLink = this.objectLink.get(objectID)
+            if (!objectLink) {
+                console.log(chalk.red("this remote object is not in this world"))
+                return this.FORCE_STOP_remoteobjectHeartbeat()
+            }
+            if (!objectLink[1]) {
+                console.log("strange error: no element after get from objectlink hash")
+                return this.FORCE_STOP_remoteobjectHeartbeat()
+            }
+            objectLink = objectLink[1]
+            if (objectLink.type !== "remote") {
+                console.log("not remote object. Ignore render")
+                return this.FORCE_STOP_remoteobjectHeartbeat()
+            }
+*/
+            // important data cache
+            let activeobjectID = this.active_at_object_persistedID
+            //let ownerID = objectLink.owner_ID
+            //let ownername = objectLink.owner_name
+            let type = "remote"
+
+            let RemoteObject = this.CALL_RemoteObject(this.active_at_object_persistedID, this.object_owner_ID, this.object_owner_name)
+            if (!RemoteObject) {
+                console.log(chalk.red("strange error: remote object is not generate"))
+                return this.FORCE_STOP_remoteobjectHeartbeat()
+            }
+
+            this.SCHEDULER_remoteobjectPage_getframe = setInterval(
+                () => {
+                    if (this.active_at_object_persistedID !== activeobjectID) {
+                        console.log(chalk.yellow("object changed, restarting scheduling"))
+                        return this.FORCE_STOP_remoteobjectHeartbeat()
+                    }
+                    let framebuffer = RemoteObject.RemoteDesktopFrameBuffer.GET_frame()
+                    if (!framebuffer) {
+                        console.log("no framebuffer yet")
+                    } else {
+                        this.SENT_REMOTEOBJECT_FRAME(framebuffer, objectID,  this.object_owner_ID, this.object_owner_name)
+                    }
+                }, this.SCHEDULER_remoteobjectPage_getframe_Interval_time
+            )
+
+        }
 
     }
+    FORUI_STOP_GET_REMOTEFRAME(){
+        if (this.SCHEDULER_remoteobjectPage_getframe) {
+            console.log(chalk.green("stoping get remote frame"))
+            clearInterval(this.SCHEDULER_remoteobjectPage_getframe)
+            this.SCHEDULER_remoteobjectPage_getframe = null
+        } else {
+            console.log(chalk.yellow("get frame already stopped"))
+        }
+    }
+
+
 
     ////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////
@@ -1324,8 +1453,9 @@ class session_Class {
         }
         if (!currentObject) {
             console.log("no object found in memory")
-            currentObject = new objectLink_Class(persistedID, owner_name, type, {positionX: others.positionX, positionY: others.positionY}, owner_ID)
+            currentObject = new objectLink_Class(persistedID, owner_name, type, {positionX: others.positionX, positionY: others.positionY, realobjectID: others.realobjectID}, owner_ID)
             this.objectLink.set(persistedID, currentObject)
+            //this.ObjectQuickInfo_RealID.ADD_object(persistedID, {realobjectID: others.realobjectID})
             this.setPosition_inMatrix(others.positionX, others.positionY, currentObject)
         } else {
             console.log("object already in memory")

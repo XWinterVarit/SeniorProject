@@ -601,7 +601,7 @@ class OneActiveWorldClass {
         for (let i of this.ObjectLinks) {
             let j = i[1]
             //console.log(chalk.yellow(JSON.stringify(i,null, 4)))
-            let newlist = messagesController.messagesTemplates.CRAFT_one_object(j.subtype, j.persistedID, j.owner_name, j.positionX, j.positionY, j.owner_persistedID)
+            let newlist = messagesController.messagesTemplates.CRAFT_one_object(j.subtype, j.persistedID, j.owner_name, j.positionX, j.positionY, j.owner_persistedID, j.object_persistedID)
             previouslist.push(newlist)
         }
         //console.log(chalk.yellow(JSON.stringify(previouslist, null, 4)))

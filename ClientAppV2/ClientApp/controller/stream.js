@@ -186,7 +186,7 @@ class DesktopRecorder_Class {
         this.fpscap = 10
         this.sessionRef = sessionRef
 
-        this.useDummyScreen = true
+        this.useDummyScreen = false
         this.dummyFileName = "screendummy.mp4" //nolonger use
 
         this.preload_dummy_framebuffer = []
@@ -245,6 +245,7 @@ class DesktopRecorder_Class {
             return false
         }
         this.intervalTaken = "starting.."
+        this.stopsignal = false
         let times = 1000/this.fpscap
         console.log("time per frame is : " + times)
 
@@ -331,6 +332,8 @@ class DesktopRecorder_Class {
             return false
         }
         this.intervalTaken = "starting.."
+        this.stopsignal = false
+
         let times = 1000/this.fpscap
         console.log("time per frame is : " + times)
 
@@ -424,6 +427,8 @@ class DesktopRecorder_Class {
             return false
         }
         this.intervalTaken = "starting.."
+        this.stopsignal = false
+
         let times = 1000/this.fpscap
         console.log("Starting screenshot taking...")
         console.log("time per frame is : " + times)
@@ -493,6 +498,9 @@ class DesktopRecorder_Class {
     STOP_RECORD () {
         console.log(chalk.green("The screen recorder is now stopped"))
         this.stopsignal = true
+    }
+    BrowserStream_STOP_RECORRD () { // speacial for remote object page
+
     }
 }
 
@@ -835,9 +843,10 @@ class RemoteDesktopFrameBuffer_Class {
 
         this.framenumber = 0
         this.timestamp = ""
+        this.maximum_time_allow_get_frame = 3000 //ms
         this.framebuffer = null
 
-        this.debugFrame = true
+        this.debugFrame = false
         this.redirecttodisplay = false
 
 
@@ -886,10 +895,11 @@ class RemoteDesktopFrameBuffer_Class {
                 console.log('emit to websocket')
                 this.sessionRef.MONITOR_REMOTEFRAME_SOCKETIO(framebuffer, framenumber, timestamp)
             }
+  /*
             if (this.redirecttodisplay === true) {
                 this.sessionRef.FORUI_DISPLAY_VIA_SOCKETIO(framebuffer)
             }
-
+*/
             this.lock = false
 
 
@@ -901,10 +911,13 @@ class RemoteDesktopFrameBuffer_Class {
         }
     }
     GET_frame () {
-        return {
-            framebuffer : this.framebuffer,
-            framenumber : this.framenumber
+        let now_timestamp = Date.now()
+        if (now_timestamp - this.timestamp < this.maximum_time_allow_get_frame) {
+            return this.framebuffer
+        } else {
+            return null
         }
+
     }
 }
 
@@ -924,7 +937,9 @@ class RemoteDesktopRedirectTask {
     REFRESH_PEERS (peers) {
         this.peers = peers
     }
-
+    GET_PEERS_LENGTH () {
+        return this.peers.length
+    }
     STOP_send() {
 
     }

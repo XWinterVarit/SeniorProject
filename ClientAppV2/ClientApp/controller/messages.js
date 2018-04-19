@@ -495,7 +495,7 @@ class messagesGlobalMethods {
                         break
                     case "object":
                         //console.log("IGNORE object")
-                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY})
+                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY, realobjectID: i.realobjectID})
                         break
                 }
             }
@@ -516,7 +516,7 @@ class messagesGlobalMethods {
                         break
                     case "object":
                         //console.log("IGNORE object")
-                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY})
+                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY, realobjectID: i.realobjectID})
                         break
                 }
             }
@@ -555,8 +555,6 @@ class messagesGlobalMethods {
     }
 
 
-
-
     static updateRemoteP2PTask (req) {
         console.log(chalk.yellow(JSON.stringify(req.body, null, 4)))
         if (!sessionController.globalSession.CHECK_RequestRemoteTask(req.body.taskedclientname, req.body.taskedclientID, req.body.objectID, req.body.objectownername,req.body.objectownerID)) {
@@ -565,6 +563,13 @@ class messagesGlobalMethods {
         }
         let currentObject = sessionController.globalSession.CALL_RemoteObject(req.body.objectID, req.body.objectownerID, req.body.objectownername)
         currentObject.RemoteDesktopRedirectTask.REFRESH_PEERS(req.body.destclient)
+        if (req.body.objectownername === sessionController.globalSession.currentUser_name) {
+            if (req.body.destclient.length === 0) {
+                sessionController.globalSession.CONTROL_STOP_BroadcastScreen()
+            } else {
+                sessionController.globalSession.CONTROL_START_BroadcastScreen()
+            }
+        }
     }
     static updateRemoteFrame_HTTP (req) {
         let headerdata = JSON.parse(req.body.headerdata)

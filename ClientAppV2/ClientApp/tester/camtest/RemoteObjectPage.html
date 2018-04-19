@@ -18,35 +18,87 @@
         crossorigin="anonymous"></script>
 <script>
 
-
     console.log("start script")
-    $( "#init" ).click(function() {
-        let port = $("#port").val()
-        var remoteMon = io.connect('http://localhost:'+port+'/remoteMon')
+    let activeAtObject = ""
 
-        let pic = document.getElementById("remoteimg")
-        //console.log("show before pic : " + pic)
-        remoteMon.on('remote_debug', function (data) {
-            //console.log(data)
-            if (data.buffer) {
-                let img = data.buffer
-                /*
-                var c = document.getElementById("myCanvas");
-                var ctx = c.getContext("2d");
-                ctx.clearRect(0, 0, c.width, c.height);
-                ctx.beginPath();
-                */
-                onBinaryMessage(img, pic)
-            }
-        });
 
+    ////////////////////////////////////////////////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+    let port = 60001
+    var remoteMon = io.connect('http://localhost:'+port+'/remoteMon')
+
+    // SET REFRESH REDIRECT TO CLEAN CAHCE BROWSER MAKE
+    setTimeout(
+        ()=>{
+            //let loc = window.location.href; // or a new URL
+            window.location.href = 'http://localhost:50001/FacesDebug?n=' + new Date().getTime(); // random number
+        },20000
+    )
+
+
+    setInterval(
+        () => {
+            remoteMon.emit('pageheartbeat',{
+                type: "signalH",
+                page: "remote"
+            })
+        },2000
+    )
+
+    ////////////////////////////////////////////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////Remote Frame///////////////////////////////
+    /////////////////////////////Remote Frame///////////////////////////////
+
+
+    let pic = document.getElementById("remoteimg")
+    //console.log("show before pic : " + pic)
+    remoteMon.on('remoteui_frame', function (data) {
+        //console.log(data)
+        if (data.framebuffer) {
+            let img = data.framebuffer
+            /*
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+            ctx.clearRect(0, 0, c.width, c.height);
+            ctx.beginPath();
+            */
+            onBinaryMessage(img, pic)
+        }
     });
 
+
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
 
     function onBinaryMessage(input, pic) {
         //console.log("show after pic : " + pic)
 
-        var blob = new Blob([input], {type: 'image/png'});
+        var blob = new Blob([input], {type: 'image/jpg'});
         var url = URL.createObjectURL(blob);
         //console.log("url is " + url)
         pic.src = url
@@ -61,6 +113,8 @@
         img.src = url;
         */
     }
+
+
 </script>
 </body>
 </html>

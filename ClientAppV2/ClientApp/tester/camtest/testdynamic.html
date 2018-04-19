@@ -103,19 +103,21 @@
         }
     }
 
-    function addListener (start, end) {
+    function addListenerToRemoteObject  (start, end) {
         for (let i = start; i <= end; i++) {
             let pic = document.getElementById('slot'+i)
-            pic.addEventListener("click", ()=>{
+            pic.addEventListener("click", async ()=>{
                 if (!pic.dataset)
                     return false
                 if (!pic.dataset.info)
                     return false
                 let object = JSON.parse(pic.dataset.info)
-                console.log(object)
+                await POST_CallSetObject(object.persistedID, object.ownername, object.ownerID)
+                //console.log(object)
             } )
         }
     }
+
 
     addElementVar(1,20)
     addElementVar(101,120)
@@ -125,9 +127,9 @@
     cleanelementRange(101,120)
     cleanelementRange(51,70)
 
-    addListener(1,20)
-    addListener(101,120)
-    addListener(51,70)
+    //addListener(1,20)
+    addListenerToRemoteObject(101,120)
+    //addListener(51,70)
 
     ////////////////////////////////////////////////////////////////////////
     //////////////////////////////API CALLER////////////////////////////////
@@ -135,7 +137,35 @@
     //////////////////////////////API CALLER////////////////////////////////
     ////////////////////////////////////////////////////////////////////////
 
-    let POST_CallSetObject = () => {
+    let POST_CallSetObject = async (objectID, ownername, ownerID) => {
+        let url = 'http://localhost:50001/FORUI_SETOBJECT'
+        let data = {
+            objectID: objectID, // link ID not real ID
+            ownername: ownername,
+            objecttype: "remote",
+            ownerID: ownerID
+        }
+
+        await new Promise(resolve=>{
+            fetch(url, {
+                method: 'POST', // or 'PUT'
+                body: JSON.stringify(data), // data can be `string` or {object}!
+                headers: new Headers({
+                    'Content-Type': 'application/json'
+                })
+            }).then(res => {
+                res.json()
+                return resolve()
+            })
+                .catch(error => {
+                    console.error('Error:', error)
+                    return resolve()
+                })
+                .then(response => {
+                    console.log('Success:', response)
+                    return resolve()
+                });
+        })
 
     }
 
@@ -354,10 +384,6 @@
         blob = null
         url = null
     }
-
-
-
-
 
     function cleanelement (div) {
         div.style.left = -400 + "px"
