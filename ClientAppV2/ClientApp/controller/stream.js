@@ -183,7 +183,7 @@ class DesktopRecorder_Class {
         console.log("DesktopRecorder_Initialize")
         this.intervalTaken = null
         this.stopsignal = false
-        this.fpscap = 10
+        this.fpscap = 1
         this.sessionRef = sessionRef
 
         this.useDummyScreen = false
@@ -512,7 +512,7 @@ class CameraRecorder_Class {
 
         this.intervalTaken = null
 
-        this.OPENCV_USE = true
+        this.OPENCV_USE = false
 
         this.useDummyFaces = true
 
@@ -891,10 +891,12 @@ class RemoteDesktopFrameBuffer_Class {
             this.framebuffer = framebuffer
             this.framenumber = framenumber
             this.timestamp = timestamp
+            /*
             if (this.debugFrame === true) {
                 console.log('emit to websocket')
                 this.sessionRef.MONITOR_REMOTEFRAME_SOCKETIO(framebuffer, framenumber, timestamp)
             }
+            */
   /*
             if (this.redirecttodisplay === true) {
                 this.sessionRef.FORUI_DISPLAY_VIA_SOCKETIO(framebuffer)
@@ -987,6 +989,7 @@ class RemoteDesktopRedirectTask {
                 //console.log(messagesController.ClientPathTemplated)
                 //console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
                 //messagesController.messagesGlobalMethods.requireTest()
+                console.log(chalk.yellow(`Special debug for stream sending system | name : ${name} objectID : ${this.object_persistedID} framenumber : ${frameNumber} ownerID : ${this.ownerID} ownername : ${this.ownerName} \n timestamp : ${timeStamp}`))
 
                 await messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer(IP,PORT
                     , messagesController.ClientPathTempleted.clientHTTPFrameUpdate

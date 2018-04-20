@@ -5,10 +5,7 @@
 </head>
 <body>
 
-<h1>This is a Welll</h1>
-<p>This is a paragraph.</p>
-<input type="text" id="port">
-<button type="button" id="init">Init!</button>
+<button id="back" style="width: 60px; height: 20px">back</button>
 <img id="remoteimg">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
@@ -27,15 +24,28 @@
     ///////////////////////////SOCKET IO SETUP//////////////////////////////
     ///////////////////////////SOCKET IO SETUP//////////////////////////////
     ////////////////////////////////////////////////////////////////////////
+    let nowref = String(window.location.href)
+    let coloncount = 0
+    let port = ""
+    for (let i = 0; i < 20; i++) {
+        if (nowref[i] === ":") {
+            coloncount++
+        }
+        if (coloncount === 2) {
+            port = nowref.substring(i+1, i+6)
+            console.log(port)
+            break
+        }
+    }
 
-    let port = 60001
-    var remoteMon = io.connect('http://localhost:'+port+'/remoteMon')
+
+    var remoteMon = io.connect('http://localhost:'+(Number(port)+10000)+'/remoteMon')
 
     // SET REFRESH REDIRECT TO CLEAN CAHCE BROWSER MAKE
     setTimeout(
         ()=>{
             //let loc = window.location.href; // or a new URL
-            window.location.href = 'http://localhost:50001/FacesDebug?n=' + new Date().getTime(); // random number
+            window.location.href = 'http://localhost:'+port+'/remoteobjpage?n=' + new Date().getTime(); // random number
         },20000
     )
 
@@ -48,6 +58,18 @@
             })
         },2000
     )
+
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+
+    let backbutton = document.getElementById('back')
+    backbutton.addEventListener('click', ()=>{
+        window.location.href = 'http://localhost:'+port+'/FacesDebug';
+    })
 
     ////////////////////////////////////////////////////////////////////////
     //////////////////////////////API CALLER////////////////////////////////

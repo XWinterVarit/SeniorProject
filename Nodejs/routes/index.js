@@ -46,10 +46,12 @@ router.post('/createUser',async (req, res, next) => {
     await userController.UserMethods.createUser(req,res)
     res.end()
 })
+/*
 router.post('/createWorld', async (req, res, next) => {
     await worldController.WorldMethods.createNew(req, res)
     res.end()
 })
+*/
 router.post('/addMemberInvitation', async (req, res, next) => {
     await worldController.WorldMethods.addMemberToInvitation(req, res)
     res.end()
@@ -224,18 +226,45 @@ router.post('/getAvatar', async(req, res, next) => {
     res.send(imagebuffer)
 })
 
+/**
+ * @param req.body.worldID
+ * @param req.body.username
+ * @param req.body.worldname
+ * @param req.body.worldID
+ */
+router.post('/forceJoinWorld', async(req, res, next) => {
+    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.worldID})
+    if (currentWorld) {
+        await worldController.WorldMethods.ForceAcceptMember(req.body.worldID, req.body.username)
+    } else {
+        console.log("world not founded")
+    }
+    res.end()
+})
 
 router.post('/CreateRemoteObject', async (req, res, next) => {
-    let currentworld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: "5a5b50a146f399051f99b4c4"})
+    let currentworld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.worldID})
 
     if (currentworld) {
         //await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop("Nutmos", "myremote", "/", "7","9"))
-        await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop("Wanwipa", "myremote", "/", "7","10"))
+        await currentworld.ACTION_createObject("remote", new currentworld.OPTIONAL_TEMPLATE_createobject_remotedesktop(req.body.username, "myremote", "/", req.body.positionX,req.body.positionY))
 
     } else {
         console.log("no world found")
     }
 
+    res.end()
+})
+
+router.post('/CreateWorld', async (req, res, next) => {
+    let worldID = await worldController.WorldMethods.createNewWorld(req.body.worldname)
+    if (worldID == null) {
+        return console.log("create error")
+    } else {
+        console.log(worldID)
+    }
+    await worldController.WorldMethods.ForceAcceptMember(worldID, req.body.username)
+    console.log("create completed")
     res.end()
 })
 

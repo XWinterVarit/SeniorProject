@@ -14,16 +14,27 @@ const CircularJSON = require('circular-json')
 /////////////////////////////////////////////////////////////////////
 const MonitorSocketChannal_45000 = require('socket.io-client')('http://localhost:45000/monitor')
 //port 45000 Monitor Socket
-MonitorSocketChannal_45000.on('connect', () => {
-    console.log("connect to monitor")
-});
-MonitorSocketChannal_45000.on('terminal',(msg)=>{
-    console.log(msg)
-});
-MonitorSocketChannal_45000.on('disconnect', function(){});
-MonitorSocketChannal_45000.on('connect_error', (err)=>{
-    console.log(chalk.red(err))
-})
+let MonSoc45000Debugger = false
+if (MonSoc45000Debugger === true) {
+    MonitorSocketChannal_45000.on('connect', () => {
+        console.log("connect to monitor")
+    });
+    MonitorSocketChannal_45000.on('terminal',(msg)=>{
+        console.log(msg)
+    });
+    MonitorSocketChannal_45000.on('disconnect', function(){});
+    MonitorSocketChannal_45000.on('connect_error', (err)=>{
+        console.log(chalk.red(err))
+    })
+}
+let Consolelog45000 = (message, color) => {
+    if (MonSoc45000Debugger === true) {
+        MonitorSocketChannal_45000.emit('terminal',{
+            message: message,
+            color: color
+        })
+    }
+}
 /////////////////////////////////////////////////////////////////////
 ////////////////////////////From Configs/////////////////////////////
 
@@ -53,9 +64,9 @@ const redistools = require(globalConfigs.mpath1.redis).tools
 //==================================================================================================
 
 class OneObjectLinks {
-    constructor (objectlink_persistedID, object_persistedID, owner_persistedID) {
+    constructor (objectlink_persistedID, object_persistedID, owner_persistedID, dummy1, subtype) {
         this.maintype = "object"
-        this.subtype = ""
+        this.subtype = subtype
         this.persistedID = objectlink_persistedID
         this.object_persistedID = object_persistedID
         this.owner_persistedID = owner_persistedID
@@ -281,6 +292,7 @@ class OneActiveWorldClass {
 
         for (let i of this.ObjectLinks) {
             let j = i[1]
+            //messages += JSON.stringify(j)
             messages += `{ persistedID :${j.persistedID} owner_name :${j.owner_name} posX :${j.positionX} posY:${j.positionY} } `
         }
         messages += "\n"
@@ -360,7 +372,10 @@ class OneActiveWorldClass {
         this.GETALL_ActiveMember_MessageTemplated(lists, ALLIPPORT)
         this.GETALL_ObjectLinks_MessageTemplated(lists)
 
-        messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(ALLIPPORT, messagesController.ClientPathTemplated.clientUserGateway,messagesController.messagesTemplates.BROADCAST_REFRESH_all(lists))
+        messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(
+            ALLIPPORT
+            , messagesController.ClientPathTemplated.clientUserGateway
+            , messagesController.messagesTemplates.BROADCAST_REFRESH_all(lists))
 
 /*
         console.log('++++')
@@ -431,15 +446,27 @@ class OneActiveWorldClass {
                     console.log("position already allocated")
                     return false
                 }
+                if (!this.activeMembers.has(argumentTemplate.ownername)) { // check only inmemory db, bacause the user must be active to create object
+                    console.log(chalk.red("this user is not a member"))
+                    return false
+                }
                 const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
                 let userdata = await globalmemoryController.GlobalActiveUser.callUsersV2(argumentTemplate.ownername)
 
 
-                let remoteobject_alreadyhas = await WorldMethods.hasRemotedObject("nutmos", currentworld.persistedID)
+                let remoteobject_alreadyhas = await WorldMethods.hasRemotedObject(argumentTemplate.ownername, this.persistedID)
                 let objectID = ""
                 if (remoteobject_alreadyhas == null) {
+                    MonitorSocketChannal_45000.emit('terminal', {
+                        message: "not have remote object before",
+                        color: "yellow"
+                    })
                     objectID = await remoteController.RemoteDesktopMethodClass.createRemoteDesktopObject(argumentTemplate.ownername, argumentTemplate.objectname, argumentTemplate.vpath)
                 } else {
+                    MonitorSocketChannal_45000.emit('terminal', {
+                        message: "already have",
+                        color: "yellow"
+                    })
                     objectID = remoteobject_alreadyhas.objectlinks[0].object_persisted_id
                 }
 
@@ -463,7 +490,12 @@ class OneActiveWorldClass {
                 console.log(JSON.stringify(currentobject, null, 4))
                 console.log("show argument template")
                 console.log(argumentTemplate)
-                await this.addnewObjectLink(objectlinkedID, objectID, userdata.persisted_id, argumentTemplate.owner_name, argumentTemplate.objectname, argumentTemplate.positionX, argumentTemplate.positionY, {objecttype: argumentTemplate.objecttype})
+                await this.addnewObjectLink(objectlinkedID, objectID, userdata.persisted_id, argumentTemplate.ownername, argumentTemplate.objectname, argumentTemplate.positionX, argumentTemplate.positionY, {objecttype: argumentTemplate.objecttype}, null, "remote")
+                messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(
+                    this.GETALL_NETWORK_ADDRESS()
+                    , messagesController.ClientPathTemplated.clientUserGateway
+                    , messagesController.messagesTemplates.BROADCAST_moveObjectPosition("remote", objectlinkedID, argumentTemplate.ownername, argumentTemplate.positionX, argumentTemplate.positionY, objectID))
+
                 break
             default:
                 break
@@ -507,7 +539,7 @@ class OneActiveWorldClass {
             if (allobj.objectlinks) {
                 for (let i of allobj.objectlinks) {
                     //console.log(i)
-                    await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY, {objecttype: i.objecttype})
+                    await this.addnewObjectLink(i._id, i.object_persisted_id, i.owner_persisted_id, i.owner_name, i.object_name, i.positionX, i.positionY, {objecttype: i.objecttype}, null, i.objecttype)
                 }
                 console.log(this.ObjectLinks)
             } else {
@@ -530,12 +562,12 @@ class OneActiveWorldClass {
         }
     }
 
-    async addnewObjectLink (objectlink_persistedID ,object_persistedID, owner_persistedID, owner_name, object_name, positionX, positionY, optional) {
+    async addnewObjectLink (objectlink_persistedID ,object_persistedID, owner_persistedID, owner_name, object_name, positionX, positionY, optional, dummy1, subtype) {
 
         console.log("links persistedID " + objectlink_persistedID)
         console.log("delete test : " + this.ObjectLinks.delete(String(objectlink_persistedID)))
 
-        let newObjectLink = new OneObjectLinks(objectlink_persistedID,object_persistedID, owner_persistedID)
+        let newObjectLink = new OneObjectLinks(objectlink_persistedID,object_persistedID, owner_persistedID, null, subtype)
         if (object_name) {
             newObjectLink.changeName(object_name)
         }
@@ -945,7 +977,7 @@ class WorldMethods {
      */
     static async addMemberToInvitation (req, res) {
         const collection = mongotools.db.collection('worlds')
-        await new Promise(resolve => {
+        return await new Promise(resolve => {
             /*
             collection.updateOne(
                 {name: req.body.name},
@@ -1050,6 +1082,36 @@ class WorldMethods {
             await userController.UserMethods.addMembered_WorldID(req.body.name,req.body.worldID)
         }
         res.end()
+    }
+
+    static async ForceAcceptMember (worldID, username) {
+        const collection = mongotools.db.collection('worlds')
+        let validation = true
+        if (validation) {
+            await new Promise(resolve => {
+                let groupobject = {}
+                collection.updateOne(
+                    {_id: safeObjectId(worldID)},
+                    {
+                        $addToSet:
+                            {"member.standard": username}
+                        //groupobject["member."+req.body.group] = req.body.name
+                    },
+                    (err, response) => {
+                        if (err) {
+                            console.log("Error " + err)
+                        } else {
+                            console.log(response.result)
+                        }
+                        return resolve()
+                    }
+                )
+
+            })
+        }
+        if (validation) {
+            await userController.UserMethods.addMembered_WorldID(username,worldID)
+        }
     }
 
     static async loadMemberInfo (world_persistedID ,member_name) {
@@ -1479,6 +1541,60 @@ class WorldMethods {
             console.log("write completed")
         }
         res.end()
+    }
+
+    //newer version
+    static async createNewWorld (worldname) {
+        let validation = true
+
+        const collection = mongotools.db.collection('worlds')
+
+        if (validation) {
+            await new Promise (resolve => {
+                collection.findOne(
+
+                    {'name':worldname}
+
+                    ,(err, docs) => {
+                        if (err) {
+                            console.log('database error')
+                        } else if (docs) {
+                            validation = false
+                            console.log("world's name already found in the database")
+                            //console.log(docs)
+                        } else {
+                            console.log('data not found in record')
+                        }
+                        return resolve()
+                    }
+                )
+            })
+        }
+        let newworldID = ""
+        if (validation) {
+            newworldID = await new Promise(resolve => {
+                collection.insertOne(
+                    {
+                        name: worldname,
+                        adminpassword: "1234"
+                    },
+                    (err, docs)=> {
+                        if (err){
+                            console.log(err)
+                        }
+                        return resolve(docs)
+                    }
+                )
+            })
+            console.log("write completed")
+        }
+        if (validation) {
+            try {
+                return newworldID.ops[0]._id
+            } catch (e) {
+                return null
+            }
+        }
     }
 
     static async hasRemotedObject (username, world_persistedID) {

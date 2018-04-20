@@ -214,7 +214,7 @@ let sentSelected = async () => {
         )
     })
 
-
+/*
     let args3 = {
         requestConfig: {timeout: 1000},
         response: {timeout: 2000},
@@ -241,6 +241,7 @@ let sentSelected = async () => {
             },3000
         )
     })
+    */
 }
 sentSelected()
 

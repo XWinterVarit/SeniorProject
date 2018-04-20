@@ -254,16 +254,19 @@ class messagesTemplates {
         }
     }
 
-    static REQUEST_CREATE_REMOTEOBJECT (username, posX, posY) {
+    static REQUEST_CREATE_REMOTEOBJECT (username, posX, posY, worldID) {
         return {
             type: "create",
             subtype: "remote",
             username: username,
+            worldID: worldID,
             vpath: "/",
             positionX: posX,
             positionY: posY
         }
     }
+
+
 }
 let messagesTemplates_ContentTypeTemplates = {
     textplain: "text/plain",
@@ -495,7 +498,7 @@ class messagesGlobalMethods {
                         break
                     case "object":
                         //console.log("IGNORE object")
-                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY, realobjectID: i.realobjectID})
+                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY, realobjectID: i.realobjectID}, i.owner_ID)
                         break
                 }
             }
@@ -516,7 +519,8 @@ class messagesGlobalMethods {
                         break
                     case "object":
                         //console.log("IGNORE object")
-                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY, realobjectID: i.realobjectID})
+                        //console.log(chalk.bold(JSON.stringify(i, null, 4)))
+                        sessionController.globalSession.callObjectLink(i.persistedID, i.owner_name, i.subtype, {positionX: i.positionX, positionY: i.positionY, realobjectID: i.realobjectID}, i.owner_ID)
                         break
                 }
             }
@@ -572,7 +576,9 @@ class messagesGlobalMethods {
         }
     }
     static updateRemoteFrame_HTTP (req) {
+        //console.log(chalk.yellow(`receive frame header data : ${JSON.stringify(req.body, null, 4)}`))
         let headerdata = JSON.parse(req.body.headerdata)
+        console.log(chalk.bold(`receive parse data : ${JSON.stringify(headerdata, null, 4)}`))
         if (!sessionController.globalSession.CHECK_RequestRemoteUpdateFrame(headerdata.destname, headerdata.objectID, headerdata.ownerID)){
             console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
             return false

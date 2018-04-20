@@ -53,7 +53,7 @@ setTimeout(
 //==================================================================================================
 //==================================================================================================
 
-class aciveMember_Class {
+class activeMember_Class {
     constructor (name, persistedID, optionals) {
         this.maintype = "member"
         this.name = name
@@ -117,6 +117,7 @@ class aciveMember_Class {
 class objectLink_Class {
     constructor (persistedID, owner_name, type, optionals, owner_ID) {
         this.maintype = "object"
+        this.test1 = "object"
         this.persistedID = persistedID
         this.owner_name = owner_name
         this.owner_ID = owner_ID
@@ -187,6 +188,7 @@ class session_Class {
         this.currentUser_IP = ""//globalConfigs.ClientInfo.clientIP
         this.currentUser_PORT = ""//globalConfigs.ClientInfo.clientPORT
 
+        this.dynamicface_allow = true
 
         this.remoteObjectID = ""
 
@@ -429,6 +431,8 @@ class session_Class {
         this.active_at_world_persistedID = persistedID
         this.active_at_object_persistedID = ""
         this.first_refresh = false
+        //this.worldmatrix = new toolsController.HashMatrix()
+
         this.AUTOSET_REMOTE_OBJECTID()
 
         console.log(chalk.cyanBright("SET CURRENT WORLD TO ID : " +  persistedID))
@@ -450,9 +454,10 @@ class session_Class {
             },1500
         )
 
-
     }
     SET_CurrentObjectLink (persistedID, ownername, objecttype, ownerID) {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+
         if (this.logined === false) {
             console.log(chalk.red("can't set world, due to not login yet"))
             return false
@@ -460,12 +465,18 @@ class session_Class {
         if (this.first_refresh === false || this.active_at_world_persistedID === "") {
             console.log(chalk.red('this set object can do only after first refresh'))
         } else {
+            if (persistedID == null || ownername == null || objecttype == null || ownerID == null) {
+                console.log(chalk.red("some argument is null or undefined | ABORT set object"))
+                return null
+            }
+            this.remotestreaming.STOP_RECORD()
             this.active_at_object_persistedID = persistedID
             this.object_owner_name = ownername
             this.object_owner_ID = ownerID
             this.object_type = objecttype
             console.log(chalk.cyanBright("SET CURRENT OBJECT TO ID : " +  persistedID))
             console.log(chalk.cyanBright(`SET CURRENT OBJECT TO ID : ${persistedID}  WITH OWNER NAME : ${ownername}  OWNER ID : ${objecttype} TYPE : ${ownerID} `))
+            messagesController.messagesGlobalMethods.httpOutput_POST_SERVER(globalConfigs.specificServerPath.user_messages_serverpath, messagesController.messagesTemplates.changeActiveObject(persistedID, this.currentUser_name))
         }
     }
     SET_IP_PORT (ip, port) {
@@ -616,6 +627,8 @@ class session_Class {
         return currentObject.GET_frame()
     }
 
+
+
     CHECK_RequestRemoteTask (name, ID, objectID, objectownername, objectownerID) {
         let validation = true
         if (String(this.currentUser_name) !== name) {
@@ -658,7 +671,7 @@ class session_Class {
         }
         if (String(this.object_owner_ID) !== ownerID) {
             console.log(chalk.red("this remote object not active, IGNORE"))
-            console.log(chalk.yellow("objectownername " + this.object_owner_name))
+            console.log(chalk.yellow("objectownerID " + this.object_owner_ID + "  req : " + ownerID))
             validation = false
         }
         return validation
@@ -709,7 +722,7 @@ class session_Class {
         const messagesController = require(globalConfigs.mpath1.messagesController)
         messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC(
             messagesController.ClientPathTempleted.createRemoteObject
-            ,messagesController.messagesTemplates.REQUEST_CREATE_REMOTEOBJECT(this.currentUser_name, posX, posY)
+            ,messagesController.messagesTemplates.REQUEST_CREATE_REMOTEOBJECT(this.currentUser_name, posX, posY, this.active_at_world_persistedID)
         )
     }
 
@@ -804,7 +817,7 @@ class session_Class {
                             //console.log(`at position x ${x} y ${y}`)
                             let data = this.getData_inMatrix(x,y)
                             if (data) {
-                                if (data.maintype = "member") {
+                                if (data.maintype === "member") {
                                     //console.log(JSON.stringify(data, null, 4))
                                     nearbyUsers.push(data)
                                     this.CurrentNearbyUserLists_HASH.set(data.name, data)
@@ -888,7 +901,7 @@ class session_Class {
     MONITOR_Session () {
         let messages = "**********************Session Monitoring************************\n"
         messages += "Active at world ID : " + this.active_at_world_persistedID + "  connection status : " + this.connection_to_server_active + "  with score : " + this.connection_to_server_heartbeat_score + "\n"
-        messages += "Active at object ID : " + this.active_at_object_persistedID + " owner name : " + this.object_owner_name + "\n"
+        messages += "Active at object ID : " + this.active_at_object_persistedID + " owner name : " + this.object_owner_name + "  ownerID : " + this.object_owner_ID + "\n"
         messages += "User information || ID : " + this.currentUser_persistedID + " name : " + this.currentUser_name + " password " + this.currentUser_password + "\n"
 
         messages += "Active Member : \n"
@@ -901,6 +914,7 @@ class session_Class {
 
         for (let i of this.objectLink) {
             let j = i[1]
+            //messages += JSON.stringify(j) + " |||  "
             messages += `{ realpersistedID :${j.realobjectID} owner_name :${j.owner_name} posX :${j.positionX} posY:${j.positionY} } `
         }
         messages += "\n"
@@ -1146,11 +1160,11 @@ class session_Class {
                                 ownerID: i.owner_ID,
                                 positionX: i.positionX,
                                 positionY: i.positionY,
-                                persistedID: i.persistedID,
+                                persistedID: i.realobjectID,
                                 info: ""
                             })
                     }
-                    //console.log(chalk.green(arrayofobjects))
+                    //console.log(chalk.green(JSON.stringify(arrayofobjects, null, 4)))
                     this.SENT_OBJECTSFRAME_SOCKETIO(arrayofobjects)
 
                 },this.INTERVALTIME_getObject
@@ -1279,7 +1293,7 @@ class session_Class {
 
                         //ending something
                         this.FORUI_STOP_RENDER_SCREENFRAME()
-
+                        this.SET_CurrentObjectLink("","","","")
                         this.remoteobjectPage_connection_Active = false
                     }
                 }, this.remoteobjectPage_connection_heartbeat_Interval_time
@@ -1423,7 +1437,7 @@ class session_Class {
         }
         if (!currentMember) {
             console.log("no member found in memory")
-            currentMember = new aciveMember_Class(name, persistedID, {positionX: others.positionX, positionY: others.positionY, IP:others.IP, PORT: others.PORT})
+            currentMember = new activeMember_Class(name, persistedID, {positionX: others.positionX, positionY: others.positionY, IP:others.IP, PORT: others.PORT})
             this.activeMember.set(name, currentMember)
             this.setPosition_inMatrix(others.positionX, others.positionY, currentMember)
             //this.CALL_FaceObject(persistedID)
@@ -1446,14 +1460,18 @@ class session_Class {
         return currentMember
     }
 
-    callObjectLink (persistedID, owner_name, type, others, owner_ID) {
+    callObjectLink (persistedID, owner_name, type, others, ownerID) {
         let currentObject = this.objectLink.get(persistedID)
         if (!others) {
             return null
         }
+        if (persistedID == null || owner_name == null || type == null || others == null || ownerID == null) {
+            console.log(chalk.red("ABOARD CALL OBJECT, argument not completed"))
+            return null
+        }
         if (!currentObject) {
             console.log("no object found in memory")
-            currentObject = new objectLink_Class(persistedID, owner_name, type, {positionX: others.positionX, positionY: others.positionY, realobjectID: others.realobjectID}, owner_ID)
+            currentObject = new objectLink_Class(persistedID, owner_name, type, {positionX: others.positionX, positionY: others.positionY, realobjectID: others.realobjectID}, ownerID)
             this.objectLink.set(persistedID, currentObject)
             //this.ObjectQuickInfo_RealID.ADD_object(persistedID, {realobjectID: others.realobjectID})
             this.setPosition_inMatrix(others.positionX, others.positionY, currentObject)
@@ -1467,6 +1485,7 @@ class session_Class {
             }
 
         }
+        //console.log(chalk.bold(JSON.stringify(currentObject, null, 4)))
         return currentObject
     }
 

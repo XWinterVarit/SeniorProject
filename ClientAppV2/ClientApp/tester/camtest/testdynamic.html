@@ -27,16 +27,28 @@
     ///////////////////////////SOCKET IO SETUP//////////////////////////////
     ///////////////////////////SOCKET IO SETUP//////////////////////////////
     ////////////////////////////////////////////////////////////////////////
+    let nowref = String(window.location.href)
+    let coloncount = 0
+    let port = ""
+    for (let i = 0; i < 20; i++) {
+        if (nowref[i] === ":") {
+            coloncount++
+        }
+        if (coloncount === 2) {
+            port = nowref.substring(i+1, i+6)
+            console.log(port)
+            break
+        }
+    }
 
-
-    var remoteMon = io.connect('http://localhost:60001/remoteMon')
+    var remoteMon = io.connect('http://localhost:'+(Number(port)+10000)+'/remoteMon')
 
 
     // SET REFRESH REDIRECT TO CLEAN CAHCE BROWSER MAKE
     setTimeout(
         ()=>{
             //let loc = window.location.href; // or a new URL
-            window.location.href = 'http://localhost:50001/FacesDebug?n=' + new Date().getTime(); // random number
+            window.location.href = 'http://localhost:'+port+'/FacesDebug?n=' + new Date().getTime(); // random number
         },20000
     )
 
@@ -83,7 +95,7 @@
         for (let i = 51; i <= 70; i++) {
             $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 100px;\">\n" +
                 "    <p id=\"t-slot"+i+"\" > object n "+i+" </p>\n" +
-                "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px \">\n" +
+                "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px ;border-radius: 50%\">\n" +
                 "\n" +
                 "</div>")
         }
@@ -112,7 +124,13 @@
                 if (!pic.dataset.info)
                     return false
                 let object = JSON.parse(pic.dataset.info)
-                await POST_CallSetObject(object.persistedID, object.ownername, object.ownerID)
+                console.log(object)
+                if (await POST_CallSetObject(object.persistedID, object.ownername, object.ownerID) === false) {
+
+                } else {
+                    alert(port)
+                    window.location.href = 'http://localhost:'+port+'/remoteobjpage'
+                }
                 //console.log(object)
             } )
         }
@@ -138,7 +156,13 @@
     ////////////////////////////////////////////////////////////////////////
 
     let POST_CallSetObject = async (objectID, ownername, ownerID) => {
-        let url = 'http://localhost:50001/FORUI_SETOBJECT'
+        console.log("call")
+        let url = 'http://localhost:'+port+'/FORUI_SETOBJECTV2'
+        if (objectID == null || ownername == null || ownerID == null) {
+            console.log("argument not completed || SENT ABORD")
+            return false
+        }
+
         let data = {
             objectID: objectID, // link ID not real ID
             ownername: ownername,
@@ -166,11 +190,12 @@
                     return resolve()
                 });
         })
+        return true
 
     }
 
     let POST_movePosition = (positionX, positionY) => {
-        let url = 'http://localhost:50001/CONTROL_MoveToPosition'
+        let url = 'http://localhost:'+port+'/CONTROL_MoveToPosition'
         let data = {
             positionX: positionX,
             positionY: positionY

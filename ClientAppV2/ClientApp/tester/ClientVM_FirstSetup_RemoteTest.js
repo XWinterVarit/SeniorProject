@@ -31,13 +31,13 @@ let alldata = [
         worldID: "5a5b50a146f399051f99b4c4",
         IP: "127.0.0.1",
         PORT: "50001",
-
+/*
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
         objecttype:"remote",
-
-        remoteobjectID: "5aa543f6e6ca25042f106711"
+*/
+       //remoteobjectID: "5aa543f6e6ca25042f106711"
     },
     {
         name: "A",
@@ -46,11 +46,12 @@ let alldata = [
         worldID: "5a5b50a146f399051f99b4c4",
         IP: "127.0.0.1",
         PORT: "50002",
-
+/*
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
         objecttype:"remote"
+        */
     },
     {
         name: "B",
@@ -59,11 +60,12 @@ let alldata = [
         worldID: "5a5b50a146f399051f99b4c4",
         IP: "127.0.0.1",
         PORT: "50003",
-
+/*
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
         objecttype:"remote"
+        */
     },
     {
         name: "C",
@@ -72,11 +74,12 @@ let alldata = [
         worldID: "5a5b50a146f399051f99b4c4",
         IP: "127.0.0.1",
         PORT: "50004",
-
+/*
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
         objecttype:"remote"
+        */
     },
     {
         name: "D",
@@ -85,11 +88,12 @@ let alldata = [
         worldID: "5a5b50a146f399051f99b4c4",
         IP: "127.0.0.1",
         PORT: "50005",
-
+/*
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
         objecttype:"remote"
+        */
     },
     {
         name: "E",
@@ -98,11 +102,12 @@ let alldata = [
         worldID: "5a5b50a146f399051f99b4c4",
         IP: "127.0.0.1",
         PORT: "50006",
-
+/*
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
         objecttype:"remote"
+        */
     },
     {
         name: "F",
@@ -111,11 +116,12 @@ let alldata = [
         worldID: "5a5b50a146f399051f99b4c4",
         IP: "127.0.0.1",
         PORT: "50007",
-
+/*
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
         objecttype:"remote"
+        */
     },
     {
         name: "G",
@@ -124,11 +130,12 @@ let alldata = [
         worldID: "5a5b50a146f399051f99b4c4",
         IP: "127.0.0.1",
         PORT: "50008",
-
+/*
         objectID: "5aa543f6e6ca25042f106711",
         ownername: "Nutmos",
         ownerID:"5a5b4fe146f399051f99b4c1",
         objecttype:"remote"
+        */
     }
 ]
 let sentAll = async () => {

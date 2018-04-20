@@ -53,7 +53,7 @@ class One_Scheduler_RemoteDesktopP2P {
 
         this.calculateSchedule = null
         this.active = true
-        this.calculateIntervalTime = 5000 // millisec
+        this.calculateIntervalTime = 3000 // millisec
         //this.start_Calculation_Scheduling()
 
         this.lock_activeMembers = new AsyncLock({maxPending: 1000})
@@ -135,6 +135,7 @@ class One_Scheduler_RemoteDesktopP2P {
         let messages = "RemoteDesktopP2PObj Scheduler Status . Object Persisted ID : " + this.persisted_id + "\n" +
             "----------------------------------------------------------------------------------\n"
         messages += "isActive : " + this.active + "  isChanged : " + this.changed + "  isSchedule "
+        messages += `ownername : ${this.objectowner_name} ownerID : ${this.objectowner}`
         if (this.calculateSchedule) {
             messages += "YES" + "   at " + this.calculateIntervalTime + " millisec. per interval\n"
         } else {

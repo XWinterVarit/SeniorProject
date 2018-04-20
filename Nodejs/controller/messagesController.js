@@ -57,7 +57,7 @@ class messagesTemplates {
         }
     }
 
-    static BROADCAST_moveObjectPosition (subtype, persistedID, owner_name, posX, posY) {
+    static BROADCAST_moveObjectPosition (subtype, persistedID, owner_name, posX, posY, realobjectID) {
         return {
             type: "update",
             lists: [
@@ -67,7 +67,8 @@ class messagesTemplates {
                     persistedID: persistedID,
                     owner_name: owner_name,
                     positionX: posX,
-                    positionY: posY
+                    positionY: posY,
+                    realobjectID: realobjectID
                 }
             ]
         }

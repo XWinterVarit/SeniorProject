@@ -8,6 +8,34 @@
 const chalk = require('chalk')
 const HashArray = require('hasharray')
 const fs = require('fs')
+
+
+
+/////////////////////////////////////////////////////////////////////
+const MonitorSocketChannal_45000 = require('socket.io-client')('http://localhost:45000/monitor')
+//port 45000 Monitor Socket
+let MonSoc45000Debugger = true
+if (MonSoc45000Debugger === true) {
+    MonitorSocketChannal_45000.on('connect', () => {
+        console.log("connect to monitor")
+    });
+    MonitorSocketChannal_45000.on('terminal',(msg)=>{
+        console.log(msg)
+    });
+    MonitorSocketChannal_45000.on('disconnect', function(){});
+    MonitorSocketChannal_45000.on('connect_error', (err)=>{
+        console.log(chalk.red(err))
+    })
+}
+let consolelog45000 = (message, color) => {
+    if (MonSoc45000Debugger === true) {
+        MonitorSocketChannal_45000.emit('terminal',{
+            message: message,
+            color: color
+        })
+    }
+}
+/////////////////////////////////////////////////////////////////////
 ////////////////////////////From Configs/////////////////////////////
 
 const globalConfigs = require('../config/GlobalConfigs')
@@ -110,7 +138,7 @@ class OneActiveUserClass {
     // but not change variable name yet due to low dev time
     async set_active_objectID (objectLinkID) {
         const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
-
+        //consolelog45000("pass active object ID with ID : " + objectLinkID, "green")
         let previousobjectID = ""
         let previousownerID = ""
         let previousobjecttype = ""
@@ -264,31 +292,28 @@ class OneActiveUserClass {
     async get_messages (req) {
         //console.log("hello from : " + this.name + "  " + this.persisted_id)
         console.log('--------------------Receive Second at each User Controller ')
-        console.log()
-        this.signal_heartbeat()
 
+        //consolelog45000("------------------" + JSON.stringify(req.body))
+
+        this.signal_heartbeat()
         if (req.body.standby !== undefined) {
             this.standby = req.body.standby
         }
-
-        if (req.body.ipaddr) {
+        if (req.body.ipaddr != null) {
             await this.set_IP(req.body.ipaddr, req.body.name)
         }
-        if (req.body.port) {
+        if (req.body.port != null) {
             await this.set_port(req.body.port, req.body.name)
         }
-
-
-        if (req.body.activeworld) {
+        if (req.body.activeworld != null) {
             await this.set_active_world(req.body.activeworld, req)
         }
-
-        if (req.body.activeobject) {
+        if (req.body.activeobject != null) { // empty string bug(empty string == false) so we change to this != null
+            //consolelog45000("DEBUG4", "yellow")
             await this.set_active_objectID(req.body.activeobject)
         }
 
-
-        if (req.body.login) {
+        if (req.body.login != null) {
             const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
 
             console.log('show this.active at world : ' + this.active_at_world)

@@ -89,7 +89,7 @@ router.post('/setFirstStart', (req, res, next) => {
                     sessionController.globalSession.SET_IP_PORT(req.body.IP, req.body.PORT)
                     sessionController.globalSession.PRINT_info()
                     res.end()
-                },2000
+                },4000
             )
 
 
@@ -177,6 +177,21 @@ router.post('/FORUI_SETWORLD', (req, res, next) => {
 })
 router.post('/FORUI_SETOBJECT', (req, res, next) => {
     sessionController.AppUtility.SETOBJECT(req.body.objectID, req.body.ownername, req.body.objecttype, req.body.ownerID)
+    res.end()
+})
+
+
+router.post('/FORUI_SETOBJECTV2', (req, res, next) => {
+    if (req.body.objectID === "") {
+        sessionController.AppUtility.SETOBJECT("","","","")
+    } else {
+        sessionController.AppUtility.SETOBJECT(req.body.objectID, req.body.ownername, req.body.objecttype, req.body.ownerID)
+        console.log(chalk.bold(JSON.stringify(req.body, null, 4)))
+    }
+    res.end()
+})
+router.post('/FORUI_CREATEREMOTEOBJECT', (req, res, next) => {
+    sessionController.globalSession.CONTROL_CreateRemoteObject(req.body.positionX, req.body.positionY)
     res.end()
 })
 
