@@ -44,7 +44,7 @@ login_templeted.set(
         name: "A",
         userID: "5aa61dabff33f805ac2d9ce8",
         password: "a",
-        worldID: "5a5b50a146f399051f99b4c4",
+        worldID: "5adc29de4756525be52fa4ce",
         IP: "127.0.0.1",
         PORT: "50002",
 
@@ -61,7 +61,7 @@ login_templeted.set(
         name: "B",
         userID: "5aa61db8ff33f805ac2d9ce9",
         password: "b",
-        worldID: "5a5b50a146f399051f99b4c4",
+        worldID: "5adc29de4756525be52fa4ce",
         IP: "127.0.0.1",
         PORT: "50003",
 
@@ -78,7 +78,7 @@ login_templeted.set(
         name: "C",
         userID: "5aa61dc0ff33f805ac2d9cea",
         password: "c",
-        worldID: "5a5b50a146f399051f99b4c4",
+        worldID: "5adc29de4756525be52fa4ce",
         IP: "127.0.0.1",
         PORT: "50004",
 
@@ -95,7 +95,7 @@ login_templeted.set(
         name: "D",
         userID: "5aa61dc9ff33f805ac2d9ceb",
         password: "d",
-        worldID: "5a5b50a146f399051f99b4c4",
+        worldID: "5adc29de4756525be52fa4ce",
         IP: "127.0.0.1",
         PORT: "50005",
 
@@ -112,7 +112,7 @@ login_templeted.set(
         name: "E",
         userID: "5aa61dd1ff33f805ac2d9cec",
         password: "e",
-        worldID: "5a5b50a146f399051f99b4c4",
+        worldID: "5adc29de4756525be52fa4ce",
         IP: "127.0.0.1",
         PORT: "50006",
 
@@ -129,7 +129,7 @@ login_templeted.set(
         name: "F",
         userID: "5aa61dd7ff33f805ac2d9ced",
         password: "f",
-        worldID: "5a5b50a146f399051f99b4c4",
+        worldID: "5adc29de4756525be52fa4ce",
         IP: "127.0.0.1",
         PORT: "50007",
 
@@ -147,7 +147,7 @@ login_templeted.set(
         name: "G",
         userID: "5aa61ddfff33f805ac2d9cee",
         password: "g",
-        worldID: "5a5b50a146f399051f99b4c4",
+        worldID: "5adc29de4756525be52fa4ce",
         IP: "127.0.0.1",
         PORT: "50008",
 

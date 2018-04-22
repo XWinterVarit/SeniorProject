@@ -158,15 +158,6 @@ router.post('/CONTROL_MoveToPosition', (req, res, next) => {
 })
 
 
-router.post('/CONTROL_StartRecord', (req, res, next) => {
-    sessionController.globalSession.CONTROL_START_BroadcastScreen()
-    res.end()
-})
-router.post('/CONTROL_StopRecord', (req, res, next) => {
-    sessionController.globalSession.CONTROL_STOP_BroadcastScreen()
-    res.end()
-})
-
 router.post('/FORUI_LogIn', (req, res, next) => {
     sessionController.AppUtility.LogIn(req.body.name, req.body.userID, req.body.password, null, req.body.IP, req.body.PORT)
     res.end()
@@ -179,6 +170,20 @@ router.post('/FORUI_SETOBJECT', (req, res, next) => {
     sessionController.AppUtility.SETOBJECT(req.body.objectID, req.body.ownername, req.body.objecttype, req.body.ownerID)
     res.end()
 })
+
+router.get('/SET_FACE_STREAM_ON', (req, res, next) => {
+
+})
+router.get('/SET_FACE_STREAM_OFF', (req, res, next) => {
+
+})
+router.get('/SET_SCREEN_STREAM_ON', (req, res, next) => {
+
+})
+router.get('/SET_SCREEN_STREAM_OFF', (req, res, next) => {
+
+})
+
 
 
 router.post('/FORUI_SETOBJECTV2', (req, res, next) => {
@@ -245,12 +250,20 @@ router.get('/showfaces', (req, res, next) => {
     sessionController.globalSession.FORUI_START_GETFACE()
     res.end()
 })
-router.get('/startface', (req, res, next) => {
+router.get('/man_startface', (req, res, next) => {
     sessionController.globalSession.FORUI_START_FACESTREAMING()
     res.end()
 })
-router.get('/stopface', (req, res, next) => {
+router.get('/man_stopface', (req, res, next) => {
     sessionController.globalSession.FORUI_STOP_FACESTREAMING()
+    res.end()
+})
+router.get('/man_startscreenstream', (req, res, next) => {
+    sessionController.globalSession.CONTROL_START_BroadcastScreen()
+    res.end()
+})
+router.get('/man_stopscreenstream', (req, res, next) => {
+    sessionController.globalSession.CONTROL_STOP_BroadcastScreen()
     res.end()
 })
 router.get('/FaceImageDebug', (req, res, next) => {

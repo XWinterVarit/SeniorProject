@@ -233,14 +233,23 @@ router.post('/getAvatar', async(req, res, next) => {
  * @param req.body.worldID
  */
 router.post('/forceJoinWorld', async(req, res, next) => {
-    let currentWorld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.worldID})
-    if (currentWorld) {
-        await worldController.WorldMethods.ForceAcceptMember(req.body.worldID, req.body.username)
+    let worldID = await worldController.WorldMethods.getNamereturnID(req.body.worldname)
+    console.log(worldID)
+    if (worldID == null) {
+        return console.log(chalk.red("world not found"))
+    } else if (worldID === "") {
+        return console.log(chalk.red("world not found"))
+    } else {
+    }
+
+    if (worldID) {
+        await worldController.WorldMethods.ForceAcceptMember(worldID, req.body.username)
     } else {
         console.log("world not founded")
     }
     res.end()
 })
+
 
 router.post('/CreateRemoteObject', async (req, res, next) => {
     let currentworld = await globalmemoryController.GlobalActiveWorld.getWorldReference({worldID: req.body.worldID})
@@ -292,7 +301,17 @@ router.post('/clientIPTest', async(req, res, next) => {
     res.end()
 })
 
-
+router.post('/getworldID',async (req, res, next) => {
+    let worldID = await worldController.WorldMethods.getNamereturnID(req.body.worldname)
+    console.log(worldID)
+    if (worldID == null) {
+        res.end()
+    } else if (worldID === "") {
+        res.end()
+    } else {
+        res.json({_id:worldID})
+    }
+})
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -489,4 +508,6 @@ router.post('/hasRemotedObject', async (req, res, next) => {
     }
     res.end()
 })
+
+
 module.exports = router;

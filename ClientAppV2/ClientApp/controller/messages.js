@@ -578,7 +578,7 @@ class messagesGlobalMethods {
     static updateRemoteFrame_HTTP (req) {
         //console.log(chalk.yellow(`receive frame header data : ${JSON.stringify(req.body, null, 4)}`))
         let headerdata = JSON.parse(req.body.headerdata)
-        console.log(chalk.bold(`receive parse data : ${JSON.stringify(headerdata, null, 4)}`))
+        //console.log(chalk.bold(`receive parse data : ${JSON.stringify(headerdata, null, 4)}`))
         if (!sessionController.globalSession.CHECK_RequestRemoteUpdateFrame(headerdata.destname, headerdata.objectID, headerdata.ownerID)){
             console.log(chalk.red("request task argument is not validate, the client IGNORE requested"))
             return false

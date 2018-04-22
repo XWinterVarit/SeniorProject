@@ -12,16 +12,27 @@ const fs = require('fs')
 /////////////////////////////////////////////////////////////////////
 const MonitorSocketChannal_45000 = require('socket.io-client')('http://localhost:45000/monitor')
 //port 45000 Monitor Socket
-MonitorSocketChannal_45000.on('connect', () => {
-    console.log("connect to monitor")
-});
-MonitorSocketChannal_45000.on('terminal',(msg)=>{
-    console.log(msg)
-});
-MonitorSocketChannal_45000.on('disconnect', function(){});
-MonitorSocketChannal_45000.on('connect_error', (err)=>{
-    console.log(chalk.red(err))
-})
+let MonSoc45000Debugger = false
+if (MonSoc45000Debugger === true) {
+    MonitorSocketChannal_45000.on('connect', () => {
+        console.log("connect to monitor")
+    });
+    MonitorSocketChannal_45000.on('terminal',(msg)=>{
+        console.log(msg)
+    });
+    MonitorSocketChannal_45000.on('disconnect', function(){});
+    MonitorSocketChannal_45000.on('connect_error', (err)=>{
+        console.log(chalk.red(err))
+    })
+}
+let Consolelog45000 = (message, color) => {
+    if (MonSoc45000Debugger === true) {
+        MonitorSocketChannal_45000.emit('terminal',{
+            message: message,
+            color: color
+        })
+    }
+}
 /////////////////////////////////////////////////////////////////////
 
 
@@ -235,8 +246,8 @@ class session_Class {
         this.currentMessageTransactionGet = 0
         this.currentMessageTransactionSent = 0
 
-        this.worldsizeX = 40
-        this.worldsizeY = 15
+        this.worldsizeX = 20
+        this.worldsizeY = 7
 
         this.ALLTASK = []
 
@@ -352,7 +363,7 @@ class session_Class {
         this.INTERVALTIME_getFaces = 100 //ms
 
         this.SCHEDULER_getObject = null
-        this.INTERVALTIME_getObject = 2000 //ms
+        this.INTERVALTIME_getObject = 500 //ms
 
         this.SCHEDULER_getFarUsers = null
         this.INTERVALTIME_getFarUsers = 1000 //ms
@@ -362,11 +373,12 @@ class session_Class {
 
         this.SCHEDULER_getNearbyUser = null
         this.INTERVALTIME_getNearbyUser = 2000 //msec
-        this.PREVALUE_getNearbyUser_BoundLengthX = 2
-        this.PREVALUE_getNearbyUser_BoundLengthY = 2
+        this.PREVALUE_getNearbyUser_BoundLengthX = 3
+        this.PREVALUE_getNearbyUser_BoundLengthY = 3
 
         this.CurrentNearbyUserLists = []
         this.CurrentNearbyUserLists_HASH = new Map()
+
 
         this.CONTROL_START_GETNEARBY_SCHEDULER()
 
@@ -374,7 +386,8 @@ class session_Class {
 
         //this is hot section, due to low time dev.
 
-        this.STATICRemoteObjectPic = fs.readFileSync(globalConfigs.testpath1.camtest+"RemoteObject.jpg")
+        this.STATICRemoteObjectPic = fs.readFileSync(globalConfigs.testpath1.camtest+"RemoteObject.png")
+        this.STATICBackgroundPic = fs.readFileSync(globalConfigs.testpath1.camtest+"world.jpg")
 
         //
 
@@ -416,6 +429,8 @@ class session_Class {
         this.currentUser_password = password
         this.remotestreaming.SET_UserInfo(persistedID, name)
         console.log(chalk.cyanBright(`SET CURRENT USER TO ID : ${persistedID} name : ${name}`))
+        this.remotestreaming.Custom_Preload_FrameBuffer(name)
+        this.facestreaming.Custom_Preload_FrameBuffer(name)
     }
 
     SET_CurrentWorld (persistedID) {
@@ -724,6 +739,11 @@ class session_Class {
             messagesController.ClientPathTempleted.createRemoteObject
             ,messagesController.messagesTemplates.REQUEST_CREATE_REMOTEOBJECT(this.currentUser_name, posX, posY, this.active_at_world_persistedID)
         )
+        setTimeout(
+            ()=>{
+                this.AUTOSET_REMOTE_OBJECTID()
+            }, 3000
+        )
     }
 
     GETREF_RemoteObject (object_persistedID) {
@@ -828,6 +848,17 @@ class session_Class {
                     //console.log(chalk.yellow("print array of users"))
                     //console.log(nearbyUsers)
                     this.CurrentNearbyUserLists = nearbyUsers
+
+
+                    //ADD Special Event Here
+                    console.log(chalk.bold("show nearbyUser length : " + nearbyUsers.length))
+                    if (nearbyUsers.length > 1) { // nearbyuser include ourself
+                        this.FORUI_START_FACESTREAMING()
+                    } else {
+                        this.FORUI_STOP_FACESTREAMING()
+                    }
+
+
                 }, this.INTERVALTIME_getNearbyUser
             )
         }
@@ -994,13 +1025,15 @@ class session_Class {
             data: data
         })
     }
-    SENT_REMOTEOBJECT_FRAME (framebuffer, objectID, ownerID, ownername) {
+    SENT_REMOTEOBJECT_FRAME (framebuffer, objectID, ownerID, ownername, dummy1, isOwner, hasframe) {
         this.SocketIO_Listener_RemoteMonitor.volatile.emit('remoteui_frame', {
             type: "frame",
             framebuffer: framebuffer,
             objectID: objectID,
             ownerID: ownerID,
-            ownername: ownername
+            ownername: ownername,
+            isOwner: isOwner,
+            hasframe: hasframe
         })
     }
     /////////////////////////////Global Page////////////////////////////
@@ -1241,7 +1274,10 @@ class session_Class {
             this.SENT_STATICWORLDUI_SOCKETIO({
                 worldID: this.active_at_world_persistedID,
                 worldname: this.active_at_world_name,
-                static_pic_remote_object: this.STATICRemoteObjectPic
+                static_pic_remote_object: this.STATICRemoteObjectPic,
+                static_pic_background: this.STATICBackgroundPic,
+                username: this.currentUser_name,
+                userID: this.currentUser_persistedID
             })
 
             this.SCHEDULER_WORLDUI_STATICDATA = setInterval(
@@ -1249,9 +1285,11 @@ class session_Class {
                     this.SENT_STATICWORLDUI_SOCKETIO({
                         worldID: this.active_at_world_persistedID,
                         worldname: this.active_at_world_name,
-                        static_pic_remote_object: this.STATICRemoteObjectPic
+                        static_pic_remote_object: this.STATICRemoteObjectPic,
+                        static_pic_background: this.STATICBackgroundPic,
+                        username: this.currentUser_name,
+                        userID: this.currentUser_persistedID
                     })
-
                 },this.INTERVALTIME_getObject
             )
         }
@@ -1379,10 +1417,15 @@ class session_Class {
                         return this.FORCE_STOP_remoteobjectHeartbeat()
                     }
                     let framebuffer = RemoteObject.RemoteDesktopFrameBuffer.GET_frame()
+                    let isOwner = false
+                    if (this.object_owner_name === this.currentUser_name) {
+                        isOwner = true
+                    }
                     if (!framebuffer) {
                         console.log("no framebuffer yet")
+                        this.SENT_REMOTEOBJECT_FRAME("", objectID, this.object_owner_ID, this.object_owner_name, null, false, false)
                     } else {
-                        this.SENT_REMOTEOBJECT_FRAME(framebuffer, objectID,  this.object_owner_ID, this.object_owner_name)
+                        this.SENT_REMOTEOBJECT_FRAME(framebuffer, objectID,  this.object_owner_ID, this.object_owner_name, null, isOwner, true)
                     }
                 }, this.SCHEDULER_remoteobjectPage_getframe_Interval_time
             )

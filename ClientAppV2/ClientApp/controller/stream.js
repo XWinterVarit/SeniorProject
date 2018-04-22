@@ -13,6 +13,7 @@ const stream = require('stream')
 const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
 const shots = require('azulene-screenshots')
 const sharp = require('sharp')
+const {spawn} = require('child_process')
 
 let converter
 let input
@@ -186,7 +187,7 @@ class DesktopRecorder_Class {
         this.fpscap = 1
         this.sessionRef = sessionRef
 
-        this.useDummyScreen = false
+        this.useDummyScreen = true
         this.dummyFileName = "screendummy.mp4" //nolonger use
 
         this.preload_dummy_framebuffer = []
@@ -225,6 +226,32 @@ class DesktopRecorder_Class {
             }
         }
         console.log(chalk.green("SCREEN RECORD : all frames are : " + this.preload_dummy_framebuffer.length))
+    }
+
+    Custom_Preload_FrameBuffer (foldername) {
+        this.dummy_framebuffer_folder_path = globalConfigs.testpath1.camtest + "ScreenDummy" + foldername + "/"
+        console.log(chalk.bold(this.dummy_framebuffer_folder_path))
+        if (fs.existsSync(this.dummy_framebuffer_folder_path) === true) {
+            console.log(chalk.bold("Found screen custom preload folder"))
+        } else {
+            return console.log(chalk.red("can't custom screen preload framebuffer, directory with username not existed"))
+        }
+
+        this.preload_dummy_framebuffer = []
+        for (let i = 0; i <= this.dummy_framebuffer_maximum_frame; i++) {
+            try {
+                let framebuffer = fs.readFileSync(this.dummy_framebuffer_folder_path + i + ".jpg")
+                this.preload_dummy_framebuffer.push(framebuffer)
+
+                //console.log("preloading at frame : " + i)
+            } catch (err) {
+                console.log("stopped at frame : " + (i-1))
+                //console.log(err)
+                break
+            }
+        }
+        console.log(chalk.green("Custom SCREEN RECORD : all frames are : " + this.preload_dummy_framebuffer.length))
+
     }
 
     START_RECORD (RemoteObjectRef) {
@@ -408,7 +435,7 @@ class DesktopRecorder_Class {
     START_RECORD_DUMMY_WITH_PRELOAD_FRAME (RemoteObjectRef) {
 
         if (this.intervalTaken != null) {
-            console.log("already start")
+            console.log(chalk.red("already start"))
             return false
         }
 
@@ -516,6 +543,8 @@ class CameraRecorder_Class {
 
         this.useDummyFaces = true
 
+        this.SPAWN_OPENCV = null
+
         this.preload_dummy_framebuffer = []
         this.dummy_framebuffer_folder_path = globalConfigs.testpath1.camtest + "CamDummy/"
         this.dummy_framebuffer_maximum_frame = 2000
@@ -545,6 +574,35 @@ class CameraRecorder_Class {
 
     }
 
+    Custom_Preload_FrameBuffer (foldername) {
+        this.dummy_framebuffer_folder_path = globalConfigs.testpath1.camtest + "CamDummy" + foldername + "/"
+
+        console.log(chalk.bold(this.dummy_framebuffer_folder_path))
+
+        if (fs.existsSync(this.dummy_framebuffer_folder_path) === true) {
+            console.log(chalk.bold("Found camera custom preload folder"))
+        } else {
+            return console.log(chalk.red("can't custom camera preload framebuffer, directory with username not existed"))
+        }
+
+
+        this.preload_dummy_framebuffer=[]
+        for (let i = 0; i <= this.dummy_framebuffer_maximum_frame; i++) {
+            try {
+                let framebuffer = fs.readFileSync(this.dummy_framebuffer_folder_path + i + ".jpg")
+                this.preload_dummy_framebuffer.push(framebuffer)
+
+                //console.log("preloading at frame : " + i)
+            } catch (err) {
+                console.log("stopped at frame : " + (i-1))
+                //console.log(err)
+                break
+            }
+        }
+        console.log(chalk.green("FACE STREAM : all frames are : " + this.preload_dummy_framebuffer.length))
+
+    }
+
     START_RECORD (faceframeRef) {
         if (this.OPENCV_USE === true) {
             this.START_RECORD_OPENCV()
@@ -559,8 +617,27 @@ class CameraRecorder_Class {
     }
     STOP_RECORD () {
         if (this.OPENCV_USE === true) {
-            this.intervalTaken = null
-            console.log(chalk.green("STOP OPENCV CAM RECORD"))
+            try {
+                if (this.SPAWN_OPENCV != null) {
+                    this.SPAWN_OPENCV.kill()
+                    this.SPAWN_OPENCV.removeAllListeners()
+                    this.SPAWN_OPENCV = null
+                    console.log(chalk.green("python opencv is killed"))
+                    this.intervalTaken = null
+                    console.log(chalk.green("STOP OPENCV CAM RECORD"))
+                } else {
+                    console.log(chalk.yellow("opencv already killed"))
+                }
+            } catch (e) {
+                console.log(chalk.red("******************************"))
+                console.log(chalk.red("******************************"))
+                console.log(chalk.red("******************************"))
+                console.log(chalk.red("******************************"))
+                console.log(chalk.red("kill opencv process error : " + e + "  PROCESS HANGUP"))
+                this.intervalTaken = null
+                console.log(chalk.green("STOP OPENCV CAM RECORD"))
+            }
+
 
         } else {
             if (this.intervalTaken) {
@@ -581,6 +658,23 @@ class CameraRecorder_Class {
             console.log("already start")
             return false
         }
+        try {
+            if (this.SPAWN_OPENCV != null) {
+                console.log(chalk.red("another opencv is not killed, try killing"))
+                this.SPAWN_OPENCV.kill()
+                this.SPAWN_OPENCV.removeAllListeners()
+                this.SPAWN_OPENCV = null
+            }
+            this.SPAWN_OPENCV = spawn('python', [globalConfigs.mpath1.condaScriptPath+'opencvcam.py'])
+        } catch (e) {
+            console.log(chalk.red("******************************"))
+            console.log(chalk.red("******************************"))
+            console.log(chalk.red("******************************"))
+            console.log(chalk.red("******************************"))
+            console.log(chalk.red("spawn error : " + e + "  ABORD TASK"))
+            return false
+        }
+
         console.log(chalk.green("START OPENCV CAM RECORD"))
         this.intervalTaken = "Taken by OPENCV"
 
@@ -886,7 +980,7 @@ class RemoteDesktopFrameBuffer_Class {
                 this.lock = false
                 return false
             }
-            console.log(chalk.green("SET FRAME DEBUG 1"))
+            //console.log(chalk.green("SET FRAME DEBUG 1"))
 
             this.framebuffer = framebuffer
             this.framenumber = framenumber
@@ -989,7 +1083,7 @@ class RemoteDesktopRedirectTask {
                 //console.log(messagesController.ClientPathTemplated)
                 //console.log(chalk.green(messagesController.ClientPathTempleted.clientHTTPFrameUpdate))
                 //messagesController.messagesGlobalMethods.requireTest()
-                console.log(chalk.yellow(`Special debug for stream sending system | name : ${name} objectID : ${this.object_persistedID} framenumber : ${frameNumber} ownerID : ${this.ownerID} ownername : ${this.ownerName} \n timestamp : ${timeStamp}`))
+                //console.log(chalk.yellow(`Special debug for stream sending system | name : ${name} objectID : ${this.object_persistedID} framenumber : ${frameNumber} ownerID : ${this.ownerID} ownername : ${this.ownerName} \n timestamp : ${timeStamp}`))
 
                 await messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer(IP,PORT
                     , messagesController.ClientPathTempleted.clientHTTPFrameUpdate

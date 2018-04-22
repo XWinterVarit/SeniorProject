@@ -14,7 +14,7 @@ const CircularJSON = require('circular-json')
 /////////////////////////////////////////////////////////////////////
 const MonitorSocketChannal_45000 = require('socket.io-client')('http://localhost:45000/monitor')
 //port 45000 Monitor Socket
-let MonSoc45000Debugger = false
+let MonSoc45000Debugger = true
 if (MonSoc45000Debugger === true) {
     MonitorSocketChannal_45000.on('connect', () => {
         console.log("connect to monitor")
@@ -106,8 +106,8 @@ class OneActiveWorldClass {
         this.BroadcastErrorEvents = []
 
         this.worldmatrix = new toolController.HashMatrix()
-        this.worldsizeX = 40
-        this.worldsizeY = 15
+        this.worldsizeX = 20//40
+        this.worldsizeY = 7//15
 
 
 
@@ -452,21 +452,13 @@ class OneActiveWorldClass {
                 }
                 const globalmemoryController = require(globalConfigs.mpath1.globalmemoryController)
                 let userdata = await globalmemoryController.GlobalActiveUser.callUsersV2(argumentTemplate.ownername)
-
+                userdata = userdata.data
 
                 let remoteobject_alreadyhas = await WorldMethods.hasRemotedObject(argumentTemplate.ownername, this.persistedID)
                 let objectID = ""
                 if (remoteobject_alreadyhas == null) {
-                    MonitorSocketChannal_45000.emit('terminal', {
-                        message: "not have remote object before",
-                        color: "yellow"
-                    })
                     objectID = await remoteController.RemoteDesktopMethodClass.createRemoteDesktopObject(argumentTemplate.ownername, argumentTemplate.objectname, argumentTemplate.vpath)
                 } else {
-                    MonitorSocketChannal_45000.emit('terminal', {
-                        message: "already have",
-                        color: "yellow"
-                    })
                     objectID = remoteobject_alreadyhas.objectlinks[0].object_persisted_id
                 }
 
@@ -484,17 +476,20 @@ class OneActiveWorldClass {
                     return false
                 }
                 console.log(chalk.red("Debug 3"))
-                console.log(chalk.green(CircularJSON.stringify(userdata, null, 4)))
+                //console.log(chalk.green(CircularJSON.stringify(userdata, null, 4)))
                 console.log(`objectID : ${objectID}   objectlinkedID : ${objectlinkedID}    user persisted ID ${userdata.persisted_id}`)
                 let currentobject = this.callObjectLink(objectlinkedID)
                 console.log(JSON.stringify(currentobject, null, 4))
                 console.log("show argument template")
                 console.log(argumentTemplate)
                 await this.addnewObjectLink(objectlinkedID, objectID, userdata.persisted_id, argumentTemplate.ownername, argumentTemplate.objectname, argumentTemplate.positionX, argumentTemplate.positionY, {objecttype: argumentTemplate.objecttype}, null, "remote")
+
+                Consolelog45000("show broadcast update object : " + JSON.stringify(messagesController.messagesTemplates.BROADCAST_moveObjectPosition("remote", objectlinkedID, argumentTemplate.ownername, argumentTemplate.positionX, argumentTemplate.positionY, objectID, userdata.persisted_id), null, 4), "yellow")
+                Consolelog45000("user data : " + userdata.persisted_id)
                 messagesController.messagesGlobalMethods.httpOutput_BROADCAST_POST(
                     this.GETALL_NETWORK_ADDRESS()
                     , messagesController.ClientPathTemplated.clientUserGateway
-                    , messagesController.messagesTemplates.BROADCAST_moveObjectPosition("remote", objectlinkedID, argumentTemplate.ownername, argumentTemplate.positionX, argumentTemplate.positionY, objectID))
+                    , messagesController.messagesTemplates.BROADCAST_moveObjectPosition("remote", objectlinkedID, argumentTemplate.ownername, argumentTemplate.positionX, argumentTemplate.positionY, objectID, userdata.persisted_id))
 
                 break
             default:
@@ -1016,6 +1011,33 @@ class WorldMethods {
             )
         })
     }
+
+
+    static async getNamereturnID (worldname) {
+        const collection = mongotools.db.collection('worlds')
+        return await new Promise(resolve=>{
+            collection.findOne(
+                {"name": worldname},
+
+                {"_id":1},
+
+                (err, response) => {
+                    if (err) {
+                        console.log("error " + err)
+                        return resolve(null)
+                    } else if (response) {
+                        //console.log(response)
+                        return resolve(response._id)
+                    } else {
+                        console.log("error response not found")
+                        return resolve(null)
+                    }
+
+                }
+            )
+        })
+    }
+
 
     /** @param
      *

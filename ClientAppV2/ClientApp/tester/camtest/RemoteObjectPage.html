@@ -5,8 +5,10 @@
 </head>
 <body>
 
+<div id="mainmsg" style="position: absolute;width: 1200px; height:200px; top: 50%; left: 50%; margin-left: -600px; margin-top: -100px ; font-size: 70px; color: lightgray; text-align: center">connecting...</div>
 <button id="back" style="width: 60px; height: 20px">back</button>
 <img id="remoteimg">
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <script
@@ -64,6 +66,7 @@
     ////////////////////////////Element Setup///////////////////////////////
     ////////////////////////////Element Setup///////////////////////////////
     ////////////////////////////////////////////////////////////////////////
+    let mainmsg = document.getElementById('mainmsg')
 
 
     let backbutton = document.getElementById('back')
@@ -93,21 +96,33 @@
     /////////////////////////////Remote Frame///////////////////////////////
     /////////////////////////////Remote Frame///////////////////////////////
 
+    let timestamp = Date.now()
+    let maximumtimewait = 3000 //ms
 
     let pic = document.getElementById("remoteimg")
     //console.log("show before pic : " + pic)
     remoteMon.on('remoteui_frame', function (data) {
         //console.log(data)
-        if (data.framebuffer) {
-            let img = data.framebuffer
-            /*
-            var c = document.getElementById("myCanvas");
-            var ctx = c.getContext("2d");
-            ctx.clearRect(0, 0, c.width, c.height);
-            ctx.beginPath();
-            */
-            onBinaryMessage(img, pic)
+        if (data.isOwner === true) {
+            mainmsg.innerHTML = "You are broadcasting screen.. exit this windows or back to world to stop broadcasting."
+        } else {
+            if (data.hasframe === true) {
+                mainmsg.innerHTML = ""
+                if (data.framebuffer) {
+                    let img = data.framebuffer
+                    /*
+                    var c = document.getElementById("myCanvas");
+                    var ctx = c.getContext("2d");
+                    ctx.clearRect(0, 0, c.width, c.height);
+                    ctx.beginPath();
+                    */
+                    onBinaryMessage(img, pic)
+                }
+            } else {
+                mainmsg.innerHTML = "The client of user : " + data.ownername + "  does not sent frame to ours yet."
+            }
         }
+
     });
 
 

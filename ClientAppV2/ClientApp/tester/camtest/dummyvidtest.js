@@ -5,9 +5,19 @@ const memoryFileSystem = require('memory-fs')
 const stream = require('stream')
 const ffmpeg_stream = require('ffmpeg-stream').ffmpeg
 const shots = require('azulene-screenshots')
+const commandLineArgs = require('command-line-args')
+
+const optionDefinitions = [
+    { name: 'name', alias: 'n', type: String },
+    { name: 'sec', alias: 't', type: Number},
+    { name: 'fps', alias: 'f', type: Number}
+]
+const options = commandLineArgs(optionDefinitions)
 
 
-const vid = "./screendummy.mp4"
+const vid = "./"+options.name+".mp4"
+let foldername = "./ScreenDummy"+options.name
+fs.mkdirSync(foldername)
 /*
 shots.screenshots(vid, 800).then( async (array_of_buffer) => {
     //console.log(array_of_buffer)
@@ -30,7 +40,7 @@ let createPreFrame =  async (second, fps)=>{
             console.log("start at framepass : " + framepass)
             shots.screenshot(vid, Number((Number(framepass)/Number(fps /*fps*/)).toFixed(2))).then( (buffer) => {
                 if (buffer.length > 100) {
-                    fs.writeFileSync("./test/"+framepass+".jpg", buffer)
+                    fs.writeFileSync(foldername+"/"+framepass+".jpg", buffer)
                 } else {
                     console.log(chalk.red('out of dummy video bound'))
                     framepass = 0
@@ -41,5 +51,9 @@ let createPreFrame =  async (second, fps)=>{
         })
     }
 }
-createPreFrame(60,10)
+if (options.fps) {
+    createPreFrame(options.sec,options.fps)
+} else {
+    createPreFrame(options.sec, 10)
+}
 

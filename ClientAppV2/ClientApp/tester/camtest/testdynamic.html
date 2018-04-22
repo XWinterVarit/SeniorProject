@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
-<body>
+<body style="overflow: hidden">
 
 <div style="background-color: white; position: static; height: 2000px; width: 4000px" >
+    <img id="backgroundpic" style="position: relative ;height: 2000px; top: -750px; left: -20px">
 </div>
 
 
@@ -74,7 +75,7 @@
     function dynamicElements() {
         for (let i = 1; i <= 20; i++) {
             $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 150px;\">\n" +
-                "    <p id=\"t-slot"+i+"\" > pic n "+i+" </p>\n" +
+                "    <p id=\"t-slot"+i+"\" style=\"position: absolute; text-align: center ;width:100px; top: 80px; color: rgba(255,255,255,0.8); \"> pic n "+i+" </p>\n" +
                 "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px ;border-radius: 50%\">\n" +
                 "\n" +
                 "</div>")
@@ -84,7 +85,7 @@
     function dynamicElements_object() {
         for (let i = 101; i <= 120; i++) {
             $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 100px;\">\n" +
-                "    <p id=\"t-slot"+i+"\" > object n "+i+" </p>\n" +
+                "    <p id=\"t-slot"+i+"\" style=\"position: absolute; text-align: center ;width:100px; top: 80px; color: rgba(255,255,255,0.8); \"> object n "+i+" </p>\n" +
                 "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px \">\n" +
                 "\n" +
                 "</div>")
@@ -94,7 +95,7 @@
     function dynamicElements_far_users() {
         for (let i = 51; i <= 70; i++) {
             $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 100px;\">\n" +
-                "    <p id=\"t-slot"+i+"\" > object n "+i+" </p>\n" +
+                "    <p id=\"t-slot"+i+"\" style=\"position: absolute; text-align: center ;width:100px; top: 80px; color: rgba(255,255,255,0.8); \"> object n "+i+" </p>\n" +
                 "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px ;border-radius: 50%\">\n" +
                 "\n" +
                 "</div>")
@@ -224,9 +225,14 @@
 
     let worldname = ""
     let worldID = ""
+    let username = ""
+    let userID = ""
 
     let staticRemoteObjectPicBuffer = null
+    let staticBackgroundPicBuffer = null
     let staticdataset = false
+
+    let issetBackground = false
 
     remoteMon.on('staticdata', (data) => {
         //console.log(data)
@@ -239,9 +245,26 @@
         }
         worldID = data.data.worldID
         worldname = data.data.worldname
+        username = data.data.username
+        userID = data.data.userID
         staticRemoteObjectPicBuffer = data.data.static_pic_remote_object
+        staticBackgroundPicBuffer = data.data.static_pic_background
+        setBackground()
         staticdataset = true
     })
+
+    function setBackground () {
+        if (issetBackground === true) {
+            return null
+        }
+        issetBackground = true
+        let backgroundpic = document.getElementById("backgroundpic")
+
+        let blob = new Blob([staticBackgroundPicBuffer], {type: 'image/jpg'});
+        let url = URL.createObjectURL(blob);
+
+        backgroundpic.src = url
+    }
 
     //////////////////////////////Near Face/////////////////////////////////
     //////////////////////////////Near Face/////////////////////////////////
@@ -377,6 +400,13 @@
         div.style.left = posX*100 + 'px'
         div.style.top = posY*100 + 'px'
         info.innerHTML = objectinfo.name
+
+        if (username === objectinfo.name) {
+            pic.style.border = "solid"
+            pic.style.borderColor = "white"
+        } else {
+            pic.style.border = "none"
+        }
         //console.log('render div at left :' + posX*100 + ' at top :' + posY*100)
         blob = null
         url = null

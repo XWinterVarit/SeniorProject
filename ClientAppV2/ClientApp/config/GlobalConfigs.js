@@ -11,6 +11,7 @@ const MPath1_controller_session = MPath1_controller + 'session'
 const MPath1_controller_stream = MPath1_controller + 'stream'
 const MPath1_controller_messages = MPath1_controller + 'messages'
 const MPath1_controller_tools = MPath1_controller + 'tools'
+const MPath1_controller_conda = MPath1_controller + 'conda/'
 
 const TestPath1 = nodepath + 'tester/'
 const TestPath1_data = TestPath1 + 'data/'
@@ -37,7 +38,8 @@ module.exports.mpath1 = {
     streamController: MPath1_controller_stream,
     messagesController: MPath1_controller_messages,
     toolsController: MPath1_controller_tools,
-    socketIOconfig: MPath1_config_socketIO
+    socketIOconfig: MPath1_config_socketIO,
+    condaScriptPath: MPath1_controller_conda
 }
 
 module.exports.testpath1 = {
