@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body style="overflow: hidden">
+
+<div style="background-color: white; position: static; height: 2000px; width: 4000px" >
+    <img id="backgroundpic" style="position: relative ;height: 2000px; top: -750px; left: -20px">
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script
+        src="https://code.jquery.com/jquery-3.3.1.js"
+        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+        crossorigin="anonymous"></script>
+
+
+
+
+<script>
+
+    ////////////////////////////////////////////////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ///////////////////////////SOCKET IO SETUP//////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+    let nowref = String(window.location.href)
+    let coloncount = 0
+    let port = ""
+    for (let i = 0; i < 20; i++) {
+        if (nowref[i] === ":") {
+            coloncount++
+        }
+        if (coloncount === 2) {
+            port = nowref.substring(i+1, i+6)
+            console.log(port)
+            break
+        }
+    }
+
+    var remoteMon = io.connect('http://localhost:'+(Number(port)+10000)+'/remoteMon')
+
+
+    // SET REFRESH REDIRECT TO CLEAN CAHCE BROWSER MAKE
+    setTimeout(
+        ()=>{
+            //let loc = window.location.href; // or a new URL
+            window.location.href = 'http://localhost:'+port+'/world?n=' + new Date().getTime(); // random number
+        },20000
+    )
+
+    // EMIT HEARTBEAT SIGNAL TO CLIENT APP, TO CONFIRM STREAMING
+    setInterval(
+        () => {
+            remoteMon.emit('pageheartbeat',{
+                type: "signalH",
+                page: "world"
+            })
+        },2000
+    )
+
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////Element Setup///////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+    document.body.addEventListener('click',(event)=>{
+        getMousePos(event)
+    }, true);
+
+    function dynamicElements() {
+        for (let i = 1; i <= 20; i++) {
+            $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 150px;\">\n" +
+                "    <p id=\"t-slot"+i+"\" style=\"position: absolute; text-align: center ;width:100px; top: 80px; color: rgba(255,255,255,0.8); \"> pic n "+i+" </p>\n" +
+                "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px ;border-radius: 50%\">\n" +
+                "\n" +
+                "</div>")
+        }
+    }
+
+    function dynamicElements_object() {
+        for (let i = 101; i <= 120; i++) {
+            $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 100px;\">\n" +
+                "    <p id=\"t-slot"+i+"\" style=\"position: absolute; text-align: center ;width:100px; top: 80px; color: rgba(255,255,255,0.8); \"> object n "+i+" </p>\n" +
+                "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px \">\n" +
+                "\n" +
+                "</div>")
+        }
+    }
+
+    function dynamicElements_far_users() {
+        for (let i = 51; i <= 70; i++) {
+            $('body').append("<div id = \"div"+i+"\" style=\"position: absolute; border-style: none; max-width: 100px;\">\n" +
+                "    <p id=\"t-slot"+i+"\" style=\"position: absolute; text-align: center ;width:100px; top: 80px; color: rgba(255,255,255,0.8); \"> object n "+i+" </p>\n" +
+                "        <img id=\"slot"+i+"\"style=\"max-height: 100px; max-width: 100px; min-height: 100px; min-width: 100px ;border-radius: 50%\">\n" +
+                "\n" +
+                "</div>")
+        }
+    }
+
+    dynamicElements()
+    dynamicElements_object()
+    dynamicElements_far_users()
+
+    let ElementManager = new Map()
+    function addElementVar (start, end) {
+        for (let i = start; i <= end; i++) {
+            console.log("adding element variable num " + i)
+            ElementManager.set("div"+i, document.getElementById('div'+i))
+            ElementManager.set("info"+i, document.getElementById('t-slot'+i))
+            ElementManager.set("pic"+i, document.getElementById('slot'+i))
+        }
+    }
+
+    function addListenerToRemoteObject  (start, end) {
+        for (let i = start; i <= end; i++) {
+            let pic = document.getElementById('slot'+i)
+            pic.addEventListener("click", async ()=>{
+                if (!pic.dataset)
+                    return false
+                if (!pic.dataset.info)
+                    return false
+                let object = JSON.parse(pic.dataset.info)
+                console.log(object)
+                alert("You are entering the other user screen")
+                if (await POST_CallSetObject(object.persistedID, object.ownername, object.ownerID) === false) {
+
+                } else {
+                    window.location.href = 'http://localhost:'+port+'/remote'
+                }
+                //console.log(object)
+            } )
+        }
+    }
+
+
+    addElementVar(1,20)
+    addElementVar(101,120)
+    addElementVar(51,70)
+
+    cleanelementRange(1,20)
+    cleanelementRange(101,120)
+    cleanelementRange(51,70)
+
+    //addListener(1,20)
+    addListenerToRemoteObject(101,120)
+    //addListener(51,70)
+
+    ////////////////////////////////////////////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    //////////////////////////////API CALLER////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+    let POST_CallSetObject = async (objectID, ownername, ownerID) => {
+        console.log("call")
+        let url = 'http://localhost:'+port+'/FORUI_SETOBJECTV2'
+        if (objectID == null || ownername == null || ownerID == null) {
+            console.log("argument not completed || SENT ABORD")
+            return false
+        }
+
+        let data = {
+            objectID: objectID, // link ID not real ID
+            ownername: ownername,
+            objecttype: "remote",
+            ownerID: ownerID
+        }
+
+        await new Promise(resolve=>{
+            fetch(url, {
+                method: 'POST', // or 'PUT'
+                body: JSON.stringify(data), // data can be `string` or {object}!
+                headers: new Headers({
+                    'Content-Type': 'application/json'
+                })
+            }).then(res => {
+                res.json()
+                return resolve()
+            })
+                .catch(error => {
+                    console.error('Error:', error)
+                    return resolve()
+                })
+                .then(response => {
+                    console.log('Success:', response)
+                    return resolve()
+                });
+        })
+        return true
+
+    }
+
+    let POST_movePosition = (positionX, positionY) => {
+        let url = 'http://localhost:'+port+'/CONTROL_MoveToPosition'
+        let data = {
+            positionX: positionX,
+            positionY: positionY
+        }
+
+        fetch(url, {
+            method: 'POST', // or 'PUT'
+            body: JSON.stringify(data), // data can be `string` or {object}!
+            headers: new Headers({
+                'Content-Type': 'application/json'
+            })
+        }).then(res => res.json())
+            .catch(error => console.error('Error:', error))
+            .then(response => console.log('Success:', response));
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    //////////////////////////////RENDERING/////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////Static Data////////////////////////////////
+    /////////////////////////////Static Data////////////////////////////////
+
+    let worldname = ""
+    let worldID = ""
+    let username = ""
+    let userID = ""
+
+    let staticRemoteObjectPicBuffer = null
+    let staticBackgroundPicBuffer = null
+    let staticdataset = false
+
+    let issetBackground = false
+
+    remoteMon.on('staticdata', (data) => {
+        //console.log(data)
+
+        if (!data) {
+            return console.log("static data not recieve yet")
+        }
+        if (!data.data.static_pic_remote_object) {
+            return console.log("static data not contain remoteobject pic buffer")
+        }
+        worldID = data.data.worldID
+        worldname = data.data.worldname
+        username = data.data.username
+        userID = data.data.userID
+        staticRemoteObjectPicBuffer = data.data.static_pic_remote_object
+        staticBackgroundPicBuffer = data.data.static_pic_background
+        setBackground()
+        staticdataset = true
+    })
+
+    function setBackground () {
+        if (issetBackground === true) {
+            return null
+        }
+        issetBackground = true
+        let backgroundpic = document.getElementById("backgroundpic")
+
+        let blob = new Blob([staticBackgroundPicBuffer], {type: 'image/jpg'});
+        let url = URL.createObjectURL(blob);
+
+        backgroundpic.src = url
+    }
+
+    //////////////////////////////Near Face/////////////////////////////////
+    //////////////////////////////Near Face/////////////////////////////////
+
+    let face_working = false
+    remoteMon.on('faces', function (data) {
+        if (face_working === true) {
+            console.log("operation abort due to render is not completed")
+            return false
+        }
+        face_working = true
+        document.getElementsByTagName("body")[0].style.display = "none";
+
+        //console.log("get new data")
+        let slotrunnumber = 1
+        cleanelementRange(1,20)
+        //console.log(data)
+        for (let i of data.users) {
+            //console.log(i)
+
+            if (i.framebuffer) {
+                let img = i.framebuffer
+                //console.log('setting picture')
+                //onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
+                onBinaryMessage_User(img, ElementManager.get('pic'+slotrunnumber), ElementManager.get('div'+slotrunnumber), ElementManager.get('info'+slotrunnumber), i.positionX, i.positionY, {name: i.name})
+            }
+            slotrunnumber++
+
+        }
+        document.getElementsByTagName("body")[0].style.display = "block";
+        face_working = false
+    });
+
+    ///////////////////////////////Objects//////////////////////////////////
+    ///////////////////////////////Objects//////////////////////////////////
+
+    let object_working = false
+    remoteMon.on('objects', (data) => {
+        if (object_working === true) {
+            console.log("operation abort due to render is not completed")
+            return false
+        }
+        if (staticdataset === false) {
+            console.log("static data not set yet")
+            return false
+        }
+
+        object_working = true
+        document.getElementsByTagName("body")[0].style.display = "none";
+
+        //console.log("get new data")
+        let slotrunnumber = 101
+        cleanelementRange(101,120)
+
+        //console.log(data)
+        for (let i of data.objects) {
+            //console.log(i)
+
+                let img = staticRemoteObjectPicBuffer
+                //console.log('setting picture')
+                //onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
+                onBinaryMessage_Objects(img
+                    , ElementManager.get('pic'+slotrunnumber)
+                    , ElementManager.get('div'+slotrunnumber)
+                    , ElementManager.get('info'+slotrunnumber)
+                    , i.positionX
+                    , i.positionY
+                    , {
+                        objecttype: i.objecttype,
+                        ownername: i.ownername,
+                        ownerID: i.ownerID,
+                        persistedID: i.persistedID,
+                        info: ""
+                    })
+
+            slotrunnumber++
+
+        }
+        document.getElementsByTagName("body")[0].style.display = "block";
+        object_working = false
+
+    })
+
+
+    //////////////////////////////Far Users/////////////////////////////////
+    //////////////////////////////Far Users/////////////////////////////////
+
+    let farface_working = false
+    remoteMon.on('farusers', function (data) {
+        if (farface_working === true) {
+            console.log("operation abort due to render is not completed")
+            return false
+        }
+        farface_working = true
+        document.getElementsByTagName("body")[0].style.display = "none";
+
+        //console.log("get new data")
+        let slotrunnumber = 51
+        cleanelementRange(51,70)
+
+        //console.log(data)
+        for (let i of data.users) {
+            //console.log(i)
+
+            if (i.framebuffer) {
+                let img = i.framebuffer
+                //console.log('setting picture')
+                //onBinaryMessage(img, eval('pic'+slotrunnumber), eval('div'+slotrunnumber),eval('info'+slotrunnumber), i.positionX, i.positionY)
+                onBinaryMessage_User(img, ElementManager.get('pic'+slotrunnumber), ElementManager.get('div'+slotrunnumber), ElementManager.get('info'+slotrunnumber), i.positionX, i.positionY, {name: i.name})
+            }
+            slotrunnumber++
+
+        }
+        document.getElementsByTagName("body")[0].style.display = "block";
+        farface_working = false
+    });
+
+
+    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////RENDER UTILITY//////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
+
+    function onBinaryMessage_User(input, pic,div,info, posX, posY, objectinfo) {
+        //console.log("show after pic : " + pic)
+
+        let blob = new Blob([input], {type: 'image/png'});
+        let url = URL.createObjectURL(blob);
+        //console.log("url is " + url)
+        pic.src = url
+
+        div.style.left = posX*100 + 'px'
+        div.style.top = posY*100 + 'px'
+        info.innerHTML = objectinfo.name
+
+        if (username === objectinfo.name) {
+            pic.style.border = "solid"
+            pic.style.borderColor = "white"
+        } else {
+            pic.style.border = "none"
+        }
+        //console.log('render div at left :' + posX*100 + ' at top :' + posY*100)
+        blob = null
+        url = null
+        //pic.src = ""
+        /*
+        var img = new Image;
+
+        img.onload = function() {
+            var ctx = document.getElementById("myCanvas").getContext('2d');
+            ctx.drawImage(this, 0, 0);
+            URL.revokeObjectURL(url);
+        }
+        img.src = url;
+        */
+    }
+
+    function onBinaryMessage_Objects(input, pic,div,info, posX, posY, objectinfo) {
+        let blob = new Blob([input], {type: 'image/png'});
+        let url = URL.createObjectURL(blob);
+        //console.log("url is " + url)
+        pic.src = url
+
+        pic.dataset.info = JSON.stringify(objectinfo)
+
+        div.style.left = posX*100 + 'px'
+        div.style.top = posY*100 + 'px'
+        info.innerHTML = objectinfo.objecttype + " : " + objectinfo.ownername
+
+        //console.log('render div at left :' + posX*100 + ' at top :' + posY*100)
+        blob = null
+        url = null
+    }
+
+    function cleanelement (div) {
+        div.style.left = -400 + "px"
+        div.style.top = -400+ "px"
+    }
+    function cleanlistener (pic) {
+        pic.removeEventListener("click", ()=>{
+
+        }, true)
+        pic.removeEventListener("click", ()=>{
+
+        }, false)
+    }
+
+    function cleanelementRange (start, end) {
+        for (let i = start; i <= end; i++) {
+            cleanelement(eval('div'+i))
+        }
+    }
+
+    function cleanlistenerRange (start, end) {
+        for (let i = start; i <= end; i++) {
+            cleanlistener(eval('slot'+i))
+        }
+    }
+
+    function getMousePos(event) {
+        var x = event.clientX;     // Get the horizontal coordinate
+        var y = event.clientY;     // Get the vertical coordinate
+        var coor = "X coords: " + x + ", Y coords: " + y;
+        console.log(coor)
+        let coorposX = Math.floor(Number(x)/100)
+        let coorposY = Math.floor(Number(y)/100)
+        console.log("pos coord  x: " + coorposX + "  y : " + coorposY)
+        POST_movePosition(coorposX, coorposY)
+    }
+</script>
+</body>
+</html>

@@ -14,7 +14,7 @@ const CircularJSON = require('circular-json')
 /////////////////////////////////////////////////////////////////////
 const MonitorSocketChannal_45000 = require('socket.io-client')('http://localhost:45000/monitor')
 //port 45000 Monitor Socket
-let MonSoc45000Debugger = true
+let MonSoc45000Debugger = false
 if (MonSoc45000Debugger === true) {
     MonitorSocketChannal_45000.on('connect', () => {
         console.log("connect to monitor")

@@ -184,7 +184,7 @@ class DesktopRecorder_Class {
         console.log("DesktopRecorder_Initialize")
         this.intervalTaken = null
         this.stopsignal = false
-        this.fpscap = 1
+        this.fpscap = 10
         this.sessionRef = sessionRef
 
         this.useDummyScreen = true
@@ -1000,7 +1000,7 @@ class RemoteDesktopFrameBuffer_Class {
 
 
             await this.RedirectTaskControllerRef.SIGNAL_passthrough_send(framebuffer, framenumber, timestamp)
-            console.log(chalk.green("SET FRAME DEBUG 2"))
+            //console.log(chalk.green("SET FRAME DEBUG 2"))
 
         } else {
             console.log("can't set frame due to the other operation is operate on frame")

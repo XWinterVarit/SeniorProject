@@ -142,7 +142,14 @@ router.get('/remoteMonitor', (req, res, next) => {
     res.send(currentObject.RemoteDesktopRedirectTask.MONITOR())
 })
 
-
+router.get('/world', (req, res, next) => {
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.sendFile(globalConfigs.wpath1.webpage + 'WorldPage.html')
+})
+router.get('/remote', (req, res, next) => {
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.sendFile(globalConfigs.wpath1.webpage + 'RemoteObjectPage.html')
+})
 
 router.get('/FORUI_getallactivemember', (req, res, next) => {
     res.json(sessionController.globalSession.FORUI_getallactivemember())
@@ -199,11 +206,11 @@ router.post('/FORUI_CREATEREMOTEOBJECT', (req, res, next) => {
     sessionController.globalSession.CONTROL_CreateRemoteObject(req.body.positionX, req.body.positionY)
     res.end()
 })
-
+/*
 router.get('/remoteobjpage', (req, res, next) => {
     res.sendFile(globalConfigs.testpath1.camtest + "RemoteObjectPage.html")
 })
-
+*/
 router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => {
     /*
     let framebuffer = req.body.frame
@@ -240,12 +247,12 @@ router.post('/createRemoteObject', (req, res, next) => {
     res.end()
 })
 
-
+/*
 router.get('/FrameImageDebug', (req, res, next) => {
     res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
     res.sendFile(globalConfigs.testpath1.monitorGUI + 'test.html')
 })
-
+*/
 router.get('/showfaces', (req, res, next) => {
     sessionController.globalSession.FORUI_START_GETFACE()
     res.end()
@@ -266,6 +273,7 @@ router.get('/man_stopscreenstream', (req, res, next) => {
     sessionController.globalSession.CONTROL_STOP_BroadcastScreen()
     res.end()
 })
+/*
 router.get('/FaceImageDebug', (req, res, next) => {
     res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
     res.sendFile(globalConfigs.testpath1.camtest + 'faceMon.html')
@@ -274,7 +282,7 @@ router.get('/FacesDebug', (req, res, next) => {
     res.header('Cache-Control', 'no-cache, no-store, must-revalidate')
     res.sendFile(globalConfigs.testpath1.camtest + 'testdynamic.html')
 })
-
+*/
 router.get('/NearbyCalStart', (req, res, next) => {
     sessionController.globalSession.CONTROL_START_GETNEARBY_SCHEDULER()
     res.end()

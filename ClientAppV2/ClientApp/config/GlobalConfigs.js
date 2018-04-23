@@ -13,6 +13,10 @@ const MPath1_controller_messages = MPath1_controller + 'messages'
 const MPath1_controller_tools = MPath1_controller + 'tools'
 const MPath1_controller_conda = MPath1_controller + 'conda/'
 
+
+const WPath1_webpages = nodepath + 'webpages/'
+
+
 const TestPath1 = nodepath + 'tester/'
 const TestPath1_data = TestPath1 + 'data/'
 const TestPath1_monitorGUI = TestPath1 + 'monitorGUI/'
@@ -40,6 +44,9 @@ module.exports.mpath1 = {
     toolsController: MPath1_controller_tools,
     socketIOconfig: MPath1_config_socketIO,
     condaScriptPath: MPath1_controller_conda
+}
+module.exports.wpath1 = {
+    webpage: WPath1_webpages
 }
 
 module.exports.testpath1 = {
