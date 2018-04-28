@@ -329,6 +329,7 @@ class session_Class {
 
         this.remotestreaming = null
         this.facestreaming = null
+        this.micstreaming = null
 
         setTimeout(
             () => {
@@ -336,6 +337,8 @@ class session_Class {
                 this.remotestreaming = new streamController.DesktopRecorder_Class(this)
                 console.log("face streaming module start")
                 this.facestreaming = new streamController.CameraRecorder_Class(this)
+                console.log("mic streaming module start")
+                this.micstreaming = new streamController.MicRecorder_Class(this)
             }, 1500
         )
 
@@ -378,6 +381,7 @@ class session_Class {
 
         this.CurrentNearbyUserLists = []
         this.CurrentNearbyUserLists_HASH = new Map()
+        this.CurrentNearbyUserDistance = []
 
 
         this.CONTROL_START_GETNEARBY_SCHEDULER()
@@ -811,9 +815,13 @@ class session_Class {
             this.SCHEDULER_getNearbyUser = setInterval(
                 () => {
                     let nearbyUsers = []
+                    let nearbyUsersDistance = []
                     let boundlengthX = this.PREVALUE_getNearbyUser_BoundLengthX
                     let boundlengthY = this.PREVALUE_getNearbyUser_BoundLengthY
                     let currentUser = this.activeMember.get(this.currentUser_name)
+                    let currentUser_positionX = currentUser.positionX
+                    let currentUser_positionY = currentUser.positionY
+
                     if (!currentUser) {
                         console.log("user not loaded yet")
                         return false
@@ -841,6 +849,9 @@ class session_Class {
                                     //console.log(JSON.stringify(data, null, 4))
                                     nearbyUsers.push(data)
                                     this.CurrentNearbyUserLists_HASH.set(data.name, data)
+
+                                    let distance = Math.square(Math.pow(currentUser_positionX - data.positionX,2) + Math.pow(currentUser_positionY - data.positionY,2))
+                                    nearbyUsersDistance.push({data:data, distance: distance})
                                 }
                             }
                         }
@@ -848,6 +859,7 @@ class session_Class {
                     //console.log(chalk.yellow("print array of users"))
                     //console.log(nearbyUsers)
                     this.CurrentNearbyUserLists = nearbyUsers
+                    this.CurrentNearbyUserDistance = nearbyUsersDistance
 
 
                     //ADD Special Event Here

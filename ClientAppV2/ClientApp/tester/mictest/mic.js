@@ -2,66 +2,148 @@ const mic = require('mic')
 const fs = require('fs')
 const play = require('audio-play')
 const load = require('audio-loader')
+const Speaker = require('speaker')
+const volume = require('pcm-volume')
 var createBuffer = require('audio-buffer-from')
+const speaker = new Speaker({
+    channels: 2,          // 2 channels
+    bitDepth: 16,         // 16-bit samples
+    sampleRate: 44100     // 44,100 Hz sample rate
+})
+const speaker2 = new Speaker({
+    channels: 2,          // 2 channels
+    bitDepth: 16,         // 16-bit samples
+    sampleRate: 44100     // 44,100 Hz sample rate
+})
 const memoryFileSystem = require('memory-fs')
 
-var micInstance = mic({
-    rate: '16000',
-    channels: '1',
+
+let micInstance =  mic({
+    rate: '44100',
+    channels: '2',
     debug: false,
-    fileType: 'wav'
 });
 let micInputStream = micInstance.getAudioStream()
 
-let bufferQueue=[]
+let v = new volume()
+v.setVolume(0.1)
 
-let soundtest = async () => {
-    for (let i = 0; i < 5; i++) {
-        console.log('i = ' + i)
-        let spinwaitpass = false
+
+
+
+
+
+    micInputStream.on('data', function(data) {
+        console.log("Recieved Input Stream: " + data.length);
+    });
+
+    micInputStream.on('error', function(err) {
+        cosole.log("Error in Input Stream: " + err);
+    });
+
+    micInputStream.on('startComplete', function() {
+        console.log("Got SIGNAL startComplete");
+    });
+
+    micInputStream.on('stopComplete', function() {
+        console.log("Got SIGNAL stopComplete");
+    });
+
+    micInputStream.on('pauseComplete', function() {
+        console.log("Got SIGNAL pauseComplete");
+    });
+
+    micInputStream.on('resumeComplete', function() {
+        console.log("Got SIGNAL resumeComplete");
+    });
+
+    micInputStream.on('silence', function() {
+        console.log("Got SIGNAL silence");
+    });
+
+    micInputStream.on('processExitComplete', function() {
+        console.log("Got SIGNAL processExitComplete");
+    });
+
+    let test = async () => {
         let fsM = new memoryFileSystem()
-
-//var outputFileStream = fs.WriteStream('output.wav');
-
-
-        micInputStream.pipe(fsM.createWriteStream('/output.wav'));
-
-
-        micInputStream.on('data', function(data) {
-            console.log("Recieved Input Stream: " + data.length);
-
-        });
-
-        micInputStream.on('error', function(err) {
-            console.log("Error in Input Stream: " + err);
-        });
-
-        micInputStream.on('startComplete', function() {
-            console.log("Got SIGNAL startComplete");
-            setTimeout(function() {
-                micInstance.stop();
-            }, 5000);
-        });
-
+        let outputFileStream = fsM.createWriteStream('/mic.raw')
+        micInputStream.pipe(outputFileStream)
+        micInstance.start()
         await new Promise(resolve=>{
-            console.log('pass')
-            micInputStream.on('stopComplete', function() {
-                console.log("Got SIGNAL stopComplete");
-                let audiobuffer = fsM.readFileSync('/output.wav')
-                console.log('audi buffer size : ' + audiobuffer.length)
-                micInputStream.removeAllListeners()
-                //micInputStream = null
-                return resolve()
-            });
-            micInstance.start();
+            setTimeout(
+                async ()=>{
+                    micInstance.pause()
+                    //fsM.createReadStream('/mic.raw').pipe(speaker)
+                    const speaker55 = new Speaker({
+                        channels: 2,          // 2 channels
+                        bitDepth: 16,         // 16-bit samples
+                        sampleRate: 44100     // 44,100 Hz sample rate
+                    })
+                    let channal1 = fsM.createReadStream('/mic.raw')
+                    channal1.pipe(speaker55).on('finish', ()=>{
+                        console.log("pipe end")
+                        let buffer = fsM.readFileSync('/mic.raw')
+                        console.log("buffer size : " + buffer.length)
+                        return resolve()
+                    })
+                },10000
+            )
         })
-        console.log('pass2')
+        console.log("restart recording")
+        fsM = new memoryFileSystem()
+        outputFileStream = fsM.createWriteStream('/mic.raw')
+        micInputStream = micInstance.getAudioStream()
+
+        micInputStream.pipe(outputFileStream)
+        micInstance.resume()
+        await new Promise(resolve=>{
+            setTimeout(
+                async ()=>{
+                    micInstance.pause()
+                    //fsM.createReadStream('/mic.raw').pipe(speaker)
+                    const speaker55 = new Speaker({
+                        channels: 2,          // 2 channels
+                        bitDepth: 16,         // 16-bit samples
+                        sampleRate: 44100     // 44,100 Hz sample rate
+                    })
+                    let channal1 = fsM.createReadStream('/mic.raw')
+                    channal1.pipe(speaker55).on('finish', ()=>{
+                        console.log("pipe end")
+                        return resolve()
+                    })
+                },3000
+            )
+        })
 
     }
+    test()
 
-}
 
-soundtest()
+
+
+
+
+
+  /*
+    setInterval(
+        ()=>{
+
+            const speaker55 = new Speaker({
+                channels: 2,          // 2 channels
+                bitDepth: 16,         // 16-bit samples
+                sampleRate: 44100     // 44,100 Hz sample rate
+            })
+            let channal1 = fsM.createReadStream('/mic.raw')
+            channal1.pipe(speaker55).on('finish', ()=>{
+                console.log("pipe end")
+            })
+
+            //fsM.createReadStream('/mic.raw').pipe(v).pipe(speaker2)
+        },10000
+    )
+
+*/
 
 
 /*

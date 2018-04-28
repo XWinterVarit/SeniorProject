@@ -15,6 +15,10 @@ const shots = require('azulene-screenshots')
 const sharp = require('sharp')
 const {spawn} = require('child_process')
 
+const mic = require('mic')
+const Speaker = require('speaker')
+const volume = require('pcm-volume')
+
 let converter
 let input
 
@@ -910,6 +914,112 @@ class CameraRecorder_Class {
     }
 }
 
+class MicRecorder_Class {
+    constructor (sessionRef) {
+
+        this.sessionRef = sessionRef
+        this.IsRecording = false
+        this.IsSending = false
+        this.firstTimeRec = true
+        this.maximumRecordTime = 10000 //msec
+
+        this.CheckerOverRecordTime = null
+
+        this.fsM = new memoryFileSystem()
+        this.outputFileStream = this.fsM.createWriteStream('/mic.raw')
+
+        this.micInstance = mic({
+            rate: '44100',
+            channels: '2',
+            debug: false
+        })
+        this.micInputStream = this.micInstance.getAudioStream()
+
+        this.micInputStream.on('data', function(data) {
+            console.log("recording Stream byte: " + data.length);
+        });
+
+        this.micInputStream.on('error', function(err) {
+            cosole.log("Error in Input Stream: " + err);
+        });
+
+        this.micInputStream.on('startComplete', function() {
+            console.log("Got SIGNAL startComplete");
+        });
+
+        this.micInputStream.on('stopComplete', function() {
+            console.log("Got SIGNAL stopComplete");
+        });
+
+        this.micInputStream.on('pauseComplete', function() {
+            console.log("Got SIGNAL pauseComplete");
+        });
+
+        this.micInputStream.on('resumeComplete', function() {
+            console.log("Got SIGNAL resumeComplete");
+        });
+
+        this.micInputStream.on('silence', function() {
+            console.log("Got SIGNAL silence");
+        });
+
+        this.micInputStream.on('processExitComplete', function() {
+            console.log("Got SIGNAL processExitComplete");
+        });
+
+    }
+    async START_Record () {
+        if (this.IsRecording === true || this.IsSending === true) {
+            console.log(chalk.yellow("mic already recorging or sending"))
+            return false
+        }
+        if (this.CheckerOverRecordTime != null) {
+            clearTimeout(this.CheckerOverRecordTime)
+            this.CheckerOverRecordTime = null
+        }
+        this.IsRecording = true
+        this.fsM = new memoryFileSystem()
+        this.outputFileStream = this.fsM.createWriteStream('/mic.raw')
+        this.micInputStream.pipe(this.outputFileStream)
+
+        if (this.firstTimeRec === true) {
+            this.micInstance.start()
+            this.firstTimeRec = false
+        } else {
+            this.micInstance.resume()
+        }
+
+        this.CheckerOverRecordTime = setTimeout(
+            ()=>{
+                this.STOP_Record()
+                console.log(chalk.yellow("mic now record more than " + this.maximumRecordTime + "msec. STOPPED"))
+            }, this.maximumRecordTime
+        )
+
+
+
+    }
+    STOP_Record () {
+        if (this.IsRecording === false) {
+            console.log(chalk.yellow("mic recorder already stopped"))
+            return false
+        }
+
+        this.micInstance.pause()
+        let buffer = this.fsM.readFileSync('/mic.raw')
+        console.log("buffer size : " + buffer.length)
+        this.SENDTO_NEARBY_USER()
+    }
+    FORCE_STOP_Record () { // no sent audio buffer
+
+    }
+    SENDTO_NEARBY_USER () {
+
+    }
+
+}
+
+
 class OneObjectRemoteDesktop_Class {
     constructor(object_persistedID, ownerID, ownerName, sessionRef) {
         this.RemoteDesktopFrameBuffer = new RemoteDesktopFrameBuffer_Class(object_persistedID, ownerID, ownerName, sessionRef)
@@ -925,6 +1035,7 @@ class OneObjectRemoteDesktop_Class {
     }
 
 }
+
 
 
 class RemoteDesktopFrameBuffer_Class {
@@ -1206,3 +1317,4 @@ module.exports.OneObjectRemoteDesktop_Class = OneObjectRemoteDesktop_Class
 module.exports.GlobalStreamUtility = GlobalStreamUtility
 module.exports.DesktopRecorder_Class = DesktopRecorder_Class
 module.exports.CameraRecorder_Class = CameraRecorder_Class
+module.exports.MicRecorder_Class = MicRecorder_Class
