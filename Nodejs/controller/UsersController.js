@@ -547,6 +547,31 @@ class UserMethods {
         res.end()
     }
 
+    static async getUserID (username) {
+        const collection = mongotools.db.collection('users')
+        return await new Promise(resolve => {
+            collection.findOne(
+                {"name": username},
+
+                {"_id":1},
+
+                (err, response) => {
+                    if (err) {
+                        console.log("error " + err)
+                        return resolve(null)
+                    } else if (response) {
+                        //console.log(response)
+                        return resolve(response._id)
+                    } else {
+                        console.log("error response not found")
+                        return resolve(null)
+                    }
+
+                }
+            )
+        })
+    }
+
     static async addMembered_WorldID (user_name,world_persistedID) {
         const user_collection = mongotools.db.collection('users')
         let validation = true

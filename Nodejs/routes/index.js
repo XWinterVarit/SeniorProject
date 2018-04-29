@@ -312,6 +312,18 @@ router.post('/getworldID',async (req, res, next) => {
         res.json({_id:worldID})
     }
 })
+
+router.post('/getusername', async (req, res, next) => {
+    let userID = await userController.UserMethods.getUserID(req.body.username)
+    console.log(userID)
+    if (userID == null) {
+        res.end()
+    } else if (worldID === "") {
+        res.end()
+    } else {
+        res.json({_id: userID})
+    }
+})
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////

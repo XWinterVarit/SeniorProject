@@ -537,6 +537,8 @@ class DesktopRecorder_Class {
 
 class CameraRecorder_Class {
     constructor (sessionRef) {
+        this.enable = true
+
         this.stopsignal = false
         this.fpscap = 10
         this.sessionRef = sessionRef
@@ -608,6 +610,9 @@ class CameraRecorder_Class {
     }
 
     START_RECORD (faceframeRef) {
+        if (this.enable === false) {
+            return false
+        }
         if (this.OPENCV_USE === true) {
             this.START_RECORD_OPENCV()
         } else {
@@ -916,12 +921,17 @@ class CameraRecorder_Class {
 
 class MicRecorder_Class {
     constructor (sessionRef) {
+        this.enable = true
 
         this.sessionRef = sessionRef
         this.IsRecording = false
         this.IsSending = false
         this.firstTimeRec = true
         this.maximumRecordTime = 10000 //msec
+
+        this.usedummyaudio = false
+        this.dummyfolderpath = globalConfigs.testpath1.camtest
+        this.preLoadMic = null
 
         this.CheckerOverRecordTime = null
 
@@ -967,13 +977,61 @@ class MicRecorder_Class {
             console.log("Got SIGNAL processExitComplete");
         });
 
+        this.Preload_FrameBuffer()
     }
-    async START_Record () {
-        if (this.IsRecording === true || this.IsSending === true) {
-            console.log(chalk.yellow("mic already recorging or sending"))
+
+    Preload_FrameBuffer () {
+        this.preLoadMic = null
+        try {
+            this.preLoadMic = fs.readFileSync(this.dummyfolderpath + "micdummy.raw")
+            console.log(chalk.green("MIC RECORD : all byte are " + this.preLoadMic.length))
+        } catch (err) {
+            console.log(chalk.red("no preload mic audio found"))
+        }
+    }
+
+    GET_STATUS () {
+        return {
+            enable: this.enable,
+            IsRecording: this.IsRecording,
+            IsSending: this.IsSending
+        }
+    }
+
+    async START_RECORD () {
+        if (this.enable === false) {
+            return console.log(chalk.red("Mic not enabled"))
+        }
+        if (this.usedummyaudio === true) {
+            this.START_RECORD_DUMMY()
+        } else {
+            this.START_RECORD_REAL()
+        }
+    }
+
+    async START_RECORD_DUMMY () {
+        if (this.IsRecording === true || this.IsSending === true || this.preLoadMic == null) {
+            console.log(chalk.yellow("mic already recorกing or sending"))
             return false
         }
         if (this.CheckerOverRecordTime != null) {
+            console.log(chalk.yellow("force stop checker over time"))
+            clearTimeout(this.CheckerOverRecordTime)
+            this.CheckerOverRecordTime = null
+        }
+        this.IsRecording = true
+        this.fsM = new memoryFileSystem()
+        this.fsM.writeFileSync('/mic.raw', this.preLoadMic)
+        await this.SENDTO_NEARBY_USER(this.preLoadMic)
+        this.IsRecording = false
+    }
+    async START_RECORD_REAL () {
+        if (this.IsRecording === true || this.IsSending === true) {
+            console.log(chalk.yellow("mic already recorกing or sending"))
+            return false
+        }
+        if (this.CheckerOverRecordTime != null) {
+            console.log(chalk.yellow("force stop checker over time"))
             clearTimeout(this.CheckerOverRecordTime)
             this.CheckerOverRecordTime = null
         }
@@ -991,7 +1049,7 @@ class MicRecorder_Class {
 
         this.CheckerOverRecordTime = setTimeout(
             ()=>{
-                this.STOP_Record()
+                this.STOP_RECORD()
                 console.log(chalk.yellow("mic now record more than " + this.maximumRecordTime + "msec. STOPPED"))
             }, this.maximumRecordTime
         )
@@ -999,21 +1057,73 @@ class MicRecorder_Class {
 
 
     }
-    STOP_Record () {
+    async STOP_RECORD () {
         if (this.IsRecording === false) {
             console.log(chalk.yellow("mic recorder already stopped"))
             return false
         }
+        if (this.IsSending === true) {
+            console.log(chalk.yellow("can't stop, the senting is not complted"))
+            return false
+        }
 
         this.micInstance.pause()
-        let buffer = this.fsM.readFileSync('/mic.raw')
-        console.log("buffer size : " + buffer.length)
-        this.SENDTO_NEARBY_USER()
+        let audiobuffer = this.fsM.readFileSync('/mic.raw')
+        if (audiobuffer == null) {
+            console.log(chalk.red("strange error, audiobuffer not founded"))
+        } else {
+            console.log("buffer size : " + audiobuffer.length)
+            await this.SENDTO_NEARBY_USER(audiobuffer)
+        }
+        this.IsRecording = false
     }
     FORCE_STOP_Record () { // no sent audio buffer
 
     }
-    SENDTO_NEARBY_USER () {
+    async SENDTO_NEARBY_USER (audiobuffer) {
+        if (audiobuffer == null) {
+            console.log(chalk.red("no audio buffer to send"))
+            return false
+        }
+        this.IsSending = true
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+
+        for (let i of this.sessionRef.CurrentNearbyUserDistance) {
+            if (i.data.name === this.sessionRef.currentUser_name) {
+                continue
+            }
+            console.log(chalk.green(`peer name : ${i.data.name} IP : ${i.data.IP} PORT : ${i.data.PORT} distance : ${i.distance}`))
+            let IP = i.data.IP
+            let PORT = i.data.PORT
+            let volumepercent = (10-Math.pow(i.distance,3)) * 0.1
+            if (volumepercent < 0.1) {
+                volumepercent = 0.1
+            }
+            messagesController.messagesGlobalMethods.formdata_httpOutput_ANY_ONEBuffer(
+                IP,
+                PORT,
+                messagesController.ClientPathTempleted.clientHTTPMicBuffer,
+                messagesController.messagesTemplates.UNICAST_UPDATEMICBUFFER_HEADER_FORMDATA(i.data.name, volumepercent),
+                messagesController.messagesTemplates.ONE_BUFFERDATA_FORFORMDATA(audiobuffer, "frame", messagesController.messagesTemplates_ClientPathTempleted.application_any)
+            )
+        }
+        //await this.PlayTest()
+        this.IsSending = false
+    }
+    async PlayTest () {
+
+            const speaker55 = new Speaker({
+                channels: 2,          // 2 channels
+                bitDepth: 16,         // 16-bit samples
+                sampleRate: 44100     // 44,100 Hz sample rate
+            })
+            let channal1 = this.fsM.createReadStream('/mic.raw')
+            await new Promise(resolve=>{
+                channal1.pipe(speaker55).on('finish', ()=>{
+                    console.log("pipe end")
+                    return resolve()
+                })
+            })
 
     }
 
@@ -1050,6 +1160,8 @@ class RemoteDesktopFrameBuffer_Class {
         this.timestamp = ""
         this.maximum_time_allow_get_frame = 3000 //ms
         this.framebuffer = null
+
+        this.host_set_timestamp = 0
 
         this.debugFrame = false
         this.redirecttodisplay = false
@@ -1096,6 +1208,8 @@ class RemoteDesktopFrameBuffer_Class {
             this.framebuffer = framebuffer
             this.framenumber = framenumber
             this.timestamp = timestamp
+
+            this.host_set_timestamp = Date.now()
             /*
             if (this.debugFrame === true) {
                 console.log('emit to websocket')
@@ -1119,7 +1233,7 @@ class RemoteDesktopFrameBuffer_Class {
     }
     GET_frame () {
         let now_timestamp = Date.now()
-        if (now_timestamp - this.timestamp < this.maximum_time_allow_get_frame) {
+        if (now_timestamp - this.host_set_timestamp < this.maximum_time_allow_get_frame) {
             return this.framebuffer
         } else {
             return null

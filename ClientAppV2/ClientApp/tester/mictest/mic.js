@@ -117,10 +117,23 @@ v.setVolume(0.1)
         })
 
     }
-    test()
+    //test()
+
+    let createDummySound = async(filename, time) => {
 
 
+        var outputFileStream = fs.WriteStream('./'+filename+'.raw');
 
+        micInputStream.pipe(outputFileStream);
+
+        micInstance.start();
+        setTimeout(
+            ()=>{
+                micInstance.stop()
+            },time
+        )
+    }
+    createDummySound("micDummy", 5000)
 
 
 

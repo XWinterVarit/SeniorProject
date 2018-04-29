@@ -42,7 +42,8 @@ const ClientPathTempleted = {
     clientHTTPFrameUpdate: "clientHTTPREMF",
     clientHTTPFaceFrameUpdate: "clientHTTPFaceF",
     createRemoteObject: "CreateRemoteObject",
-    requestRemoteObjectID: "RequestRemoteObjectID"
+    requestRemoteObjectID: "RequestRemoteObjectID",
+    clientHTTPMicBuffer: "clientHTTPMicB"
 }
 
 
@@ -251,6 +252,12 @@ class messagesTemplates {
             worldID: worldID,
             destusername: destusername,
             senterusername: senterusername
+        }
+    }
+    static UNICAST_UPDATEMICBUFFER_HEADER_FORMDATA (senterusername, volumepercent) {
+        return {
+            senterusername: senterusername,
+            volumepercent: volumepercent
         }
     }
 

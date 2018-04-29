@@ -15,6 +15,10 @@ const uploadService = multer({storage: multer.memoryStorage()})
 const fs = require('fs')
 var iconv = require('iconv-lite');
 
+const Speaker = require('speaker')
+const volume = require('pcm-volume')
+let speakerEnabled = false
+const memoryFileSystem = require('memory-fs')
 
 ////////////////////////////From Configs/////////////////////////////
 
@@ -178,6 +182,53 @@ router.post('/FORUI_SETOBJECT', (req, res, next) => {
     res.end()
 })
 
+router.post('/FORUI_TOGGLE_MICBROADCAST', (req, res, next) => {
+    let status = sessionController.globalSession.GET_MIC_STATUS()
+    if (status == null) {
+        console.log(chalk.red("something error: get mic status"))
+        return res.json({
+            enable: false
+        })
+    }
+    if (status.enable === false) {
+        return res.json({
+            enable: false
+        })
+    }
+
+    if (status.IsRecording === true || status.IsSending === true) {
+        sessionController.globalSession.CONTROL_STOP_MIC_BROADCAST()
+        return res.json({
+            enable: true,
+            recording: true
+        })
+    } else {
+        sessionController.globalSession.CONTROL_START_MIC_BROADCAST()
+        return res.json({
+            enable:true,
+            recording: false
+        })
+    }
+})
+
+router.post('/FORUI_START_MICBROADCAST', (req, res, next) => {
+    sessionController.globalSession.CONTROL_START_MIC_BROADCAST()
+    res.end()
+})
+router.post('/FORUI_STOP_MICBROADCAST', (req, res, next) => {
+    sessionController.globalSession.CONTROL_STOP_MIC_BROADCAST()
+    res.end()
+})
+
+router.post('/FORUI_SET_SPEAKER_ENABLE', (req, res, next) => {
+    speakerEnabled = true
+    res.end()
+})
+router.post('/FORUI_SET_SPEAKER_DISABLE', (req, res, next) => {
+    speakerEnabled = false
+    res.end()
+})
+
 router.get('/SET_FACE_STREAM_ON', (req, res, next) => {
 
 })
@@ -239,6 +290,48 @@ router.post('/clientHTTPREMF',uploadService.single('file'), (req, res, next) => 
 
 router.post('/clientHTTPFaceF', uploadService.single('file'), (req, res, next) => {
     messagesController.messagesGlobalMethods.updateFaceFrame(req)
+    res.end()
+})
+
+router.post('/clientHTTPMicB', uploadService.single('file'), (req, res, next) => {
+    if (speakerEnabled === false) {
+        return console.log("data recieved. but speaker is not enabled")
+    }
+
+    let headerdata = null
+    try {
+        headerdata = JSON.parse(req.body.headerdata)
+    } catch (e) {
+        console.log(e)
+        return false
+    }
+
+    let audiobuffer = req.file.buffer
+    if (audiobuffer == null) {
+        console.log(chalk.red("no audio frame buffer, IGNORE play"))
+        return false
+    }
+
+    try {
+        let fsM = new memoryFileSystem()
+        console.log(chalk.green(JSON.stringify(headerdata, null, 4)))
+        //console.log(`receive from ${headerdata.senterusername} with volume ${headerdata.volumepercent} percent`)
+        fsM.writeFileSync('/mic.raw', audiobuffer)
+        let channal1 = fsM.createReadStream('/mic.raw')
+        const speaker55 = new Speaker({
+            channels: 2,          // 2 channels
+            bitDepth: 16,         // 16-bit samples
+            sampleRate: 44100     // 44,100 Hz sample rate
+        })
+        let v = new volume()
+        v.setVolume(headerdata.volumepercent)
+        channal1.pipe(v).pipe(speaker55).on('finish', () => {
+            console.log("pipe end")
+        })
+    } catch (e) {
+        console.log("speaker error : " + e)
+    }
+
     res.end()
 })
 

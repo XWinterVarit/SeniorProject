@@ -6,6 +6,11 @@
 </head>
 <body style="overflow: hidden">
 
+
+<div id="micrecordtoggle" style="z-index: 999;background-color: green; position: fixed; height: 80px; width: 80px; top: 10px; left: 60px;">
+    MIC
+</div>
+
 <div style="background-color: white; position: static; height: 2000px; width: 4000px" >
     <img id="backgroundpic" style="position: relative ;height: 2000px; top: -750px; left: -20px">
 </div>
@@ -68,9 +73,22 @@
     ////////////////////////////Element Setup///////////////////////////////
     ////////////////////////////Element Setup///////////////////////////////
     ////////////////////////////////////////////////////////////////////////
+    let micrecordtoggle = document.getElementById('micrecordtoggle')
+    console.log(micrecordtoggle)
+    micrecordtoggle.addEventListener('click', async ()=>{
+        let result = await POST_MICREC()
+        console.log(result)
+        console.log("*****************************")
+    })
+
+/*
     document.body.addEventListener('click',(event)=>{
         getMousePos(event)
     }, true);
+*/
+    document.getElementById('backgroundpic').addEventListener('click', (event)=>{
+        getMousePos(event)
+    }, true)
 
     function dynamicElements() {
         for (let i = 1; i <= 20; i++) {
@@ -150,6 +168,9 @@
     addListenerToRemoteObject(101,120)
     //addListener(51,70)
 
+
+
+
     ////////////////////////////////////////////////////////////////////////
     //////////////////////////////API CALLER////////////////////////////////
     //////////////////////////////API CALLER////////////////////////////////
@@ -208,9 +229,35 @@
             headers: new Headers({
                 'Content-Type': 'application/json'
             })
-        }).then(res => res.json())
+        })
             .catch(error => console.error('Error:', error))
             .then(response => console.log('Success:', response));
+    }
+
+
+    let POST_MICREC = async () => {
+        let url = 'http://localhost:'+port+'/FORUI_TOGGLE_MICBROADCAST'
+        let data = {
+            message: "no data"
+        }
+        console.log("sending pos")
+        return await new Promise(resolve=>{
+            fetch(url, {
+                method: 'POST', // or 'PUT'
+                body: JSON.stringify(data), // data can be `string` or {object}!
+                headers: new Headers({
+                    'Content-Type': 'application/json'
+                })
+            })
+                .catch(error => {
+                    console.error('Error:', error)
+                    return resolve()
+                })
+                .then(response => {
+                    console.log('Success:', response)
+                    return resolve(response.json())
+                });
+        })
     }
 
 

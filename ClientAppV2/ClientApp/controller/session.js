@@ -807,6 +807,16 @@ class session_Class {
         }
     }
 
+    GET_MIC_STATUS () {
+        return this.micstreaming.GET_STATUS()
+    }
+    CONTROL_START_MIC_BROADCAST () {
+        this.micstreaming.START_RECORD()
+    }
+    CONTROL_STOP_MIC_BROADCAST () {
+        this.micstreaming.STOP_RECORD()
+    }
+
     CONTROL_START_GETNEARBY_SCHEDULER () {
         if (this.SCHEDULER_getNearbyUser) {
             console.log("getnearby user already started")
@@ -819,13 +829,14 @@ class session_Class {
                     let boundlengthX = this.PREVALUE_getNearbyUser_BoundLengthX
                     let boundlengthY = this.PREVALUE_getNearbyUser_BoundLengthY
                     let currentUser = this.activeMember.get(this.currentUser_name)
-                    let currentUser_positionX = currentUser.positionX
-                    let currentUser_positionY = currentUser.positionY
+
 
                     if (!currentUser) {
                         console.log("user not loaded yet")
                         return false
                     }
+                    let currentUser_positionX = currentUser.positionX
+                    let currentUser_positionY = currentUser.positionY
                     /*
                     let users_not_near = new Map()
                     for (let i of this.activeMember) {
@@ -850,8 +861,14 @@ class session_Class {
                                     nearbyUsers.push(data)
                                     this.CurrentNearbyUserLists_HASH.set(data.name, data)
 
-                                    let distance = Math.square(Math.pow(currentUser_positionX - data.positionX,2) + Math.pow(currentUser_positionY - data.positionY,2))
-                                    nearbyUsersDistance.push({data:data, distance: distance})
+                                    try {
+                                        let distance = Math.sqrt(Math.pow(currentUser_positionX - data.positionX,2) + Math.pow(currentUser_positionY - data.positionY,2))
+                                        nearbyUsersDistance.push({data:data, distance: distance})
+                                    } catch (e) {
+                                        console.log("Error!")
+                                        console.log(e)
+                                    }
+
                                 }
                             }
                         }
@@ -864,7 +881,7 @@ class session_Class {
 
                     //ADD Special Event Here
                     console.log(chalk.bold("show nearbyUser length : " + nearbyUsers.length))
-                    if (nearbyUsers.length > 1) { // nearbyuser include ourself
+                    if (nearbyUsers.length > 1 && this.WorldPage_connection_Active === true) { // nearbyuser include ourself
                         this.FORUI_START_FACESTREAMING()
                     } else {
                         this.FORUI_STOP_FACESTREAMING()

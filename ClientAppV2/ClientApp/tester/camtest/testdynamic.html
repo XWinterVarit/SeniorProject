@@ -10,7 +10,8 @@
     <img id="backgroundpic" style="position: relative ;height: 2000px; top: -750px; left: -20px">
 </div>
 
-
+<div id = "audiorec" style="background-color: green; position: static; height:50px; width: 50px">
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <script
@@ -213,6 +214,30 @@
             .then(response => console.log('Success:', response));
     }
 
+    let POST_MICREC = async () => {
+        let url = 'http://localhost:'+port+'/FORUI_TOGGLE_MICBROADCAST'
+        let data = {
+            message: "no data"
+        }
+
+        return await new Promise(resolve=>{
+            fetch(url, {
+                method: 'POST', // or 'PUT'
+                body: JSON.stringify(data), // data can be `string` or {object}!
+                headers: new Headers({
+                        'Content-Type': 'application/json'
+                    })
+                })
+                .catch(error => {
+                    console.error('Error:', error)
+                    return resolve()
+                })
+                .then(response => {
+                    console.log('Success:', response)
+                    return resolve(response.json())
+                });
+        })
+    }
 
     ////////////////////////////////////////////////////////////////////////
     //////////////////////////////RENDERING/////////////////////////////////
