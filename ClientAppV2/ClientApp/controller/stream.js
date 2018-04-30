@@ -545,7 +545,7 @@ class CameraRecorder_Class {
 
         this.intervalTaken = null
 
-        this.OPENCV_USE = false
+        this.OPENCV_USE = true
 
         this.useDummyFaces = true
 

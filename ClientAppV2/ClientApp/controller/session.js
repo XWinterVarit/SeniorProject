@@ -1600,7 +1600,7 @@ class session_Class {
 ////////////////////////////////////////////
 let logined = false
 class AppUtility {
-    static LogIn (name, userID, password, dummy1, IP, PORT) {
+    static async LogIn (name, userID, password, dummy1, IP, PORT) {
         if (logined === false) {
             globalSession.SET_CurrentUSER(name, userID, password)
             globalSession.SET_IP_PORT(IP,PORT)
@@ -1609,6 +1609,56 @@ class AppUtility {
             console.log('Already login')
         }
     }
+
+    static async LogInV2 (name, password, IP, PORT) {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+        let RES = await messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC("getuserID", {username: name})
+        if (RES == null) {
+            return console.log(chalk.red("user name not founded, ABORT login"))
+        }
+
+        console.log(JSON.stringify(RES, null, 4))
+        if (RES._id == null) {
+            return console.log(chalk.red("userID return empty, ABORT login"))
+        }
+
+        console.log(RES._id)
+        console.log(RES.clientIP)
+
+        if (logined === false) {
+            globalSession.SET_CurrentUSER(name, RES._id, password)
+            globalSession.SET_IP_PORT(IP,PORT)
+            globalSession.ACTIVE_SETLOGINED()
+        } else {
+            console.log('Already login')
+        }
+    }
+    static async SETWOLRD_BYNAME (worldname) {
+        const messagesController = require(globalConfigs.mpath1.messagesController)
+        let RES = await messagesController.messagesGlobalMethods.httpOutput_POST_SERVER_V2withASYNC("getworldID", {worldname: worldname})
+        if (RES == null) {
+            return console.log(chalk.red("world name not founded, ABORT login"))
+        }
+        if (RES._id == null) {
+            return console.log(chalk.red("userID return empty, ABORT login"))
+        }
+        console.log(RES._id)
+        globalSession.SET_CurrentWorld(RES._id)
+
+        await new Promise(resolve=>{
+            let check = setInterval(
+                ()=>{
+                    console.log(chalk.bold("SETWORLD is working..."))
+                    if (globalSession.first_refresh === true) {
+                        console.log(chalk.bold("SETWORLD Completed."))
+                        clearInterval(check)
+                        return resolve()
+                    }
+                },1000
+            )
+        })
+    }
+
     static SETWORLD (worldID) {
         globalSession.SET_CurrentWorld(worldID)
     }

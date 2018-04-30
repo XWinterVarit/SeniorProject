@@ -108,6 +108,31 @@ router.post('/setFirstStart', (req, res, next) => {
     */
 
 })
+
+
+
+router.post('/setFirstStartV2',async (req, res, next) => {
+    console.log("req " + CircularJSON.stringify(req ,null, 4))
+
+    await sessionController.AppUtility.LogInV2(req.body.name, req.body.password, req.body.IP, req.body.PORT)
+
+    await sessionController.AppUtility.SETWOLRD_BYNAME(req.body.worldname)
+
+    if (req.body.objectID) {
+        sessionController.globalSession.SET_CurrentObjectLink(req.body.objectID, req.body.ownername, req.body.objecttype, req.body.ownerID)
+    }
+
+    sessionController.globalSession.PRINT_info()
+    res.end()
+
+    /*
+    if (req.body.remoteobjectID) {
+        sessionController.globalSession.SET_REMOTE_OBJECTID(req.body.remoteobjectID)
+    }
+    */
+
+})
+
 let count = 0
 router.get('/testwebsocket', (req, res, next) => {
     count++
@@ -169,12 +194,20 @@ router.post('/CONTROL_MoveToPosition', (req, res, next) => {
 })
 
 
-router.post('/FORUI_LogIn', (req, res, next) => {
-    sessionController.AppUtility.LogIn(req.body.name, req.body.userID, req.body.password, null, req.body.IP, req.body.PORT)
+router.post('/FORUI_LogIn',async (req, res, next) => {
+    await sessionController.AppUtility.LogIn(req.body.name, req.body.userID, req.body.password, null, req.body.IP, req.body.PORT)
+    res.end()
+})
+router.post('/FORUI_LogInV2', async(req, res, next) => {
+    await sessionController.AppUtility.LogInV2(req.body.name, req.body.password, req.body.IP, req.body.PORT)
     res.end()
 })
 router.post('/FORUI_SETWORLD', (req, res, next) => {
     sessionController.AppUtility.SETWORLD(req.body.worldID)
+    res.end()
+})
+router.post('/FORUI_SETWORLD_BYNAME',async (req, res, next) => {
+    await sessionController.AppUtility.SETWOLRD_BYNAME(req.body.worldname)
     res.end()
 })
 router.post('/FORUI_SETOBJECT', (req, res, next) => {
