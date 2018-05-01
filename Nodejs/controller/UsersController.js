@@ -663,6 +663,7 @@ class UserMethods {
             return imagebuffer
         } else {
             let nofaceimagebuffer = fs.readFileSync(globalConfigs.mpath1.clouddrive_users_avatar+"##noface.jpg")
+
             return nofaceimagebuffer
         }
     }

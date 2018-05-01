@@ -35,9 +35,44 @@ const toolsController = require(globalConfigs.mpath1.toolsController)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 /* GET home page. */
+/*
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
+*/
+//Junior code
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+router.get('/about', function(req, res) {
+    res.render('pages/about');
+});
+
+router.get('/', function(req, res) {
+    res.render('pages/loginReal');
+});
+
+router.get('/navbar', function(req, res) {
+    res.render('pages/navbar');
+});
+
+router.get('/createWorld', function(req, res) {
+    res.render('pages/createWorld');
+});
+
+router.get('/Join', function(req, res) {
+    res.render('pages/Join');
+});
+
+router.get('/testworld', function(req, res) {
+    res.render('pages/world');
+});
+
+router.get('/signUp', function(req, res) {
+    res.render('pages/signUp');
+});
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 router.post('/removeObjectLink', (req, res, next) => {
     let messages = {

@@ -191,7 +191,7 @@ class DesktopRecorder_Class {
         this.fpscap = 10
         this.sessionRef = sessionRef
 
-        this.useDummyScreen = true
+        this.useDummyScreen = false
         this.dummyFileName = "screendummy.mp4" //nolonger use
 
         this.preload_dummy_framebuffer = []
@@ -930,6 +930,7 @@ class MicRecorder_Class {
         this.maximumRecordTime = 10000 //msec
 
         this.usedummyaudio = false
+
         this.dummyfolderpath = globalConfigs.testpath1.camtest
         this.preLoadMic = null
 
