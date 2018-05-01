@@ -1625,6 +1625,8 @@ class AppUtility {
         console.log(RES._id)
         console.log(RES.clientIP)
 
+        //fs.writeFileSync(globalConfigs)
+
         if (logined === false) {
             globalSession.SET_CurrentUSER(name, RES._id, password)
             globalSession.SET_IP_PORT(IP,PORT)
@@ -1665,7 +1667,63 @@ class AppUtility {
     static SETOBJECT (objectID, ownername, objecttype, ownerID) {
         globalSession.SET_CurrentObjectLink(objectID, ownername, objecttype, ownerID)
     }
+
+
+    static async SETUP_FROMFILE () {
+        await new Promise(resolve=>{
+            let check = setInterval(
+                ()=>{
+                    console.log(chalk.bold("SETWORLD is working..."))
+                    if (globalSession.first_refresh === true) {
+                        console.log(chalk.bold("SETWORLD Completed."))
+                        clearInterval(check)
+                        return resolve()
+                    }
+                },1000
+            )
+        })
+
+        let presetupjson = null
+        try {
+            presetupjson = fs.readFileSync(globalConfigs.mpath1.nodepath + "presetup.txt")
+            presetupjson = JSON.parse(presetupjson)
+        } catch (err) {
+            console.log(chalk.yellow("Presetup file not found, wait for signal"))
+            return false
+        }
+
+        if (presetupjson == null) {
+            console.log(chalk.red("Presetup error!"))
+            return false
+        }
+
+        let username = presetupjson.username
+        let password = presetupjson.password
+        let IP = presetupjson.IP
+        let PORT = presetupjson.PORT
+
+        let worldname = presetupjson.worldname
+
+        if (username == null || password == null || IP == null || PORT == null || worldname == null) {
+            console.log(chalk.red("some argument in presetup file is null, ABORT"))
+            return false
+        }
+        if (username === "") {
+            console.log(chalk.red("some argument in presetup file is empty!, ABORT"))
+            return false
+        }
+
+        await this.LogInV2(username, password, IP, PORT)
+
+        await this.SETWOLRD_BYNAME(worldname)
+
+        globalSession.PRINT_info()
+
+    }
+
+
 }
+
 module.exports.globalSession = globalSession
 module.exports.session_Class = session_Class
 module.exports.AppUtility = AppUtility

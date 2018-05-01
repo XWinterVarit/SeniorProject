@@ -25,7 +25,7 @@ login_templeted.set(
         name: "Nutmos",
         password: "1234",
         worldname: "CPE200",
-        IP: "127.0.0.1",
+        IP: "10.2.11.38",
         PORT: "50001",
     }
 )
@@ -36,7 +36,7 @@ login_templeted.set(
         name: "A",
         password: "a",
         worldname: "CPE200",
-        IP: "127.0.0.1",
+        IP: "10.2.11.38",
         PORT: "50002",
     }
 )
@@ -47,7 +47,7 @@ login_templeted.set(
         name: "B",
         password: "b",
         worldname: "CPE200",
-        IP: "127.0.0.1",
+        IP: "10.2.11.38",
         PORT: "50003",
     }
 )
@@ -58,7 +58,7 @@ login_templeted.set(
         name: "C",
         password: "c",
         worldname: "CPE200",
-        IP: "127.0.0.1",
+        IP: "10.2.11.38",
         PORT: "50004",
     }
 )
@@ -69,7 +69,7 @@ login_templeted.set(
         name: "D",
         password: "d",
         worldname: "CPE200",
-        IP: "127.0.0.1",
+        IP: "10.2.11.38",
         PORT: "50005",
     }
 )
@@ -80,7 +80,7 @@ login_templeted.set(
         name: "E",
         password: "e",
         worldname: "CPE200",
-        IP: "127.0.0.1",
+        IP: "10.2.11.38",
         PORT: "50006",
     }
 )
@@ -91,7 +91,7 @@ login_templeted.set(
         name: "F",
         password: "f",
         worldname: "CPE200",
-        IP: "127.0.0.1",
+        IP: "10.2.11.38",
         PORT: "50007",
     }
 )
